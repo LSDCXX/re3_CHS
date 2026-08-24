@@ -1,11 +1,17 @@
-<img src="https://github.com/GTAmodding/re3/blob/master/res/images/logo_1024.png?raw=true" alt="re3 logo" width="200">
+<img src="https://github.com/hezkore/re3/blob/master/res/images/logo_1024.png?raw=true" alt="re3 logo" width="200">
 
-[![Build Status](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Factions-badge.atrox.dev%2FGTAmodding%2Fre3%2Fbadge%3Fref%3Dmaster&style=flat)](https://actions-badge.atrox.dev/GTAmodding/re3/goto?ref=master)
-<a href="https://discord.gg/RFNbjsUMGg"><img src="https://img.shields.io/badge/discord-join-7289DA.svg?logo=discord&longCache=true&style=flat" /></a>
+## About this fork of re3
+This fork fixes some issues I've had with the original re3.\
+They're currently only applied to GTA 3.
+
+* The camera now has the same vertical and horizontal speed.
+* The mouse is generally slower, letting you adjust the mouse sensitivity at a finer-granularity level.
+* Particles are no longer affected by framerate.\
+_(via a dirty fixed rate hack)_
 
 ## Intro
 
-In this repository you'll find the fully reversed source code for GTA III ([master](https://github.com/GTAmodding/re3/tree/master/) branch) and GTA VC ([miami](https://github.com/GTAmodding/re3/tree/miami/) branch).
+In this repository you'll find the fully reversed source code for GTA III ([master](https://github.com/hezkore/re3/tree/master/) branch) and GTA VC ([miami](https://github.com/GTAmodding/re3/tree/miami/) branch).
 
 It has been tested and works on Windows, Linux, MacOS and FreeBSD, on x86, amd64, arm and arm64.\
 Rendering is handled either by original RenderWare (D3D8)
