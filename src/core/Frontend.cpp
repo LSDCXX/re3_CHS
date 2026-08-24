@@ -3536,6 +3536,15 @@ CMenuManager::InitialiseChangedLanguageSettings()
 		CTimer::Update();
 		CGame::frenchGame = false;
 		CGame::germanGame = false;
+#ifdef CHINESE
+		CGame::chineseGame = false;
+		if (m_PrefsLanguage == LANGUAGE_CHINESE) {
+			CGame::chineseGame = true;
+			CFont::ReloadChineseFonts();
+		} else {
+			CFont::UnloadChineseFonts();
+		}
+#endif
 #ifdef MORE_LANGUAGES
 		CGame::russianGame = false;
 		CGame::japaneseGame = false;

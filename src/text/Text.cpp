@@ -46,6 +46,11 @@ CText::Load(void)
 	case CMenuManager::LANGUAGE_SPANISH:
 		sprintf(filename, "SPANISH.GXT");
 		break;
+#ifdef CHINESE
+	case CMenuManager::LANGUAGE_CHINESE:
+		sprintf(filename, "CHINESE.GXT");
+		break;
+#endif
 #ifdef MORE_LANGUAGES
 	case CMenuManager::LANGUAGE_POLISH:
 		sprintf(filename, "POLISH.GXT");

@@ -119,6 +119,19 @@ void LangJapSelect(int8 action)
 }
 #endif
 
+#ifdef CHINESE
+void
+LangChaSelect(int8 action)
+{
+	if (action == FEOPTION_ACTION_SELECT) {
+		FrontEndMenuManager.m_PrefsLanguage = CMenuManager::LANGUAGE_CHINESE;
+		FrontEndMenuManager.m_bFrontEnd_ReloadObrTxtGxt = true;
+		FrontEndMenuManager.InitialiseChangedLanguageSettings();
+		FrontEndMenuManager.SaveSettings();
+	}
+}
+#endif
+
 void
 CustomFrontendOptionsPopulate(void)
 {
@@ -126,6 +139,7 @@ CustomFrontendOptionsPopulate(void)
 
 	// These work only if we have neo folder
 	int fd;
+	int fd2;
 #ifdef EXTENDED_PIPELINES
 	const char *vehPipelineNames[] = { "FED_MFX", "FED_NEO" };
 	const char *off_on[] = { "FEM_OFF", "FEM_ON" };
@@ -149,8 +163,19 @@ CustomFrontendOptionsPopulate(void)
 #endif
 
 	// Add outsourced language translations, if files are found
+#ifdef CHINESE
+	FrontendOptionSetCursor(MENUPAGE_LANGUAGE_SETTINGS, 5, false);
+
+	if (fd = CFileMgr::OpenFile("text/chinese.gxt")) {
+		if(fd2 = CFileMgr::OpenFile("models/chinese.txd")) {
+			FrontendOptionAddDynamic("FEL_CHS", nil, nil, LangChaSelect, nil, nil);
+			CFileMgr::CloseFile(fd2);
+		}
+		CFileMgr::CloseFile(fd);
+	}
+#endif
+
 #ifdef MORE_LANGUAGES
-	int fd2;
 	FrontendOptionSetCursor(MENUPAGE_LANGUAGE_SETTINGS, 5, false);
 	if (fd = CFileMgr::OpenFile("text/polish.gxt","r")) {
 		if (fd2 = CFileMgr::OpenFile("models/fonts_p.txd","r")) {

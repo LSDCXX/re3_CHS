@@ -96,6 +96,9 @@ bool CGame::bDemoMode = true;
 bool CGame::nastyGame = true;
 bool CGame::frenchGame;
 bool CGame::germanGame;
+#ifdef CHINESE
+bool CGame::chineseGame = false;
+#endif
 bool CGame::noProstitutes;
 bool CGame::playingIntro;
 char CGame::aDatFile[32];

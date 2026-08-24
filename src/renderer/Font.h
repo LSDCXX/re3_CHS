@@ -44,6 +44,13 @@ enum {
 	MAX_FONTS
 };
 
+#ifdef CHINESE
+enum {
+	FONT_CHN_NORMAL,
+	FONT_CHN_SLANT,
+	FONT_CHN_MAX
+};
+#endif
 enum {
 	ALIGN_LEFT,
 	ALIGN_CENTER,
@@ -98,6 +105,9 @@ class CFont
 	static int32 Slot;
 #else
 	static int16 Size[MAX_FONTS][193];
+#endif
+#ifdef CHINESE
+	static int32 chineseSlot;
 #endif
 	static bool16 NewLine;
 public:
@@ -179,4 +189,24 @@ public:
 	static bool IsJapanese() { return LanguageSet == FONT_LANGSET_JAPANESE; }
 	static bool IsJapaneseFont() { return IsJapanese() && (Details.style == FONT_JAPANESE || Details.style == FONT_PAGER);  }
 #endif
+#ifdef CHINESE
+	static void LoadChineseFonts(void);
+	static void ReloadChineseFonts(void);
+	static void UnloadChineseFonts(void);
+
+	static void PrintCharDispatcher(float x, float y, wchar c);
+	static void PrintCHSChar(float x, float y, wchar c);
+	static void RenderFontBuffer_Chs(void);
+
+	static float GetCharacterSize_Chs(wchar c, uint16 fontStyle, bool fontHalfTexture, bool prop, float scaleX);
+	static float GetCharacterSizeNormal(wchar c);
+	static float GetCharacterSizeDrawing(wchar c);
+
+	static void PrintString_Chs(float x, float y, wchar *text);
+	static int GetNumberLines_Chs(float xstart, float ystart, wchar *s);
+	static void GetTextRect_Chs(CRect *rect, float xstart, float ystart, wchar *s);
+	static float GetStringWidth_Chs(wchar *s, bool spaces = false);
+	static uint16 *GetNextSpace_Chs(wchar *s);
+#endif
 };
+
