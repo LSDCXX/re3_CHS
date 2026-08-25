@@ -39,6 +39,7 @@ extern RwBool psNativeTextureSupport(void);
 
 extern void _InputTranslateShiftKeyUpDown(RsKeyCodes* rs);
 extern long _InputInitialiseMouse(); // returns HRESULT on Windows actually
+extern void _InputShutdownMouse();
 extern void _InputInitialiseJoys();
 
 extern void HandleExit();
