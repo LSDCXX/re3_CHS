@@ -123,6 +123,16 @@ static uint8 *gLockedAtlasPixels = nil;
 // Forward declaration: InitRareFont is defined later but LoadFontConfig calls it.
 static bool InitRareFont(const std::wstring &absPath);
 
+static int
+ParseTextRenderer(const std::string &value)
+{
+	if(value == "1" || value == "TXD")
+		return CHS_TEXT_TXD;
+	if(value == "2" || value == "GDI")
+		return CHS_TEXT_GDI;
+	return CHS_TEXT_DWRITE;
+}
+
 // Debug log written next to the game exe; helps diagnose font loading.
 static void
 ChsLog(const char *fmt, ...)
@@ -492,12 +502,7 @@ LoadFontConfig(void)
 		// atlas), 3=DWrite (DirectWrite backend, default). The pre-numeric
 		// strings ("TXD"/"GDI"/"DWrite") are still accepted so configs from
 		// older builds keep working; anything else falls back to DWrite.
-		if(tr == "1" || tr == "TXD")
-			gTextRenderer = CHS_TEXT_TXD;
-		else if(tr == "2" || tr == "GDI")
-			gTextRenderer = CHS_TEXT_GDI;
-		else
-			gTextRenderer = CHS_TEXT_DWRITE; // includes "3"/"DWrite"/unknown
+		gTextRenderer = ParseTextRenderer(tr); // includes "3"/"DWrite"/unknown
 	} else {
 		ChsLog("  TextRenderer missing, using default (DWrite)");
 	}
@@ -1256,6 +1261,19 @@ bool
 CHSFont::Inited(void)
 {
 	return gInited;
+}
+
+bool
+CHSFont::UsesDynamicRenderer(void)
+{
+	EnsureFontsIni();
+	mINI::INIFile iniFile(WideToAnsi(MakeAbsPath(L"re3.ini")));
+	mINI::INIStructure cfg;
+	if(!iniFile.read(cfg) || !cfg.has("Fonts"))
+		return true;
+	mINI::INIMap<std::string> &sec = cfg["Fonts"];
+	return !sec.has("TextRenderer") ||
+	       ParseTextRenderer(sec.get("TextRenderer")) != CHS_TEXT_TXD;
 }
 
 void

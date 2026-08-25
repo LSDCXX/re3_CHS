@@ -37,6 +37,10 @@ public:
 	static bool Init(void);      // create fonts + first pages; rebuild if already inited
 	static void Shutdown(void);  // release everything (idempotent)
 	static bool Inited(void);
+	// True when [Fonts] TextRenderer selects GDI or DirectWrite.  The
+	// language menu uses this before Init() so dynamic fonts are not hidden
+	// merely because the legacy Chinese.dat/Chinese.txd pair is absent.
+	static bool UsesDynamicRenderer(void);
 	// Ensure the [Fonts] section exists in re3.ini (write defaults if
 	// missing; fail hard if it cannot be ensured). Callable at any time,
 	// independent of Init/Inited.

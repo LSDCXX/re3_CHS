@@ -795,6 +795,9 @@ CMenuManager::BuildStatLine(Const char *text, void *stat, bool itsFloat, void *s
 void
 CMenuManager::CentreMousePointer()
 {
+	if (!IsForegroundApp())
+		return;
+
 	if (SCREEN_WIDTH * 0.5f != 0.0f && 0.0f != SCREEN_HEIGHT * 0.5f) {
 #if defined RW_D3D9 || defined RWLIBS
 		tagPOINT Point;
