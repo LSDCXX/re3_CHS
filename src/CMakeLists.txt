@@ -1,7 +1,7 @@
 find_package(Threads REQUIRED)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 
-file(GLOB_RECURSE ${PROJECT}_SOURCES "*.cpp" "*.h" "*.rc")
+file(GLOB_RECURSE ${PROJECT}_SOURCES CONFIGURE_DEPENDS "*.cpp" "*.h" "*.rc")
 
 function(header_directories RETURN_LIST)
     file(GLOB_RECURSE ALL_SRCS *.h *.cpp *.c)

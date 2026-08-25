@@ -7,6 +7,9 @@
 #include "Frontend.h"
 #include "Messages.h"
 #include "Text.h"
+#if defined(CHINESE) && defined(_WIN32)
+#include "CHSFont.h"
+#endif
 
 wchar WideErrorString[25];
 
@@ -87,6 +90,14 @@ CText::Load(void)
 	}
 
 	keyArray.Update(data.chars);
+
+#if defined(CHINESE) && defined(_WIN32)
+	// On PC the RenderWare/font system and GXT data can be initialised in
+	// either order. Preload here as well as from CFont so the normal atlas is
+	// guaranteed warm before gameplay regardless of the startup path.
+	if(CMenuManager::m_PrefsLanguage == CMenuManager::LANGUAGE_CHINESE && CHSFont::Inited())
+		CHSFont::Preload(data.chars, data.numChars);
+#endif
 
 	delete[] filedata;
 }

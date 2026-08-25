@@ -758,11 +758,18 @@ void CHud::Draw()
 					CFont::SetRightJustifyOn();
 					CFont::SetRightJustifyWrap(0.0f);
 					CFont::SetBackGroundOnlyTextOff();
+					#ifdef CHINESE
+					CFont::SetChineseSyntheticSlant(0.15f);
+					#endif
+					CFont::SetDropShadowPosition(2);
+					CFont::SetDropColor(CRGBA(0, 0, 0, fZoneAlpha));
 					CFont::SetFontStyle(FONT_BANK);
-					CFont::SetColor(CRGBA(0, 0, 0, fZoneAlpha));
-					CFont::PrintString(SCREEN_SCALE_FROM_RIGHT(32.0f) + SCREEN_SCALE_X_FIX(1.0f), SCREEN_SCALE_FROM_BOTTOM(ZONE_Y) + SCREEN_SCALE_Y_FIX(1.0f), m_ZoneToPrint);
 					CFont::SetColor(CRGBA(ZONE_COLOR.r, ZONE_COLOR.g, ZONE_COLOR.b, fZoneAlpha));
 					CFont::PrintString(SCREEN_SCALE_FROM_RIGHT(32.0f), SCREEN_SCALE_FROM_BOTTOM(ZONE_Y), m_ZoneToPrint);
+					#ifdef CHINESE
+					CFont::SetChineseSyntheticSlant(0.0f);
+					#endif
+					CFont::SetDropShadowPosition(0);
 				}
 			}
 		}
@@ -852,11 +859,18 @@ void CHud::Draw()
 					CFont::SetRightJustifyOn();
 					CFont::SetRightJustifyWrap(0.0f);
 					CFont::SetBackGroundOnlyTextOff();
+					#ifdef CHINESE
+					CFont::SetChineseSyntheticSlant(0.15f);
+					#endif
+					CFont::SetDropShadowPosition(2);
+					CFont::SetDropColor(CRGBA(0, 0, 0, fVehicleAlpha));
 					CFont::SetFontStyle(FONT_BANK);
-					CFont::SetColor(CRGBA(0, 0, 0, fVehicleAlpha));
-					CFont::PrintString(SCREEN_SCALE_FROM_RIGHT(32.0f) + SCREEN_SCALE_X_FIX(1.0f), SCREEN_SCALE_FROM_BOTTOM(VEHICLE_Y) + SCREEN_SCALE_Y_FIX(1.0f), m_pVehicleNameToPrint);
 					CFont::SetColor(CRGBA(VEHICLE_COLOR.r, VEHICLE_COLOR.g, VEHICLE_COLOR.b, fVehicleAlpha));
 					CFont::PrintString(SCREEN_SCALE_FROM_RIGHT(32.0f), SCREEN_SCALE_FROM_BOTTOM(VEHICLE_Y), m_pVehicleNameToPrint);
+					#ifdef CHINESE
+					CFont::SetChineseSyntheticSlant(0.0f);
+					#endif
+					CFont::SetDropShadowPosition(0);
 				}
 			}
 		}
@@ -1185,6 +1199,11 @@ void CHud::Draw()
 			CFont::SetCentreOn();
 			CFont::SetPropOn();
 			CFont::SetFontStyle(FONT_LOCALE(FONT_BANK));
+			// GTA III uses FONT_BANK for subtitles, but that style selects the
+			// optional cursive CJK face.  VC subtitles use the normal CJK face.
+			#ifdef CHINESE
+			CFont::SetChineseFontStyleOverride(FONT_CHN_NORMAL);
+			#endif
 
 #ifdef XBOX_SUBTITLES
 			float radarBulge = SCREEN_SCALE_X(45.0f) + SCREEN_SCALE_X(16.0f);
@@ -1209,6 +1228,9 @@ void CHud::Draw()
 			CFont::PrintString(rectWidth / 2.0f + radarBulge - SCREEN_SCALE_X_FIX(shadow), SCREEN_SCALE_Y_PC(4.0f) + SCREEN_SCALE_FROM_BOTTOM(SUBS_Y) - SCREEN_SCALE_Y_FIX(shadow), m_Message);
 			CFont::SetDropShadowPosition(0);
 #endif // #ifdef XBOX_SUBTITLES
+			#ifdef CHINESE
+			CFont::SetChineseFontStyleOverride(-1);
+			#endif
 		}
 
 		/*

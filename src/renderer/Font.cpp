@@ -10,31 +10,148 @@
 #endif
 #ifdef CHINESE
 #include "Game.h"
+#include "CHSFont.h"
+#include "Text.h"
+#include <vector>
 #endif
 
 #ifdef CHINESE
 static CSprite2d SpriteChinese[FONT_CHN_MAX];
+static const float CHS_DISPLAY_SCALE = 1.10f;
+// GTA III's FONT_BANK quad is 20 units high. Slanted vehicle/zone names use
+// that font, so make their square CJK glyphs match its native on-screen height
+// instead of inheriting the smaller 16-unit general CJK cell.
+static const float CHS_BANK_DISPLAY_SCALE = 20.0f / 16.0f;
 
-struct CharPos {
-	uint8 rowIndex;
-	uint8 columnIndex;
+// reVC accumulates glyph quads and submits one draw per atlas texture instead
+// of drawing every character immediately. Keep shadow and main passes separate
+// so every shadow is behind every foreground glyph, matching its font buffer.
+struct ChsBatchItem
+{
+	CSprite2d *sprite;
+	CRect rect;
+	CRGBA color;
+	float u0, v0, u1, v1;
+	float shear;
 };
 
+static std::vector<ChsBatchItem> gChsShadowBatch;
+static std::vector<ChsBatchItem> gChsMainBatch;
+static RwIm2DVertex gChsBatchVertices[6 * 64];
+
+static void
+RenderChsBatchItems(const std::vector<ChsBatchItem> &items)
+{
+	for(size_t seed = 0; seed < items.size(); seed++) {
+		CSprite2d *sprite = items[seed].sprite;
+		bool rendered = false;
+		for(size_t previous = 0; previous < seed; previous++) {
+			if(items[previous].sprite == sprite) {
+				rendered = true;
+				break;
+			}
+		}
+		if(rendered)
+			continue;
+
+		sprite->SetRenderState();
+		int32 numVertices = 0;
+		for(size_t i = seed; i < items.size(); i++) {
+			const ChsBatchItem &item = items[i];
+			if(item.sprite != sprite)
+				continue;
+			CSprite2d::SetVertices(&gChsBatchVertices[numVertices], item.rect,
+				item.color, item.color, item.color, item.color,
+				item.u0, item.v0, item.u1, item.v0,
+				item.u1, item.v1, item.u0, item.v1);
+			// FONT_BANK already contains slanted Latin glyphs. Dynamic CJK uses the
+			// normal system face, so reproduce that lean geometrically. Anchor the
+			// top edge to preserve right justification and move the lower edge left;
+			// the amount scales with the actual on-screen glyph height.
+			if(item.shear != 0.0f) {
+				RwIm2DVertexSetScreenX(&gChsBatchVertices[numVertices + 1], item.rect.left - item.shear);
+				RwIm2DVertexSetScreenX(&gChsBatchVertices[numVertices + 2], item.rect.right - item.shear);
+				RwIm2DVertexSetScreenX(&gChsBatchVertices[numVertices + 4], item.rect.right - item.shear);
+			}
+			numVertices += 6;
+			if(numVertices == ARRAY_SIZE(gChsBatchVertices)) {
+				RwIm2DRenderPrimitive(rwPRIMTYPETRILIST, gChsBatchVertices, numVertices);
+				numVertices = 0;
+			}
+		}
+		if(numVertices != 0)
+			RwIm2DRenderPrimitive(rwPRIMTYPETRILIST, gChsBatchVertices, numVertices);
+	}
+}
+
+static void
+RenderChsBatches(void)
+{
+	if(gChsShadowBatch.empty() && gChsMainBatch.empty())
+		return;
+	RwRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, (void *)TRUE);
+	RwRenderStateSet(rwRENDERSTATETEXTUREFILTER, (void *)rwFILTERLINEAR);
+	RenderChsBatchItems(gChsShadowBatch);
+	RenderChsBatchItems(gChsMainBatch);
+	RwRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, (void *)FALSE);
+	gChsShadowBatch.clear();
+	gChsMainBatch.clear();
+}
+
 static CharPos sTable[0x10000];
+static const CharPos sFallbackCharPos = { 0, 63, 63 };
+
+static bool
+IsZeroWidthChineseChar(wchar c)
+{
+	return c == 0x200C || c == 0x200D || (c >= 0xFE00 && c <= 0xFE0F);
+}
+
+static uint32
+DecodeChineseCodepoint(const wchar *text, int &units)
+{
+	uint32 first = (uint16)text[0];
+	units = 1;
+	if (first >= 0xD800 && first <= 0xDBFF) {
+		uint32 second = (uint16)text[1];
+		if (second >= 0xDC00 && second <= 0xDFFF) {
+			units = 2;
+			return 0x10000 + ((first - 0xD800) << 10) + (second - 0xDC00);
+		}
+	}
+	return first;
+}
 
 static const CharPos &
-GetCharPos(wchar chr)
+GetCharPos(uint32 chr, bool slant)
 {
+	#ifdef _WIN32
+	if (CHSFont::Inited())
+		return CHSFont::GetSlot(chr, slant);
+	#endif
+	if (chr >= 0x10000)
+		return sFallbackCharPos;
 	return sTable[chr];
 }
 
 static bool
 ReadTable(void)
 {
-	memset(sTable, 63, sizeof(sTable));
+	for (int i = 0; i < 0x10000; i++)
+		sTable[i] = sFallbackCharPos;
 	int hfile = CFileMgr::OpenFile("data/Chinese.dat", "rb");
 	if (hfile) {
-		CFileMgr::Read(hfile, (char *)sTable, sizeof(sTable));
+		struct LegacyCharPos { uint8 rowIndex, columnIndex; };
+		LegacyCharPos legacyTable[0x10000];
+		if (CFileMgr::Read(hfile, (char *)legacyTable, sizeof(legacyTable)) != sizeof(legacyTable)) {
+			CFileMgr::CloseFile(hfile);
+			return false;
+		}
+		for (int i = 0; i < 0x10000; i++) {
+			sTable[i].page = 0;
+			sTable[i].rowIndex = legacyTable[i].rowIndex;
+			sTable[i].columnIndex = legacyTable[i].columnIndex;
+		}
 		CFileMgr::CloseFile(hfile);
 		return true;
 	}
@@ -88,6 +205,9 @@ CSprite2d CFont::Sprite[MAX_FONTS];
 int32 CFont::chineseSlot = -1;
 static bool gChineseFontSystemInitialised = false;
 static bool gChineseFontsLoaded = false;
+static bool gStaticChineseFontsLoaded = false;
+static int16 gChineseFontStyleOverride = -1;
+static float gChineseSyntheticSlant = 0.0f;
 #endif
 
 #ifdef MORE_LANGUAGES
@@ -341,6 +461,11 @@ int CFont::ButtonsSlot = -1;
 void
 CFont::Initialise(void)
 {
+	#ifdef CHINESE
+	#ifdef _WIN32
+	CHSFont::EnsureConfig();
+	#endif
+	#endif
 	int slot;
 
 	slot = CTxdStore::AddTxdSlot("fonts");
@@ -1682,6 +1807,14 @@ CFont::LoadChineseFonts()
 	if (!gChineseFontSystemInitialised || gChineseFontsLoaded)
 		return;
 
+	#ifdef _WIN32
+	if (CHSFont::Init()) {
+		CHSFont::Preload(TheText.GetLoadedData(), TheText.GetLoadedDataLength());
+		gChineseFontsLoaded = true;
+		return;
+	}
+	#endif
+
 	if (chineseSlot == -1)
 		chineseSlot = CTxdStore::AddTxdSlot("chsfonts");
 
@@ -1696,6 +1829,7 @@ CFont::LoadChineseFonts()
 	SpriteChinese[FONT_CHN_SLANT].SetTexture("slant", "slantm");
 	CTxdStore::PopCurrentTxd();
 
+	gStaticChineseFontsLoaded = true;
 	gChineseFontsLoaded = true;
 }
 
@@ -1705,12 +1839,18 @@ CFont::UnloadChineseFonts()
 	if (!gChineseFontsLoaded)
 		return;
 
-	SpriteChinese[FONT_CHN_NORMAL].Delete();
-	SpriteChinese[FONT_CHN_SLANT].Delete();
+	#ifdef _WIN32
+	CHSFont::Shutdown();
+	#endif
+	if (gStaticChineseFontsLoaded) {
+		SpriteChinese[FONT_CHN_NORMAL].Delete();
+		SpriteChinese[FONT_CHN_SLANT].Delete();
 
-	if (chineseSlot != -1)
-		CTxdStore::RemoveTxd(chineseSlot);
+		if (chineseSlot != -1)
+			CTxdStore::RemoveTxd(chineseSlot);
+	}
 
+	gStaticChineseFontsLoaded = false;
 	gChineseFontsLoaded = false;
 }
 
@@ -1736,7 +1876,19 @@ CFont::PrintCharDispatcher(float x, float y, wchar c)
 }
 
 void
-CFont::PrintCHSChar(float x, float y, wchar c)
+CFont::SetChineseFontStyleOverride(int16 style)
+{
+	gChineseFontStyleOverride = style;
+}
+
+void
+CFont::SetChineseSyntheticSlant(float slant)
+{
+	gChineseSyntheticSlant = slant;
+}
+
+void
+CFont::PrintCHSChar(float x, float y, uint32 c)
 {
 	static const float rRowsCount = 1.0f / 64.0f;
 	static const float rColumnsCount = 1.0f / 64.0f;
@@ -1746,34 +1898,71 @@ CFont::PrintCHSChar(float x, float y, wchar c)
 	if (x <= 0.0f || x > SCREEN_WIDTH || y <= 0.0f || y > SCREEN_HEIGHT)
 		return;
 
-	CharPos pos = GetCharPos(c);
+	// GTA III uses FONT_BANK for most UI text, while VC uses FONT_STANDARD.
+	// Treating the numeric value 0 as "slant" therefore selects a different
+	// CJK face throughout re3. Normal is the reVC-compatible default; callers
+	// may still request the optional slant set explicitly through the override.
+	bool slant = gChineseFontStyleOverride == FONT_CHN_SLANT;
+	CharPos pos = GetCharPos(c, slant);
 	CRect rect;
 
 	float yOffset = Details.scaleY * 2.0f;
-	float charHeight = Details.scaleY * 16.0f;
+	// The atlas cell is square.  Use the vertical scale for both screen axes so
+	// CJK glyphs stay square even when the original Latin font uses unrelated
+	// horizontal and vertical scales (subtitles and menus do this frequently).
+	float displayScale = Details.style == FONT_BANK && gChineseSyntheticSlant != 0.0f ?
+		CHS_BANK_DISPLAY_SCALE : CHS_DISPLAY_SCALE;
+	float charSize = Details.scaleY * 16.0f * displayScale;
+	float shear = charSize * gChineseSyntheticSlant;
+	// BANK and HEADING use a 20-unit-high native quad in GTA III; the other
+	// atlas path uses 16. Centre CJK inside the active native quad, not inside
+	// the 18-unit CHS line advance. This puts menu text in the selection bar's
+	// true centre and gives save-slot numbers and adjacent CJK the same centre.
+	float nativeCellHeight = Details.style == FONT_BANK || Details.style == FONT_HEADING ? 20.0f : 16.0f;
+	yOffset = Details.scaleY * (nativeCellHeight - 16.0f * displayScale) * 0.5f;
 
 	rect.left = x;
 	rect.top = y + yOffset;
-	rect.right = Details.scaleX * 32.0f + x;
-	rect.bottom = charHeight + y + yOffset;
+	rect.right = x + charSize;
+	rect.bottom = y + yOffset + charSize;
 
 	float u1 = pos.columnIndex * rColumnsCount;
 	float v1 = pos.rowIndex * rRowsCount;
 	float u2 = (pos.columnIndex + 1) * rColumnsCount - ufix;
 	float v2 = (pos.rowIndex + 1) * rRowsCount - vfix;
 
-	CSprite2d *spr = (Details.style == FONT_BANK) ?
-		&SpriteChinese[FONT_CHN_SLANT] :
-		&SpriteChinese[FONT_CHN_NORMAL];
+	CSprite2d *spr;
+	CRGBA color = Details.color;
+	#ifdef _WIN32
+	if (CHSFont::Inited()) {
+		spr = &CHSFont::SpriteC[pos.page];
+		if (CHSFont::IsSlotColor(c, slant))
+			color = CRGBA(255, 255, 255, Details.color.a);
+	} else
+	#endif
+		spr = slant ? &SpriteChinese[FONT_CHN_SLANT] : &SpriteChinese[FONT_CHN_NORMAL];
 
-	spr->Draw(rect, Details.color, u1, v1, u2, v1, u1, v2, u2, v2);
+	if (Details.dropShadowPosition != 0) {
+		float shadowX = SCREEN_SCALE_X(Details.dropShadowPosition);
+		float shadowY = SCREEN_SCALE_Y(Details.dropShadowPosition);
+		CRect shadowRect(rect.left + shadowX, rect.top + shadowY,
+			rect.right + shadowX, rect.bottom + shadowY);
+		gChsShadowBatch.push_back({ spr, shadowRect, Details.dropColor, u1, v1, u2, v2, shear });
+	}
+
+	// reVC renders its accumulated font vertex buffer with linear filtering.
+	// Queue the foreground here; RenderChsBatches submits one draw per page.
+	gChsMainBatch.push_back({ spr, rect, color, u1, v1, u2, v2, shear });
 }
 
 float
-CFont::GetCharacterSize_Chs(wchar c, uint16 fontStyle, bool fontHalfTexture, bool prop, float scaleX)
+CFont::GetCharacterSize_Chs(wchar c, uint16 fontStyle, bool fontHalfTexture, bool prop, float scaleX, float scaleY)
 {
 	if (c >= 0x80)
-		return 29.0f * scaleX;
+		// Keep the original 29/32 cell advance while deriving it from the
+		// square glyph size.  Drawing, centring and wrapping now agree.
+		return 14.5f * (fontStyle == FONT_BANK && gChineseSyntheticSlant != 0.0f ?
+			CHS_BANK_DISPLAY_SCALE : CHS_DISPLAY_SCALE) * scaleY;
 
 	wchar ascii = c - ' ';
 
@@ -1790,18 +1979,19 @@ CFont::GetCharacterSize_Chs(wchar c, uint16 fontStyle, bool fontHalfTexture, boo
 float
 CFont::GetCharacterSizeNormal(wchar c)
 {
-	return GetCharacterSize_Chs(c, Details.style, false, Details.proportional, Details.scaleX);
+	return GetCharacterSize_Chs(c, Details.style, false, Details.proportional, Details.scaleX, Details.scaleY);
 }
 
 float
 CFont::GetCharacterSizeDrawing(wchar c)
 {
-	return GetCharacterSize_Chs(c, Details.style, false, Details.proportional, Details.scaleX);
+	return GetCharacterSize_Chs(c, Details.style, false, Details.proportional, Details.scaleX, Details.scaleY);
 }
 
 void
 CFont::RenderFontBuffer_Chs(void)
 {
+	RenderChsBatches();
 }
 
 void
@@ -1820,6 +2010,17 @@ CFont::PrintString_Chs(float x, float y, wchar *text)
 
 	if (*text == '*')
 		return;
+	#ifdef _WIN32
+	if(CHSFont::Inited())
+		// Any GXT-external characters in this string are generated under one
+		// atlas lock/upload, rather than one 64MB upload per character.
+		CHSFont::Preload(text, UnicodeStrlen(text));
+	#endif
+
+	// PrintString_Chs is the re3 equivalent of one reVC font-buffer pass.
+	// It owns the temporary batches so stale quads can never cross strings.
+	gChsShadowBatch.clear();
+	gChsMainBatch.clear();
 
 	if (Details.background) {
 		GetTextRect_Chs(&rect, x, y, text);
@@ -1835,9 +2036,18 @@ CFont::PrintString_Chs(float x, float y, wchar *text)
 				cur = ParseToken(cur, &unused);
 				continue;
 			}
-			PrintCharDispatcher(curX, startY, *cur);
-			curX += GetCharacterSizeNormal(*cur);
-			cur++;
+			if (IsZeroWidthChineseChar(*cur)) {
+				cur++;
+				continue;
+			}
+			int units;
+			uint32 cp = DecodeChineseCodepoint(cur, units);
+			if (cp < 0x80)
+				PrintCharDispatcher(curX, startY, (wchar)cp);
+			else
+				PrintCHSChar(curX, startY, cp);
+			curX += GetCharacterSizeNormal((wchar)cp);
+			cur += units;
 		}
 	};
 
@@ -1934,6 +2144,8 @@ CFont::PrintString_Chs(float x, float y, wchar *text)
 			emptyLine = true;
 		}
 	}
+
+	RenderFontBuffer_Chs();
 }
 
 int
@@ -2020,7 +2232,10 @@ CFont::GetStringWidth_Chs(wchar *s, bool spaces)
 	float result = 0.0f;
 
 	while (*s != '\0') {
-		if (*s == ' ') {
+		if (IsZeroWidthChineseChar(*s)) {
+			++s;
+			continue;
+		} else if (*s == ' ') {
 			if (spaces)
 				result += GetCharacterSizeNormal(' ');
 			else
@@ -2039,11 +2254,14 @@ CFont::GetStringWidth_Chs(wchar *s, bool spaces)
 		} else if (*s < 0x80) {
 			result += GetCharacterSizeNormal(*s);
 		} else {
+			int units;
+			DecodeChineseCodepoint(s, units);
 			if (result == 0.0f || spaces)
 				result += GetCharacterSizeNormal(*s);
 
 			if (!spaces)
 				break;
+			s += units - 1;
 		}
 
 		++s;
