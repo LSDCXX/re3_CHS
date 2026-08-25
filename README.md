@@ -11,6 +11,28 @@ _(via a dirty fixed rate hack)_
 
 ## Intro
 
+## Dynamic Chinese fonts
+
+On Windows, Chinese text can now be rasterized on demand from installed system fonts or local TTF/TTC/OTF files. Configure it in `re3.ini`:
+
+```ini
+[Fonts]
+TextRenderer=3
+NormalFonts=Microsoft YaHei,SimSun,SimHei,DengXian
+NormalBold=1
+SlantFontFile=
+SlantBold=1
+GlyphHeight=56
+RareFontFile=C:\Windows\Fonts\msyh.ttc,C:\Windows\Fonts\SimsunExtG.ttf
+NormalWeight=700
+SlantWeight=700
+RareWeight=400
+```
+
+`TextRenderer=3` uses DirectWrite (default), `2` uses the compatible GDI renderer, and `1` keeps the legacy `MODELS/CHINESE.TXD` plus `data/Chinese.dat` path. Dynamic modes cache glyphs in atlas pages as characters are encountered, so they are not limited to the glyphs bundled in the static texture.
+
+When Chinese is loaded, the normal glyphs referenced by `CHINESE.GXT` are pre-rendered while the loading screen is active, regardless of whether the font system or GXT data finishes loading first. This makes the first load slightly longer, but prevents new cutscene subtitles from stalling gameplay. GXT-external characters in one string share a single atlas lock/upload. Chinese HUD glyphs are displayed 10% larger. As in reVC, glyph quads are grouped by atlas texture and submitted in separate shadow/main batches with linear filtering; Latin text keeps the original game's sizing and rendering path.
+
 In this repository you'll find the fully reversed source code for GTA III ([master](https://github.com/hezkore/re3/tree/master/) branch) and GTA VC ([miami](https://github.com/GTAmodding/re3/tree/miami/) branch).
 
 It has been tested and works on Windows, Linux, MacOS and FreeBSD, on x86, amd64, arm and arm64.\

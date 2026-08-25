@@ -681,6 +681,14 @@ void SaveINISettings()
 	}
 #endif
 
+	#ifdef CHINESE
+	#ifdef _WIN32
+	// Preserve the dynamic font configuration when mINI rewrites re3.ini.
+	extern void ChsFontSaveIniValues(mINI::INIStructure &cfg);
+	ChsFontSaveIniValues(cfg);
+	#endif
+	#endif
+
 	ini.write(cfg);
 }
 

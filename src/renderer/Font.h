@@ -195,10 +195,12 @@ public:
 	static void UnloadChineseFonts(void);
 
 	static void PrintCharDispatcher(float x, float y, wchar c);
-	static void PrintCHSChar(float x, float y, wchar c);
+	static void PrintCHSChar(float x, float y, uint32 c);
+	static void SetChineseFontStyleOverride(int16 style);
+	static void SetChineseSyntheticSlant(float slant);
 	static void RenderFontBuffer_Chs(void);
 
-	static float GetCharacterSize_Chs(wchar c, uint16 fontStyle, bool fontHalfTexture, bool prop, float scaleX);
+	static float GetCharacterSize_Chs(wchar c, uint16 fontStyle, bool fontHalfTexture, bool prop, float scaleX, float scaleY);
 	static float GetCharacterSizeNormal(wchar c);
 	static float GetCharacterSizeDrawing(wchar c);
 

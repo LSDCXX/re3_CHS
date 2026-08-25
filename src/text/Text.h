@@ -61,6 +61,10 @@ public:
 	wchar *Get(const char *key);
 	wchar GetUpperCase(wchar c);
 	void UpperCase(wchar *s);
+#ifdef CHINESE
+	const wchar *GetLoadedData(void) const { return data.chars; }
+	int GetLoadedDataLength(void) const { return data.numChars; }
+#endif
 };
 
 extern CText TheText;
