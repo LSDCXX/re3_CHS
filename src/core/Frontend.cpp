@@ -1325,7 +1325,7 @@ CMenuManager::Draw()
 		CFont::SetDropColor(CRGBA(0, 0, 0, FadeIn(255)));
 		CFont::PrintString(MENU_X(60.0f), SCREEN_SCALE_FROM_BOTTOM(120.0f), backTx);
 		CFont::SetDropShadowPosition(0);
-		if (!CheckHover(MENU_X(30.0f), MENU_X(30.0f) + CFont::GetStringWidth(backTx), SCREEN_SCALE_FROM_BOTTOM(125.0f), SCREEN_SCALE_FROM_BOTTOM(105.0f))) {
+		if (!CheckHover(MENU_X(50.0f), MENU_X(210.0f), SCREEN_SCALE_FROM_BOTTOM(130.0f), SCREEN_SCALE_FROM_BOTTOM(98.0f))) {
 			m_nHoverOption = HOVEROPTION_NOT_HOVERING;
 			m_nCurrOption = m_nOptionMouseHovering = 0;
 		} else {
@@ -4369,7 +4369,8 @@ CMenuManager::ProcessButtonPresses(void)
 	// Leave the map through Escape or the visible Back button, staying paused.
 	if (m_nCurrScreen == MENUPAGE_MAP) {
 		if (CPad::GetPad(0)->GetEscapeJustDown() ||
-			(m_bShowMouse && m_nHoverOption == HOVEROPTION_RANDOM_ITEM && CPad::GetPad(0)->GetLeftMouseJustDown())) {
+			(m_bShowMouse && CPad::GetPad(0)->GetLeftMouseJustDown() &&
+			 CheckHover(MENU_X(50.0f), MENU_X(210.0f), SCREEN_SCALE_FROM_BOTTOM(130.0f), SCREEN_SCALE_FROM_BOTTOM(98.0f)))) {
 			ResetHelperText();
 			DMAudio.PlayFrontEndSound(SOUND_FRONTEND_MENU_BACK, 0);
 			ThingsToDoBeforeGoingBack();
