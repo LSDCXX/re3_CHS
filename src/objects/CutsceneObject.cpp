@@ -12,6 +12,7 @@
 #include "Shadows.h"
 #include "Timecycle.h"
 #include "CutsceneObject.h"
+#include "CutsceneHand.h"
 
 CCutsceneObject::CCutsceneObject(void)
 {
@@ -85,6 +86,7 @@ CCutsceneObject::PreRender(void)
 void
 CCutsceneObject::Render(void)
 {
+	CCutsceneHand::RenderFor(this);
 #ifdef PED_SKIN
 	if(IsClumpSkinned(GetClump())){
 		if(bRenderLeftHand) RenderLimb(BONE_Lhand);

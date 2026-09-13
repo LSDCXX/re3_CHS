@@ -265,6 +265,7 @@ project "re3"
 	files { addSrcFiles("src/math") }
 	files { addSrcFiles("src/modelinfo") }
 	files { addSrcFiles("src/objects") }
+	files { addSrcFiles("src/objects/xmllib") }
 	files { addSrcFiles("src/peds") }
 	files { addSrcFiles("src/renderer") }
 	files { addSrcFiles("src/rw") }
