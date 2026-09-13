@@ -17,6 +17,7 @@
 #include "PlayerPed.h"
 #include "Wanted.h"
 #include "CutsceneHead.h"
+#include "CutsceneHand.h"
 #include "RpAnimBlend.h"
 #include "ModelIndices.h"
 #include "TempColModels.h"
@@ -185,6 +186,7 @@ CCutsceneMgr::LoadCutsceneData(const char *szCutsceneName)
 	CGame::DrasticTidyUpMemory(true);
 
 	strcpy(ms_cutsceneName, szCutsceneName);
+	CCutsceneHand::Init();
 	file = CFileMgr::OpenFile("ANIM\\CUTS.IMG", "rb");
 
 	// Load animations
@@ -306,6 +308,7 @@ CCutsceneMgr::AddCutsceneHead(CObject *pObject, int modelId)
 	pHead->SetModelIndex(modelId);
 	CWorld::Add(pHead);
 	ms_pCutsceneObjects[ms_numCutsceneObjs++] = pHead;
+	CCutsceneHand::Attach((CCutsceneObject*)pObject);
 	return pHead;
 }
 
@@ -343,6 +346,8 @@ void
 CCutsceneMgr::DeleteCutsceneData(void)
 {
 	if (!ms_loaded) return;
+
+	CCutsceneHand::CleanUp();
 
 	ms_cutsceneProcessing = false;
 	ms_useLodMultiplier = false;

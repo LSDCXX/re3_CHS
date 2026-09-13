@@ -47,7 +47,8 @@ RwReal RwV3dDotProduct(const RwV3d * ina, const RwV3d * inb) { return dot(*ina, 
 //void RwV3dCrossProduct(RwV3d * out, const RwV3d * ina, const RwV3d * inb);
 RwV3d *RwV3dTransformPoints(RwV3d * pointsOut, const RwV3d * pointsIn, RwInt32 numPoints, const RwMatrix * matrix)
 	{ V3d::transformPoints(pointsOut, pointsIn, numPoints, matrix); return pointsOut; }
-//RwV3d *RwV3dTransformVectors(RwV3d * vectorsOut, const RwV3d * vectorsIn, RwInt32 numPoints, const RwMatrix * matrix);
+RwV3d *RwV3dTransformVectors(RwV3d * vectorsOut, const RwV3d * vectorsIn, RwInt32 numPoints, const RwMatrix * matrix)
+	{ V3d::transformVectors(vectorsOut, vectorsIn, numPoints, matrix); return vectorsOut; }
 
 
 
@@ -684,6 +685,7 @@ RwV3d  *RpMorphTargetGetVertexNormals(const RpMorphTarget *morphTarget) { return
 RpTriangle  *RpGeometryGetTriangles(const RpGeometry *geometry) { return geometry->triangles; }
 RwInt32 RpGeometryGetNumTriangles(const RpGeometry *geometry) { return geometry->numTriangles; }
 RpMaterial  *RpGeometryGetMaterial(const RpGeometry *geometry, RwInt32 matNum) { return geometry->matList.materials[matNum]; }
+RwInt32 RpGeometryGetNumMaterials(const RpGeometry *geometry) { return geometry->matList.numMaterials; }
 const RpGeometry  *RpGeometryTriangleSetVertexIndices(const RpGeometry *geometry, RpTriangle *triangle, RwUInt16 vert1, RwUInt16 vert2, RwUInt16 vert3)
 	{ triangle->v[0] = vert1; triangle->v[1] = vert2; triangle->v[2] = vert3; return geometry; }
 RpGeometry  *RpGeometryTriangleSetMaterial(RpGeometry *geometry, RpTriangle *triangle, RpMaterial *material) {

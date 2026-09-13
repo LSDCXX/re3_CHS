@@ -1535,16 +1535,19 @@ CRadar::DrawYouAreHereSprite(float x, float y)
 void
 CRadar::ToggleTargetMarker(float x, float y)
 {
+	if (TargetMarkerId != -1) {
+		uint16 index = (uint16)TargetMarkerId;
+		if (index >= NUMRADARBLIPS || GetActualBlipArrayIndex(TargetMarkerId) < 0 || !ms_RadarTrace[index].m_bInUse)
+			TargetMarkerId = -1;
+	}
 	if (TargetMarkerId == -1) {
 		int nextBlip;
 		for (nextBlip = NUMRADARBLIPS-1; nextBlip >= 0; nextBlip--) {
 			if (!ms_RadarTrace[nextBlip].m_bInUse)
 				break;
 		}
-#ifdef FIX_BUGS
-		if (nextBlip == 0)
+		if (nextBlip < 0)
 			return;
-#endif
 		ms_RadarTrace[nextBlip].m_eBlipType = BLIP_COORD;
 		ms_RadarTrace[nextBlip].m_nColor = RADAR_TRACE_GRAY;
 		ms_RadarTrace[nextBlip].m_bDim = 0;

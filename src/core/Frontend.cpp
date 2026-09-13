@@ -30,6 +30,7 @@
 #include "Renderer.h"
 #include "CdStream.h"
 #include "Radar.h"
+#include "MenuMap.h"
 #include "Stats.h"
 #include "Messages.h"
 #include "FileLoader.h"
@@ -2543,6 +2544,9 @@ CMenuManager::DrawControllerSetupScreen()
 void
 CMenuManager::DrawFrontEnd()
 {
+#ifdef MENU_MAP
+	if (m_nCurrScreen != MENUPAGE_MAP) CMenuMap::Shutdown();
+#endif
 	CFont::SetAlphaFade(255.0f);
 
 #ifdef PS2_LIKE_MENU
@@ -3661,9 +3665,7 @@ CMenuManager::LoadAllTextures()
 #ifdef MENU_MAP
 	static bool menuOptionAdded = false;
 	for (int i = 0; i < ARRAY_SIZE(MapFilenames); i++) {
-		RwTexture *firstTile;
-		if (!menuOptionAdded && (firstTile = RwTextureRead(MapFilenames[i][0], MapFilenames[i][1]))) {
-			RwTextureDestroy(firstTile);
+		if (!menuOptionAdded) {
 			FrontendOptionSetCursor(MENUPAGE_PAUSE_MENU, 2, false);
 			FrontendOptionAddBuiltinAction("FEG_MAP", MENUACTION_CHANGEMENU, MENUPAGE_MAP, SAVESLOT_NONE);
 			menuOptionAdded = true;
@@ -4156,10 +4158,18 @@ CMenuManager::Process(void)
 	InitialiseChangedLanguageSettings();
 
 	// Just a hack by R* to not make game continuously resume/pause. But we it seems we can live with it.
-	if (CPad::GetPad(0)->GetEscapeJustDown())
+	if (CPad::GetPad(0)->GetEscapeJustDown()
+#ifdef MENU_MAP
+		&& !(m_bMenuActive && m_nCurrScreen == MENUPAGE_MAP)
+#endif
+	)
 		RequestFrontEndStartUp();
 
 	SwitchMenuOnAndOff();
+#ifdef MENU_MAP
+	if (!m_bMenuActive || m_nCurrScreen != MENUPAGE_MAP)
+		CMenuMap::Shutdown();
+#endif
 
 	// Be able to re-open menu correctly.
 	if (m_bMenuActive) {
@@ -4354,6 +4364,21 @@ CMenuManager::ProcessButtonPresses(void)
 	if (m_nMousePosX > SCREEN_WIDTH) m_nMousePosX = SCREEN_WIDTH;
 	if (m_nMousePosY < 0) m_nMousePosY = 0;
 	if (m_nMousePosY > SCREEN_HEIGHT) m_nMousePosY = SCREEN_HEIGHT;
+
+#ifdef MENU_MAP
+	// Leave the map through Escape or the visible Back button, staying paused.
+	if (m_nCurrScreen == MENUPAGE_MAP) {
+		if (CPad::GetPad(0)->GetEscapeJustDown() ||
+			(m_bShowMouse && m_nHoverOption == HOVEROPTION_RANDOM_ITEM && CPad::GetPad(0)->GetLeftMouseJustDown())) {
+			ResetHelperText();
+			DMAudio.PlayFrontEndSound(SOUND_FRONTEND_MENU_BACK, 0);
+			ThingsToDoBeforeGoingBack();
+			CMenuMap::Shutdown();
+			ChangeScreen(MENUPAGE_PAUSE_MENU, 2, true, true);
+		}
+		return;
+	}
+#endif
 
 	if (hasNativeList(m_nCurrScreen)) {
 		// Not split to seperate function in III as in VC, but we need it for scrollable pages :)
@@ -5693,7 +5718,10 @@ CMenuManager::SwitchMenuOnAndOff()
 	bool menuWasActive = GetIsMenuActive();
 
 	// Reminder: You need REGISTER_START_BUTTON defined to make it work.
-	if (CPad::GetPad(0)->GetStartJustDown() 
+	if (CPad::GetPad(0)->GetStartJustDown()
+#ifdef MENU_MAP
+		&& !(m_bMenuActive && m_nCurrScreen == MENUPAGE_MAP)
+#endif
 #ifdef FIX_BUGS
 		&& !m_bGameNotLoaded
 #endif
@@ -5782,6 +5810,9 @@ CMenuManager::SwitchMenuOnAndOff()
 void
 CMenuManager::UnloadTextures()
 {
+#ifdef MENU_MAP
+	CMenuMap::Shutdown();
+#endif
 	if (!m_bSpritesLoaded)
 		return;
 
@@ -6369,215 +6400,11 @@ CMenuManager::PrintController(void)
 #endif
 
 #ifdef MENU_MAP
-
-#define ZOOM(x, y, in) \
-	do { \
-		if(fMapSize > SCREEN_HEIGHT * 3.0f && in) \
-			break; \
-		float z2 = in? 1.1f : 1.f/1.1f; \
-		fMapCenterX += (x - fMapCenterX) * (1.0f - z2); \
-		fMapCenterY += (y - fMapCenterY) * (1.0f - z2); \
-		\
-		if (fMapSize < SCREEN_HEIGHT / 2 && !in) \
-			break; \
-		\
-		fMapSize *= z2; \
-	} while(0) \
-
 void
 CMenuManager::PrintMap(void)
 {
-	CFont::SetJustifyOn();
-	bMenuMapActive = true;
-	CRadar::InitFrontEndMap();
-
-	if (m_nMenuFadeAlpha < 255 && fMapCenterX == 0.f && fMapCenterY == 0.f) {
-		// Just entered. We need to do these transformations in here, because Radar knows whether map is active or not
-		CVector2D radarSpacePlayer;
-		CVector2D screenSpacePlayer;
-		CRadar::TransformRealWorldPointToRadarSpace(radarSpacePlayer, CVector2D(FindPlayerCoors()));
-		CRadar::TransformRadarPointToScreenSpace(screenSpacePlayer, radarSpacePlayer);
-		fMapCenterX = (-screenSpacePlayer.x) + SCREEN_WIDTH / 2;
-		fMapCenterY = (-screenSpacePlayer.y) + SCREEN_HEIGHT / 2;
-	}
-
-	// Because fMapSize is half of the map length, and map consists of 3x3 tiles.
-	float halfTile = fMapSize / 3.0f;
-
-	// Darken background a bit
-	CSprite2d::DrawRect(CRect(0, 0,
-		SCREEN_WIDTH, SCREEN_HEIGHT),
-		CRGBA(0, 0, 0, FadeIn(128)));
-
-	RwRenderStateSet(rwRENDERSTATETEXTUREFILTER, (void*)rwFILTERLINEAR);
-
-	if (SCREEN_WIDTH >= fMapCenterX - fMapSize || SCREEN_HEIGHT >= fMapCenterY - fMapSize) {
-		m_aMapSprites[MAPTOP1].Draw(CRect(fMapCenterX - fMapSize, fMapCenterY - fMapSize,
-			fMapCenterX - halfTile, fMapCenterY - halfTile), CRGBA(255, 255, 255, FadeIn(255)));
-	}
-
-	if (SCREEN_WIDTH >= fMapCenterX - halfTile || SCREEN_HEIGHT >= fMapCenterY - fMapSize) {
-		m_aMapSprites[MAPTOP2].Draw(CRect(fMapCenterX - halfTile, fMapCenterY - fMapSize,
-			fMapCenterX + halfTile, fMapCenterY - halfTile), CRGBA(255, 255, 255, FadeIn(255)));
-	}
-
-	if (SCREEN_WIDTH >= fMapCenterX + halfTile || SCREEN_HEIGHT >= fMapCenterY - fMapSize) {
-		m_aMapSprites[MAPTOP3].Draw(CRect(fMapCenterX + halfTile, fMapCenterY - fMapSize,
-			fMapCenterX + fMapSize, fMapCenterY - halfTile), CRGBA(255, 255, 255, FadeIn(255)));
-	}
-
-	if (SCREEN_WIDTH >= fMapCenterX - fMapSize || SCREEN_HEIGHT >= fMapCenterY - halfTile) {
-		m_aMapSprites[MAPMID1].Draw(CRect(fMapCenterX - fMapSize, fMapCenterY - halfTile,
-			fMapCenterX - halfTile, fMapCenterY + halfTile), CRGBA(255, 255, 255, FadeIn(255)));
-	}
-
-	if (SCREEN_WIDTH >= fMapCenterX - halfTile || SCREEN_HEIGHT >= fMapCenterY - halfTile) {
-		m_aMapSprites[MAPMID2].Draw(CRect(fMapCenterX - halfTile, fMapCenterY - halfTile,
-			fMapCenterX + halfTile, fMapCenterY + halfTile), CRGBA(255, 255, 255, FadeIn(255)));
-	}
-
-	if (SCREEN_WIDTH >= fMapCenterX + halfTile || SCREEN_HEIGHT >= fMapCenterY - halfTile) {
-		m_aMapSprites[MAPMID3].Draw(CRect(fMapCenterX + halfTile, fMapCenterY - halfTile,
-			fMapCenterX + fMapSize, fMapCenterY + halfTile), CRGBA(255, 255, 255, FadeIn(255)));
-	}
-
-	if (SCREEN_WIDTH >= fMapCenterX - fMapSize || SCREEN_HEIGHT >= fMapCenterY + halfTile) {
-		m_aMapSprites[MAPBOT1].Draw(CRect(fMapCenterX - fMapSize, fMapCenterY + halfTile,
-			fMapCenterX - halfTile, fMapCenterY + fMapSize), CRGBA(255, 255, 255, FadeIn(255)));
-	}
-
-	if (SCREEN_WIDTH >= fMapCenterX - halfTile || SCREEN_HEIGHT >= fMapCenterY + halfTile) {
-		m_aMapSprites[MAPBOT2].Draw(CRect(fMapCenterX - halfTile, fMapCenterY + halfTile,
-			fMapCenterX + halfTile, fMapCenterY + fMapSize), CRGBA(255, 255, 255, FadeIn(255)));
-	}
-
-	if (SCREEN_WIDTH >= fMapCenterX + halfTile || SCREEN_HEIGHT >= fMapCenterY + halfTile) {
-		m_aMapSprites[MAPBOT3].Draw(CRect(fMapCenterX + halfTile, fMapCenterY + halfTile,
-			fMapCenterX + fMapSize, fMapCenterY + fMapSize), CRGBA(255, 255, 255, FadeIn(255)));
-	}
-
-	CRadar::DrawBlips();
-	static CVector2D mapCrosshair;
-
-	if (m_nMenuFadeAlpha != 255 && !m_bShowMouse) {
-		mapCrosshair.x = SCREEN_WIDTH / 2;
-		mapCrosshair.y = SCREEN_HEIGHT / 2;
-	} else if (m_bShowMouse) {
-		mapCrosshair.x = m_nMousePosX;
-		mapCrosshair.y = m_nMousePosY;
-	}
-
-	CSprite2d::DrawRect(CRect(mapCrosshair.x - MENU_X(1.0f), 0.0f,
-		mapCrosshair.x + MENU_X(1.0f), SCREEN_HEIGHT),
-		CRGBA(0, 0, 0, 150));
-	CSprite2d::DrawRect(CRect(0.0f, mapCrosshair.y + MENU_X(1.0f),
-		SCREEN_WIDTH, mapCrosshair.y - MENU_X(1.0f)),
-		CRGBA(0, 0, 0, 150));
-
-	// Adding marker
-	if (m_nMenuFadeAlpha >= 255) {
-		if (CPad::GetPad(0)->GetRightMouseJustDown() || CPad::GetPad(0)->GetCrossJustDown()) {
-			if (mapCrosshair.y > fMapCenterY - fMapSize && mapCrosshair.y < fMapCenterY + fMapSize &&
-				mapCrosshair.x > fMapCenterX - fMapSize && mapCrosshair.x < fMapCenterX + fMapSize) {
-
-				float diffX = fMapCenterX - fMapSize, diffY = fMapCenterY - fMapSize;
-				float x = ((mapCrosshair.x - diffX) / (fMapSize * 2)) * 4000.0f - 2000.0f;
-				float y = 2000.0f - ((mapCrosshair.y - diffY) / (fMapSize * 2)) * 4000.0f;
-				CRadar::ToggleTargetMarker(x, y);
-				DMAudio.PlayFrontEndSound(SOUND_FRONTEND_MENU_SETTING_CHANGE, 0);
-			}
-		}
-	}
-
-	if (CPad::GetPad(0)->GetLeftMouse()) {
-		fMapCenterX += m_nMousePosX - m_nMouseOldPosX;
-		fMapCenterY += m_nMousePosY - m_nMouseOldPosY;
-	} else if (CPad::GetPad(0)->GetLeft() || CPad::GetPad(0)->GetDPadLeft()) {
-		fMapCenterX += 15.0f;
-	} else if (CPad::GetPad(0)->GetRight() || CPad::GetPad(0)->GetDPadRight()) {
-		fMapCenterX -= 15.0f;
-	} else if (CPad::GetPad(0)->GetLeftStickX()) {
-		fMapCenterX -= CPad::GetPad(0)->GetLeftStickX() / 128.0f * 20.0f;
-	}
-
-	if (CPad::GetPad(0)->GetUp() || CPad::GetPad(0)->GetDPadUp()) {
-		fMapCenterY += 15.0f;
-	} else if (CPad::GetPad(0)->GetDown() || CPad::GetPad(0)->GetDPadDown()) {
-		fMapCenterY -= 15.0f;
-	} else if (CPad::GetPad(0)->GetLeftStickY()) {
-		fMapCenterY -= CPad::GetPad(0)->GetLeftStickY() / 128.0f * 20.0f;
-	}
-
-	if (CPad::GetPad(0)->GetMouseWheelDown() || CPad::GetPad(0)->GetPageDown() || CPad::GetPad(0)->GetRightShoulder2()) {
-		if (CPad::GetPad(0)->GetMouseWheelDown())
-			ZOOM(mapCrosshair.x, mapCrosshair.y, false);
-		else
-			ZOOM(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, false);
-	} else if (CPad::GetPad(0)->GetMouseWheelUp() || CPad::GetPad(0)->GetPageUp() || CPad::GetPad(0)->GetRightShoulder1()) {
-		if (CPad::GetPad(0)->GetMouseWheelUp())
-			ZOOM(mapCrosshair.x, mapCrosshair.y, true);
-		else
-			ZOOM(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, true);
-	}
-	
-	if (fMapCenterX - fMapSize > SCREEN_WIDTH / 2)
-		fMapCenterX = fMapSize + SCREEN_WIDTH / 2;
-
-	if (fMapCenterX + fMapSize < SCREEN_WIDTH / 2)
-		fMapCenterX = SCREEN_WIDTH / 2 - fMapSize;
-
-	if (fMapCenterY + fMapSize < SCREEN_HEIGHT - MENU_Y(60.0f))
-		fMapCenterY = SCREEN_HEIGHT - MENU_Y(60.0f) - fMapSize;
-	
-	fMapCenterY = Min(fMapCenterY, fMapSize); // To not show beyond north border
-
-	bMenuMapActive = false;
-
-	CSprite2d::DrawRect(CRect(MENU_X(14.0f), SCREEN_STRETCH_FROM_BOTTOM(95.0f),
-		SCREEN_STRETCH_FROM_RIGHT(11.0f), SCREEN_STRETCH_FROM_BOTTOM(59.0f)),
-		CRGBA(235, 170, 50, 255));
-
-	CFont::SetScale(MENU_X(0.4f), MENU_Y(0.7f));
-	CFont::SetFontStyle(FONT_LOCALE(FONT_BANK));
-	CFont::SetColor(CRGBA(HEADER_COLOR.r, HEADER_COLOR.g, HEADER_COLOR.b, FadeIn(255)));
-
-	float nextX = MENU_X(30.0f), nextY = 95.0f;
-	wchar *text;
-#ifdef MORE_LANGUAGES
-#define TEXT_PIECE(key,extraSpace) \
-	text = TheText.Get(key);\
-	CFont::PrintString(nextX, SCREEN_SCALE_FROM_BOTTOM(nextY), text);\
-	if (CFont::IsJapanese())\
-		nextX += CFont::GetStringWidth_Jap(text) + MENU_X(extraSpace);\
-	else\
-		nextX += CFont::GetStringWidth(text, true) + MENU_X(extraSpace);
-#else
-#define TEXT_PIECE(key,extraSpace) \
-	text = TheText.Get(key); CFont::PrintString(nextX, SCREEN_SCALE_FROM_BOTTOM(nextY), text); nextX += CFont::GetStringWidth(text, true) + MENU_X(extraSpace);
-#endif
-
-	TEXT_PIECE("FEC_MWF", 3.0f);
-	TEXT_PIECE("FEC_PGU", 1.0f);
-	TEXT_PIECE("FEC_IBT", 1.0f);
-	TEXT_PIECE("FEC_ZIN", 20.0f);
-	TEXT_PIECE("FEC_MWB", 3.0f);
-	TEXT_PIECE("FEC_PGD", 1.0f);
-	TEXT_PIECE("FEC_IBT", 1.0f);
-	CFont::PrintString(nextX, SCREEN_SCALE_FROM_BOTTOM(nextY), TheText.Get("FEC_ZOT")); nextX = MENU_X(30.0f); nextY -= 11.0f;
-	TEXT_PIECE("FEC_UPA", 2.0f);
-	TEXT_PIECE("FEC_DWA", 2.0f);
-	TEXT_PIECE("FEC_LFA", 2.0f);
-	TEXT_PIECE("FEC_RFA", 2.0f);
-	TEXT_PIECE("FEC_MSL", 1.0f);
-	TEXT_PIECE("FEC_IBT", 1.0f);
-	CFont::PrintString(nextX, SCREEN_SCALE_FROM_BOTTOM(nextY), TheText.Get("FEC_MOV")); nextX = MENU_X(30.0f); nextY -= 11.0f;
-	TEXT_PIECE("FEC_MSR", 2.0f);
-	TEXT_PIECE("FEC_IBT", 1.0f);
-	CFont::PrintString(nextX, SCREEN_SCALE_FROM_BOTTOM(nextY), TheText.Get("FEM_TWP"));
-#undef TEXT_PIECE
+	CMenuMap::Draw(*this);
 }
-
-#undef ZOOM
 #endif
 
 // rowIdx 99999 returns total numbers of rows. otherwise it returns 0.
