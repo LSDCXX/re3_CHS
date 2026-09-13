@@ -143,12 +143,17 @@ std::basic_string<wchar> Label(int sprite) {
 		sprite >= 0 && sprite < (int)ARRAY_SIZE(englishLabels) ? englishLabels[sprite] : "Marker"));
 }
 CRGBA Fade(CMenuManager &menu, CRGBA color) { color.a = menu.FadeIn(color.a); return color; }
-void Text(float x, float y, std::basic_string<wchar> text, float width, CRGBA color) {
+float TextWidth(std::basic_string<wchar> text, float fontSize = 1.0f) {
+	CFont::SetPropOn(); CFont::SetFontStyle(FONT_BANK);
+	CFont::SetScale(Scale(0.34f)*fontSize,Scale(0.65f)*fontSize);
+	return CFont::GetStringWidth(&text[0], true);
+}
+void Text(float x, float y, std::basic_string<wchar> text, float width, CRGBA color, float fontSize = 1.0f) {
 	CFont::SetBackgroundOff(); CFont::SetPropOn(); CFont::SetCentreOff();
 	CFont::SetRightJustifyOff(); CFont::SetJustifyOff(); CFont::SetFontStyle(FONT_BANK);
 	CFont::SetWrapx(SCREEN_WIDTH - Scale(8)); CFont::SetColor(color);
 	CFont::SetDropShadowPosition(0);
-	float sx = Scale(0.34f), sy = Scale(0.65f);
+	float sx = Scale(0.34f)*fontSize, sy = Scale(0.65f)*fontSize;
 	CFont::SetScale(sx,sy);
 	float measured = CFont::GetStringWidth(&text[0], true);
 	if(measured > width) CFont::SetScale(sx * width / measured, sy * width / measured);
@@ -229,7 +234,14 @@ void Blip(CMenuManager &menu, int sprite, const CVector &pos, CRGBA color) {
 	for(size_t i=0;i<legend.size();i++) if(legend[i].sprite == sprite) {found=true;break;}
 	if(!found && legend.size()<64) legend.push_back({sprite,color});
 	Point p=view.ToScreen(pos.x,pos.y);
-	Icon(sprite,p,Fade(menu,color),Scale(7));
+	if(sprite == RADAR_SPRITE_CENTRE) {
+		// North-up map: match the radar sprite orientation with its half-turn offset.
+		float margin=Scale(12);
+		if(p.x>=viewport.left+margin && p.x<=viewport.right-margin &&
+			p.y>=viewport.top+margin && p.y<=viewport.bottom-margin)
+			CRadar::DrawRotatingRadarSprite(&CRadar::CentreSprite,p.x,p.y,PI+FindPlayerHeading(),menu.FadeIn(255));
+	} else
+		Icon(sprite,p,Fade(menu,color),Scale(7));
 	float distance=SQR(cursor.x-p.x)+SQR(cursor.y-p.y);
 	if(Inside(p) && Inside(cursor) && distance<hoverDistance) {hoverId=sprite;hoverPoint=p;hoverDistance=distance;}
 }
@@ -352,20 +364,24 @@ void CMenuMap::Draw(CMenuManager &menu) {
 		CSprite2d::DrawRect(CRect(viewport.left,cursor.y-t,viewport.right,cursor.y+t),col);
 	}
 	if(showLegend && settings.legend) {
-		int rows=Min((int)legend.size(),14),columns=((int)legend.size()+13)/14;
-		float left=SCREEN_WIDTH-Scale(174*columns+12), top=viewport.top+Scale(8);
-		CSprite2d::DrawRect(CRect(left,top,SCREEN_WIDTH-Scale(8),top+Scale(rows*17+8)),Fade(menu,CRGBA(0,0,0,205)));
+		int columns=Min((int)legend.size(),2),rows=((int)legend.size()+1)/2;
+		float width=Scale(200*columns+8);
+		float left=(SCREEN_WIDTH-width)/2, top=Scale(70);
+		CSprite2d::DrawRect(CRect(left,top,left+width,top+Scale(rows*22+12)),Fade(menu,CRGBA(0,0,0,180)));
 		for(size_t i=0;i<legend.size();i++) {
-			float x=left+Scale(12+(i/14)*174),y=top+Scale(12+(i%14)*17);
-			Icon(legend[i].sprite,{x,y},Fade(menu,legend[i].color),Scale(6));
-			Text(x+Scale(12),y-Scale(6),Label(legend[i].sprite),Scale(147),Fade(menu,CRGBA(255,255,255,255)));
+			float x=left+Scale(15+(i%columns)*200),y=top+Scale(16+(i/columns)*22);
+			Icon(legend[i].sprite,{x,y},Fade(menu,legend[i].color),Scale(7.5f));
+			Text(x+Scale(15),y-Scale(8),Label(legend[i].sprite),Scale(168),Fade(menu,CRGBA(255,255,255,255)),1.25f);
 		}
 	}
 	if(hoverId!=-999 && menu.m_bShowMouse) {
-		float x=Bound(hoverPoint.x+Scale(12),Scale(8),SCREEN_WIDTH-Scale(190));
+		std::basic_string<wchar> label=Label(hoverId);
+		float textWidth=Min(TextWidth(label),Scale(200));
+		float width=textWidth+Scale(12);
+		float x=Bound(hoverPoint.x+Scale(12),Scale(8),SCREEN_WIDTH-width-Scale(8));
 		float y=Bound(hoverPoint.y-Scale(29),viewport.top,viewport.bottom-Scale(25));
-		CSprite2d::DrawRect(CRect(x,y,x+Scale(182),y+Scale(23)),Fade(menu,CRGBA(0,0,0,230)));
-		Text(x+Scale(7),y+Scale(4),Label(hoverId),Scale(168),Fade(menu,CRGBA(255,230,160,255)));
+		CSprite2d::DrawRect(CRect(x,y,x+width,y+Scale(20)),Fade(menu,CRGBA(0,0,0,105)));
+		Text(x+Scale(6),y+Scale(3),label,textWidth,Fade(menu,CRGBA(255,230,160,255)));
 	}
 	// Match the original re3 map footer; the native page title is drawn next.
 	CSprite2d::DrawRect(CRect(SCREEN_SCALE_X(14.0f), SCREEN_SCALE_FROM_BOTTOM(95.0f),
@@ -385,9 +401,13 @@ void CMenuMap::Draw(CMenuManager &menu) {
 		CZone *zone=CTheZones::FindSmallestZonePositionType(&position,ZONE_NAVIG);
 		if(!zone) zone=CTheZones::FindSmallestZonePositionType(&position,ZONE_DEFAULT);
 		if(zone) {
-			float x=SCREEN_WIDTH-Scale(290), y=SCREEN_HEIGHT-Scale(45);
-			CSprite2d::DrawRect(CRect(x-Scale(5),y-Scale(3),x+Scale(205),y+Scale(16)),Fade(menu,CRGBA(0,0,0,170)));
-			Text(x,y,std::basic_string<wchar>(zone->GetTranslatedName()),Scale(200),Fade(menu,settings.zone));
+			std::basic_string<wchar> name(zone->GetTranslatedName());
+			const float zoneFontSize=1.35f;
+			float width=Min(TextWidth(name,zoneFontSize),Scale(270));
+			float x=SCREEN_WIDTH-SCREEN_SCALE_X(20)-width;
+			float y=SCREEN_SCALE_FROM_BOTTOM(120.0f);
+			Text(x+Scale(1),y+Scale(1),name,width,Fade(menu,CRGBA(0,0,0,110)),zoneFontSize);
+			Text(x,y,name,width,Fade(menu,settings.zone),zoneFontSize);
 		}
 	}
 	CFont::DrawFonts();CFont::Details=savedFont;
