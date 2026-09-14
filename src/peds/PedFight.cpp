@@ -1,4 +1,5 @@
 #include "common.h"
+#include "ClassicAxis.h"
 
 #include "main.h"
 #include "RpAnimBlend.h"
@@ -158,7 +159,7 @@ CPed::SetPointGunAt(CEntity *to)
 #endif
 	}
 
-	if (m_nPedState == PED_AIM_GUN || bIsDucking || m_nWaitState == WAITSTATE_PLAYANIM_DUCK)
+	if (m_nPedState == PED_AIM_GUN || (bIsDucking && !CClassicAxis::Crouched(this)) || m_nWaitState == WAITSTATE_PLAYANIM_DUCK)
 		return;
 
 	if (m_nPedState != PED_ATTACK)
@@ -166,7 +167,9 @@ CPed::SetPointGunAt(CEntity *to)
 
 	SetPedState(PED_AIM_GUN);
 	bIsPointingGunAt = true;
-	CWeaponInfo *curWeapon = CWeaponInfo::GetWeaponInfo(GetWeapon()->m_eWeaponType);
+	CWeaponInfo axisWeapon = *CWeaponInfo::GetWeaponInfo(GetWeapon()->m_eWeaponType);
+	CClassicAxis::AdjustWeaponInfo(this, axisWeapon);
+	CWeaponInfo *curWeapon = &axisWeapon;
 	SetMoveState(PEDMOVE_NONE);
 
 	CAnimBlendAssociation *aimAssoc;
@@ -192,7 +195,9 @@ CPed::SetPointGunAt(CEntity *to)
 void
 CPed::PointGunAt(void)
 {
-	CWeaponInfo *weaponInfo = CWeaponInfo::GetWeaponInfo(GetWeapon()->m_eWeaponType);
+	CWeaponInfo axisWeapon = *CWeaponInfo::GetWeaponInfo(GetWeapon()->m_eWeaponType);
+	CClassicAxis::AdjustWeaponInfo(this, axisWeapon);
+	CWeaponInfo *weaponInfo = &axisWeapon;
 	CAnimBlendAssociation *weaponAssoc = RpAnimBlendClumpGetAssociation(GetClump(), weaponInfo->m_AnimToPlay);
 	if (!weaponAssoc || weaponAssoc->blendDelta < 0.0f)
 		weaponAssoc = RpAnimBlendClumpGetAssociation(GetClump(), weaponInfo->m_Anim2ToPlay);
@@ -213,6 +218,7 @@ CPed::ClearPointGunAt(void)
 {
 	CAnimBlendAssociation *animAssoc;
 	CWeaponInfo *weaponInfo;
+	CWeaponInfo axisWeapon;
 
 	ClearLookFlag();
 	ClearAimFlag();
@@ -226,7 +232,9 @@ CPed::ClearPointGunAt(void)
 		RestorePreviousState();
 	}
 #endif
-		weaponInfo = CWeaponInfo::GetWeaponInfo(GetWeapon()->m_eWeaponType);
+		axisWeapon = *CWeaponInfo::GetWeaponInfo(GetWeapon()->m_eWeaponType);
+		CClassicAxis::AdjustWeaponInfo(this, axisWeapon);
+		weaponInfo = &axisWeapon;
 		animAssoc = RpAnimBlendClumpGetAssociation(GetClump(), weaponInfo->m_AnimToPlay);
 		if (!animAssoc || animAssoc->blendDelta < 0.0f) {
 			animAssoc = RpAnimBlendClumpGetAssociation(GetClump(), weaponInfo->m_Anim2ToPlay);
@@ -270,7 +278,9 @@ CPed::SetAttack(CEntity *victim)
 		return;
 	}
 
-	CWeaponInfo *curWeapon = CWeaponInfo::GetWeaponInfo(GetWeapon()->m_eWeaponType);
+	CWeaponInfo axisWeapon = *CWeaponInfo::GetWeaponInfo(GetWeapon()->m_eWeaponType);
+	CClassicAxis::AdjustWeaponInfo(this, axisWeapon);
+	CWeaponInfo *curWeapon = &axisWeapon;
 	if (curWeapon->m_eWeaponFire == WEAPON_FIRE_INSTANT_HIT && !IsPlayer()) {
 		if (GetWeapon()->HitsGround(this, nil, victim))
 			return;
@@ -397,7 +407,7 @@ CPed::SetAttack(CEntity *victim)
 void
 CPed::ClearAttack(void)
 {
-	if (m_nPedState != PED_ATTACK || bIsDucking || m_nWaitState == WAITSTATE_PLAYANIM_DUCK)
+	if (m_nPedState != PED_ATTACK || (bIsDucking && !CClassicAxis::Crouched(this)) || m_nWaitState == WAITSTATE_PLAYANIM_DUCK)
 		return;
 
 #ifdef VC_PED_PORTS
@@ -407,7 +417,9 @@ CPed::ClearAttack(void)
 		SetPointGunAt(nil);
 	} else
 #endif
-	if (bIsPointingGunAt) {
+	if (CClassicAxis::Aiming(this)) {
+		SetPointGunAt(m_pPointGunAt);
+	} else if (bIsPointingGunAt) {
 		if (m_pLookTarget)
 			SetPointGunAt(m_pLookTarget);
 		else
@@ -422,10 +434,12 @@ CPed::ClearAttack(void)
 void
 CPed::ClearAttackByRemovingAnim(void)
 {
-	if (m_nPedState != PED_ATTACK || bIsDucking)
+	if (m_nPedState != PED_ATTACK || (bIsDucking && !CClassicAxis::Crouched(this)))
 		return;
 
-	CWeaponInfo *weapon = CWeaponInfo::GetWeaponInfo(GetWeapon()->m_eWeaponType);
+	CWeaponInfo axisWeapon = *CWeaponInfo::GetWeaponInfo(GetWeapon()->m_eWeaponType);
+	CClassicAxis::AdjustWeaponInfo(this, axisWeapon);
+	CWeaponInfo *weapon = &axisWeapon;
 	CAnimBlendAssociation *weaponAssoc = RpAnimBlendClumpGetAssociation(GetClump(), weapon->m_AnimToPlay);
 	if (!weaponAssoc) {
 		weaponAssoc = RpAnimBlendClumpGetAssociation(GetClump(), weapon->m_Anim2ToPlay);
@@ -532,6 +546,8 @@ CPed::CheckForPointBlankPeds(CPed *pedToVerify)
 void
 CPed::Attack(void)
 {
+	if (CClassicAxis::ProcessAttack(this))
+		return;
 	CAnimBlendAssociation *weaponAnimAssoc;
 	int32 weaponAnim;
 	float animStart;
@@ -544,7 +560,9 @@ CPed::Attack(void)
 	float delayBetweenAnimAndFire;
 	CVector firePos;
 
-	ourWeapon = CWeaponInfo::GetWeaponInfo(GetWeapon()->m_eWeaponType);
+	CWeaponInfo axisWeapon = *CWeaponInfo::GetWeaponInfo(GetWeapon()->m_eWeaponType);
+	CClassicAxis::AdjustWeaponInfo(this, axisWeapon);
+	ourWeapon = &axisWeapon;
 	weaponAnimAssoc = RpAnimBlendClumpGetAssociation(GetClump(), ourWeapon->m_AnimToPlay);
 	attackShouldContinue = bIsAttacking;
 	reloadAnimAssoc = nil;
@@ -560,7 +578,7 @@ CPed::Attack(void)
 	if (reloadAnim != ANIM_STD_NUM)
 		reloadAnimAssoc = RpAnimBlendClumpGetAssociation(GetClump(), reloadAnim);
 
-	if (bIsDucking)
+	if (bIsDucking && !CClassicAxis::Crouched(this))
 		return;
 
 	if (reloadAnimAssoc) {
@@ -742,6 +760,8 @@ CPed::Attack(void)
 			weaponAnimAssoc->flags &= ~ASSOC_RUNNING;
 			SetPointGunAt(m_pPointGunAt);
 #endif
+		} else if (CClassicAxis::Aiming(this) && GetWeapon()->m_eWeaponState != WEAPONSTATE_RELOADING) {
+			SetPointGunAt(m_pPointGunAt);
 #ifdef FREE_CAM
 		} else if (IsPlayer() && ((CPlayerPed*)this)->m_bFreeAimActive && GetWeapon()->m_eWeaponState != WEAPONSTATE_RELOADING) {
 			float limitedCam = CGeneral::LimitRadianAngle(-TheCamera.Orientation);

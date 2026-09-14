@@ -2655,11 +2655,52 @@ const char *NintendoSwitchButtons[][MAX_CONTROLLERACTIONS] =
 #undef CONTROLLER_BUTTONS
 #undef VFB
 
+// Use set zero only as a source of device-specific button names/icons. Gameplay
+// in Standard Controls has its own bindings and must not use the saved pad Mode.
+static const char *StandardControlLabel(uint16 action, const char **base)
+{
+	switch(action) {
+	case PED_FIREWEAPON: return base[PED_CYCLE_WEAPON_RIGHT]; // RT / R2
+	case PED_LOCK_TARGET: return base[PED_CYCLE_WEAPON_LEFT]; // LT / L2
+	case PED_CYCLE_WEAPON_LEFT: case PED_CYCLE_TARGET_LEFT: return "D-Pad LEFT";
+	case PED_CYCLE_WEAPON_RIGHT: case PED_CYCLE_TARGET_RIGHT: return "D-Pad RIGHT";
+	case GO_FORWARD: return "Left stick UP";
+	case GO_BACK: return "Left stick DOWN";
+	case GO_LEFT: return "Left stick LEFT";
+	case GO_RIGHT: return "Left stick RIGHT";
+	case PED_SNIPER_ZOOM_IN: return "Left stick UP";
+	case PED_SNIPER_ZOOM_OUT: return "Left stick DOWN";
+	case VEHICLE_ENTER_EXIT: return base[VEHICLE_ENTER_EXIT];
+	case CAMERA_CHANGE_VIEW_ALL_SITUATIONS: return base[CAMERA_CHANGE_VIEW_ALL_SITUATIONS];
+	case PED_JUMPING: return base[PED_JUMPING];
+	case PED_SPRINT: return base[PED_SPRINT];
+	case PED_LOOKBEHIND: return base[PED_LOOKBEHIND];
+#ifdef BIND_VEHICLE_FIREWEAPON
+	case VEHICLE_FIREWEAPON: return base[PED_FIREWEAPON]; // B / Circle
+#endif
+	case VEHICLE_ACCELERATE: return base[PED_CYCLE_WEAPON_RIGHT];
+	case VEHICLE_BRAKE: return base[PED_CYCLE_WEAPON_LEFT];
+	case VEHICLE_HANDBRAKE: return base[PED_SPRINT];
+	case VEHICLE_CHANGE_RADIO_STATION: return "D-Pad LEFT/RIGHT";
+	case VEHICLE_HORN: return base[VEHICLE_HORN];
+	case TOGGLE_SUBMISSIONS: return base[TOGGLE_SUBMISSIONS];
+	case VEHICLE_LOOKLEFT: return base[PED_CENTER_CAMERA_BEHIND_PLAYER]; // LB
+	case VEHICLE_LOOKRIGHT: return base[PED_LOCK_TARGET]; // RB
+	case VEHICLE_LOOKBEHIND: return "LB + RB";
+	case PED_CENTER_CAMERA_BEHIND_PLAYER: return base[PED_LOCK_TARGET];
+	case PED_1RST_PERSON_LOOK_LEFT: case VEHICLE_TURRETLEFT: return "Right stick LEFT";
+	case PED_1RST_PERSON_LOOK_RIGHT: case VEHICLE_TURRETRIGHT: return "Right stick RIGHT";
+	case PED_1RST_PERSON_LOOK_UP: case VEHICLE_TURRETUP: return "Right stick UP";
+	case PED_1RST_PERSON_LOOK_DOWN: case VEHICLE_TURRETDOWN: return "Right stick DOWN";
+	default: return nil;
+	}
+}
+
 void CControllerConfigManager::GetWideStringOfCommandKeys(uint16 action, wchar *text, uint16 leight)
 {
 #ifdef DETECT_PAD_INPUT_SWITCH
 	if (CPad::GetPad(0)->IsAffectedByController) {
-		wchar wstr[16];
+		wchar wstr[64];
 
 		const char* (*Buttons)[MAX_CONTROLLERACTIONS];
 
@@ -2699,6 +2740,20 @@ void CControllerConfigManager::GetWideStringOfCommandKeys(uint16 action, wchar *
 		}
 #endif
 
+		if(CPad::IsStandardControls()) {
+			const char *label = StandardControlLabel(action, Buttons[0]);
+			if(action == VEHICLE_LOOKBEHIND) {
+				char combo[64];
+				snprintf(combo, sizeof(combo), "%s + %s", Buttons[0][PED_CENTER_CAMERA_BEHIND_PLAYER], Buttons[0][PED_LOCK_TARGET]);
+				AsciiToUnicode(combo, wstr);
+			} else if(label) {
+				AsciiToUnicode(label, wstr);
+			}
+			if(label) {
+				CMessages::WideStringCopy(text, wstr, leight);
+				return;
+			}
+		}
 		assert(Buttons[CPad::GetPad(0)->Mode][action] != nil); // we cannot use these
 		AsciiToUnicode(Buttons[CPad::GetPad(0)->Mode][action], wstr);
 

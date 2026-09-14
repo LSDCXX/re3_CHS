@@ -514,7 +514,12 @@ cMusicManager::ServiceGameMode()
 			&& FindPlayerVehicle() != nil
 			&& !UsesPoliceRadio(FindPlayerVehicle())) {
 
-				if (CPad::GetPad(0)->ChangeStationJustDown()) {
+				if (CPad::IsStandardControls() && !CPad::GetPad(0)->ArePlayerControlsDisabled() &&
+				    CPad::GetPad(0)->GetDPadLeftJustDown()) {
+					gRetuneCounter = 30;
+					gNumRetunePresses--;
+					AudioManager.PlayOneShot(AudioManager.m_nFrontEndEntity, SOUND_FRONTEND_RADIO_CHANGE, 1.0f);
+				} else if (CPad::GetPad(0)->ChangeStationJustDown()) {
 					gRetuneCounter = 30;
 					gNumRetunePresses++;
 					AudioManager.PlayOneShot(AudioManager.m_nFrontEndEntity, SOUND_FRONTEND_RADIO_CHANGE, 1.0f);

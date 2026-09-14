@@ -113,6 +113,18 @@ CText::Unload(void)
 wchar*
 CText::Get(const char *key)
 {
+#ifdef MISSION_REPLAY
+	// PC GXT packs may lack the mobile retry prompt; no replacement GXT is needed.
+	if (strcmp(key, "FESZ_RM") == 0) {
+#ifdef CHINESE
+		static wchar retryChinese[] = {0x4efb, 0x52a1, 0x5931, 0x8d25, 0xff0c, 0x662f, 0x5426, 0x91cd, 0x8bd5, 0xff1f, 0};
+		if (CMenuManager::m_PrefsLanguage == CMenuManager::LANGUAGE_CHINESE)
+			return retryChinese;
+#endif
+		static wchar retryEnglish[] = {'R','e','t','r','y',' ','t','h','e',' ','m','i','s','s','i','o','n','?',0};
+		return retryEnglish;
+	}
+#endif
 #if defined (FIX_BUGS) || defined(FIX_BUGS_64)
 	return keyArray.Search(key, data.chars);
 #else

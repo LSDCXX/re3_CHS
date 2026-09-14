@@ -4157,8 +4157,20 @@ CMenuManager::Process(void)
 	m_bWantToRestart = false;
 	InitialiseChangedLanguageSettings();
 
+#ifdef MISSION_REPLAY
+	if (m_bMenuActive && m_nCurrScreen == MENUPAGE_MISSION_RETRY &&
+	    (CPad::GetPad(0)->GetBackJustDown() || CPad::GetPad(0)->GetEscapeJustDown() || CPad::GetPad(0)->GetStartJustDown())) {
+		doingMissionRetry = false;
+		AllowMissionReplay = MISSION_RETRY_STAGE_NORMAL;
+		RequestFrontEndShutDown();
+	}
+#endif
+
 	// Just a hack by R* to not make game continuously resume/pause. But we it seems we can live with it.
 	if (CPad::GetPad(0)->GetEscapeJustDown()
+#ifdef MISSION_REPLAY
+		&& !(m_bMenuActive && m_nCurrScreen == MENUPAGE_MISSION_RETRY)
+#endif
 #ifdef MENU_MAP
 		&& !(m_bMenuActive && m_nCurrScreen == MENUPAGE_MAP)
 #endif
@@ -4366,9 +4378,9 @@ CMenuManager::ProcessButtonPresses(void)
 	if (m_nMousePosY > SCREEN_HEIGHT) m_nMousePosY = SCREEN_HEIGHT;
 
 #ifdef MENU_MAP
-	// Leave the map through Escape or the visible Back button, staying paused.
+	// Escape, controller B and the visible Back button return to the pause menu.
 	if (m_nCurrScreen == MENUPAGE_MAP) {
-		if (CPad::GetPad(0)->GetEscapeJustDown() ||
+		if (CPad::GetPad(0)->GetEscapeJustDown() || CPad::GetPad(0)->GetBackJustDown() ||
 			(m_bShowMouse && CPad::GetPad(0)->GetLeftMouseJustDown() &&
 			 CheckHover(MENU_X(50.0f), MENU_X(210.0f), SCREEN_SCALE_FROM_BOTTOM(130.0f), SCREEN_SCALE_FROM_BOTTOM(98.0f)))) {
 			ResetHelperText();
@@ -4741,7 +4753,7 @@ CMenuManager::ProcessButtonPresses(void)
 					goBack = true;
 				}
 			} else {
-				if (CPad::GetPad(0)->GetEscapeJustDown() || (m_nCurrScreen != MENUPAGE_PAUSE_MENU && CPad::GetPad(0)->GetBackJustDown())) {
+				if (CPad::GetPad(0)->GetEscapeJustDown() || CPad::GetPad(0)->GetBackJustDown()) {
 					m_bShowMouse = false;
 					goBack = true;
 				}
@@ -5720,9 +5732,6 @@ CMenuManager::SwitchMenuOnAndOff()
 
 	// Reminder: You need REGISTER_START_BUTTON defined to make it work.
 	if (CPad::GetPad(0)->GetStartJustDown()
-#ifdef MENU_MAP
-		&& !(m_bMenuActive && m_nCurrScreen == MENUPAGE_MAP)
-#endif
 #ifdef FIX_BUGS
 		&& !m_bGameNotLoaded
 #endif

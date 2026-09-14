@@ -1,4 +1,5 @@
 #include "common.h"
+#include "ClassicAxis.h"
 
 #include "main.h"
 #include "Pools.h"
@@ -4141,6 +4142,8 @@ CPed::CanSetPedState(void)
 bool
 CPed::CanStrafeOrMouseControl(void)
 {
+	if (CClassicAxis::Aiming(this))
+		return true;
 #ifdef FREE_CAM
 	if (CCamera::bFreeCam)
 		return false;

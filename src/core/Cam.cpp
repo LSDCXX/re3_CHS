@@ -1,4 +1,5 @@
 #include "common.h"
+#include "ClassicAxis.h"
 
 #include "main.h"
 #include "Draw.h"
@@ -1494,7 +1495,8 @@ float fDefaultAlphaOrient = -0.22f;
 void
 CCam::Process_FollowPedWithMouse(const CVector &CameraTarget, float TargetOrientation, float, float)
 {
-	FOV = DefaultFOV;
+	if (ResetStatics || !CamTargetEntity->IsPed() || !CClassicAxis::Active((CPed*)CamTargetEntity))
+		FOV = DefaultFOV;
 
 	if(!CamTargetEntity->IsPed())
 		return;
@@ -1579,6 +1581,8 @@ CCam::Process_FollowPedWithMouse(const CVector &CameraTarget, float TargetOrient
 		Beta = TheCamera.m_PedOrientForBehindOrInFront + PI;
 	if(OnTrain)
 		Beta = TargetOrientation;
+
+	CClassicAxis::Camera(*this, TargetCoors, CamDist);
 
 	Front.x = Cos(Alpha) * Cos(Beta);
 	Front.y = Cos(Alpha) * Sin(Beta);

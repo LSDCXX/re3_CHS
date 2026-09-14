@@ -12,6 +12,7 @@
 #endif
 
 #include "Pad.h"
+#include "ClassicAxis.h"
 #include "ControllerConfig.h"
 #include "Timer.h"
 #include "Frontend.h"
@@ -26,6 +27,7 @@
 #include "World.h"
 #include "Vehicle.h"
 #include "Ped.h"
+#include "PlayerPed.h"
 #include "Population.h"
 #include "Record.h"
 #include "Replay.h"
@@ -1521,8 +1523,22 @@ CPad *CPad::GetPad(int32 pad)
 #endif
 
 
+bool CPad::IsStandardControls(void)
+{
+#ifdef DETECT_PAD_INPUT_SWITCH
+	return IsAffectedByController && CMenuManager::m_ControlMethod == CONTROL_STANDARD;
+#else
+	return false;
+#endif
+}
+
+bool CPad::GetStandardLockOn(void)
+{
+	return IsStandardControls() && !ArePlayerControlsDisabled() && NewState.LeftShoulder2 >= 254;
+}
 int16 CPad::GetSteeringLeftRight(void)
 {
+	if (IsStandardControls()) return ArePlayerControlsDisabled() ? 0 : (NewState.LeftStickX);
 	if ( ArePlayerControlsDisabled() )
 		return 0;
 
@@ -1556,6 +1572,7 @@ int16 CPad::GetSteeringLeftRight(void)
 
 int16 CPad::GetSteeringUpDown(void)
 {
+	if (IsStandardControls()) return ArePlayerControlsDisabled() ? 0 : (NewState.LeftStickY);
 	if ( ArePlayerControlsDisabled() )
 		return 0;
 
@@ -1589,6 +1606,7 @@ int16 CPad::GetSteeringUpDown(void)
 
 int16 CPad::GetCarGunUpDown(void)
 {
+	if (IsStandardControls()) return ArePlayerControlsDisabled() ? 0 : (NewState.RightStickY);
 	if ( ArePlayerControlsDisabled() )
 		return 0;
 
@@ -1616,6 +1634,7 @@ int16 CPad::GetCarGunUpDown(void)
 
 int16 CPad::GetCarGunLeftRight(void)
 {
+	if (IsStandardControls()) return ArePlayerControlsDisabled() ? 0 : (NewState.RightStickX);
 	if ( ArePlayerControlsDisabled() )
 		return 0;
 
@@ -1643,6 +1662,7 @@ int16 CPad::GetCarGunLeftRight(void)
 
 int16 CPad::GetPedWalkLeftRight(void)
 {
+	if (IsStandardControls()) return ArePlayerControlsDisabled() ? 0 : (NewState.LeftStickX);
 	if ( ArePlayerControlsDisabled() )
 		return 0;
 
@@ -1677,6 +1697,7 @@ int16 CPad::GetPedWalkLeftRight(void)
 
 int16 CPad::GetPedWalkUpDown(void)
 {
+	if (IsStandardControls()) return ArePlayerControlsDisabled() ? 0 : (NewState.LeftStickY);
 	if ( ArePlayerControlsDisabled() )
 		return 0;
 
@@ -1710,6 +1731,7 @@ int16 CPad::GetPedWalkUpDown(void)
 
 int16 CPad::GetAnalogueUpDown(void)
 {
+	if (IsStandardControls()) return ArePlayerControlsDisabled() ? 0 : (NewState.LeftStickY);
 	switch (CURMODE)
 	{
 		case 0:
@@ -1740,6 +1762,7 @@ int16 CPad::GetAnalogueUpDown(void)
 
 bool CPad::GetLookLeft(void)
 {
+	if (IsStandardControls()) return ArePlayerControlsDisabled() ? 0 : (NewState.LeftShoulder1 && !NewState.RightShoulder1);
 	if ( ArePlayerControlsDisabled() )
 		return false;
 
@@ -1748,6 +1771,7 @@ bool CPad::GetLookLeft(void)
 
 bool CPad::GetLookRight(void)
 {
+	if (IsStandardControls()) return ArePlayerControlsDisabled() ? 0 : (NewState.RightShoulder1 && !NewState.LeftShoulder1);
 	if ( ArePlayerControlsDisabled() )
 		return false;
 
@@ -1757,6 +1781,7 @@ bool CPad::GetLookRight(void)
 
 bool CPad::GetLookBehindForCar(void)
 {
+	if (IsStandardControls()) return ArePlayerControlsDisabled() ? 0 : (NewState.LeftShoulder1 && NewState.RightShoulder1);
 	if ( ArePlayerControlsDisabled() )
 		return false;
 
@@ -1773,6 +1798,7 @@ bool CPad::GetLookBehindForPed(void)
 
 bool CPad::GetHorn(void)
 {
+	if (IsStandardControls()) return ArePlayerControlsDisabled() ? 0 : (NewState.LeftShock);
 	if ( ArePlayerControlsDisabled() )
 		return false;
 
@@ -1812,6 +1838,7 @@ bool CPad::GetHorn(void)
 
 bool CPad::HornJustDown(void)
 {
+	if (IsStandardControls()) return ArePlayerControlsDisabled() ? 0 : (NewState.LeftShock && !OldState.LeftShock);
 	if ( ArePlayerControlsDisabled() )
 		return false;
 
@@ -1852,6 +1879,7 @@ bool CPad::HornJustDown(void)
 
 bool CPad::GetCarGunFired(void)
 {
+	if (IsStandardControls()) return ArePlayerControlsDisabled() ? 0 : (NewState.Circle);
 	if ( ArePlayerControlsDisabled() )
 		return false;
 
@@ -1879,6 +1907,7 @@ bool CPad::GetCarGunFired(void)
 
 bool CPad::CarGunJustDown(void)
 {
+	if (IsStandardControls()) return ArePlayerControlsDisabled() ? 0 : (NewState.Circle && !OldState.Circle);
 	if ( ArePlayerControlsDisabled() )
 		return false;
 
@@ -1906,6 +1935,7 @@ bool CPad::CarGunJustDown(void)
 
 int16 CPad::GetHandBrake(void)
 {
+	if (IsStandardControls()) return ArePlayerControlsDisabled() ? 0 : (NewState.Cross);
 	if ( ArePlayerControlsDisabled() )
 		return 0;
 
@@ -1939,6 +1969,7 @@ int16 CPad::GetHandBrake(void)
 
 int16 CPad::GetBrake(void)
 {
+	if (IsStandardControls()) return ArePlayerControlsDisabled() ? 0 : (NewState.LeftShoulder2);
 	if ( ArePlayerControlsDisabled() )
 		return 0;
 
@@ -1977,6 +2008,7 @@ int16 CPad::GetBrake(void)
 
 bool CPad::GetExitVehicle(void)
 {
+	if (IsStandardControls()) return ArePlayerControlsDisabled() ? 0 : (NewState.Triangle);
 	if ( ArePlayerControlsDisabled() )
 		return false;
 
@@ -2004,6 +2036,7 @@ bool CPad::GetExitVehicle(void)
 
 bool CPad::ExitVehicleJustDown(void)
 {
+	if (IsStandardControls()) return ArePlayerControlsDisabled() ? 0 : (NewState.Triangle && !OldState.Triangle);
 	if ( ArePlayerControlsDisabled() )
 		return false;
 
@@ -2031,6 +2064,7 @@ bool CPad::ExitVehicleJustDown(void)
 
 int32 CPad::GetWeapon(void)
 {
+	if (IsStandardControls()) return ArePlayerControlsDisabled() ? 0 : (FindPlayerPed() && FindPlayerPed()->bInVehicle ? NewState.Circle : (NewState.RightShoulder2 > 30 ? NewState.RightShoulder2 : (FindPlayerPed() && FindPlayerPed()->GetWeapon()->m_eWeaponType <= WEAPONTYPE_BASEBALLBAT ? NewState.Circle : 0)));
 	if ( ArePlayerControlsDisabled() )
 		return false;
 
@@ -2064,6 +2098,7 @@ int32 CPad::GetWeapon(void)
 
 bool CPad::WeaponJustDown(void)
 {
+	if (IsStandardControls()) return ArePlayerControlsDisabled() ? 0 : (FindPlayerPed() && FindPlayerPed()->bInVehicle ? (NewState.Circle && !OldState.Circle) : ((NewState.RightShoulder2 > 30 && OldState.RightShoulder2 <= 30) || (FindPlayerPed() && FindPlayerPed()->GetWeapon()->m_eWeaponType <= WEAPONTYPE_BASEBALLBAT && NewState.Circle && !OldState.Circle)));
 	if ( ArePlayerControlsDisabled() )
 		return false;
 
@@ -2097,6 +2132,7 @@ bool CPad::WeaponJustDown(void)
 
 int16 CPad::GetAccelerate(void)
 {
+	if (IsStandardControls()) return ArePlayerControlsDisabled() ? 0 : (NewState.RightShoulder2);
 	if ( ArePlayerControlsDisabled() )
 		return 0;
 
@@ -2135,6 +2171,7 @@ int16 CPad::GetAccelerate(void)
 
 bool CPad::CycleCameraModeUpJustDown(void)
 {
+	if (IsStandardControls()) return ArePlayerControlsDisabled() ? 0 : (NewState.Select && !OldState.Select);
 	switch (CURMODE)
 	{
 		case 0:
@@ -2159,6 +2196,7 @@ bool CPad::CycleCameraModeUpJustDown(void)
 
 bool CPad::CycleCameraModeDownJustDown(void)
 {
+	if (IsStandardControls()) return ArePlayerControlsDisabled() ? 0 : (false);
 	switch (CURMODE)
 	{
 		case 0:
@@ -2183,6 +2221,7 @@ bool CPad::CycleCameraModeDownJustDown(void)
 
 bool CPad::ChangeStationJustDown(void)
 {
+	if (IsStandardControls()) return ArePlayerControlsDisabled() ? 0 : (NewState.DPadRight && !OldState.DPadRight);
 	if ( ArePlayerControlsDisabled() )
 		return false;
 
@@ -2223,6 +2262,7 @@ bool CPad::ChangeStationJustDown(void)
 
 bool CPad::CycleWeaponLeftJustDown(void)
 {
+	if (IsStandardControls()) return ArePlayerControlsDisabled() ? 0 : (NewState.DPadLeft && !OldState.DPadLeft);
 	if ( ArePlayerControlsDisabled() )
 		return false;
 
@@ -2231,6 +2271,7 @@ bool CPad::CycleWeaponLeftJustDown(void)
 
 bool CPad::CycleWeaponRightJustDown(void)
 {
+	if (IsStandardControls()) return ArePlayerControlsDisabled() ? 0 : (NewState.DPadRight && !OldState.DPadRight);
 	if ( ArePlayerControlsDisabled() )
 		return false;
 
@@ -2239,6 +2280,7 @@ bool CPad::CycleWeaponRightJustDown(void)
 
 bool CPad::GetTarget(void)
 {
+	if (IsStandardControls()) return ArePlayerControlsDisabled() ? 0 : (NewState.LeftShoulder2 > 30);
 	if ( ArePlayerControlsDisabled() )
 		return false;
 
@@ -2266,6 +2308,7 @@ bool CPad::GetTarget(void)
 
 bool CPad::TargetJustDown(void)
 {
+	if (IsStandardControls()) return ArePlayerControlsDisabled() ? 0 : (NewState.LeftShoulder2 > 30 && OldState.LeftShoulder2 <= 30);
 	if ( ArePlayerControlsDisabled() )
 		return false;
 
@@ -2301,6 +2344,9 @@ bool CPad::JumpJustDown(void)
 
 bool CPad::GetSprint(void)
 {
+	// A configured walk modifier takes precedence if it shares the sprint key.
+	if (CClassicAxis::Walking(FindPlayerPed())) return false;
+	if (IsStandardControls()) return ArePlayerControlsDisabled() ? 0 : (NewState.Cross);
 	if ( ArePlayerControlsDisabled() )
 		return false;
 
@@ -2328,6 +2374,7 @@ bool CPad::GetSprint(void)
 
 bool CPad::ShiftTargetLeftJustDown(void)
 {
+	if (IsStandardControls()) return ArePlayerControlsDisabled() ? 0 : (NewState.DPadLeft && !OldState.DPadLeft);
 	if ( ArePlayerControlsDisabled() )
 		return false;
 
@@ -2336,6 +2383,7 @@ bool CPad::ShiftTargetLeftJustDown(void)
 
 bool CPad::ShiftTargetRightJustDown(void)
 {
+	if (IsStandardControls()) return ArePlayerControlsDisabled() ? 0 : (NewState.DPadRight && !OldState.DPadRight);
 	if ( ArePlayerControlsDisabled() )
 		return false;
 
@@ -2572,6 +2620,7 @@ bool CPad::GetAnaloguePadRightJustUp(void)
 
 bool CPad::ForceCameraBehindPlayer(void)
 {
+	if (IsStandardControls()) return ArePlayerControlsDisabled() ? 0 : (NewState.RightShoulder1);
 	if ( ArePlayerControlsDisabled() )
 		return false;
 
@@ -2605,6 +2654,7 @@ bool CPad::ForceCameraBehindPlayer(void)
 
 bool CPad::SniperZoomIn(void)
 {
+	if (IsStandardControls()) return ArePlayerControlsDisabled() ? 0 : (NewState.LeftStickY < -30);
 	if ( ArePlayerControlsDisabled() )
 		return false;
 
@@ -2632,6 +2682,7 @@ bool CPad::SniperZoomIn(void)
 
 bool CPad::SniperZoomOut(void)
 {
+	if (IsStandardControls()) return ArePlayerControlsDisabled() ? 0 : (NewState.LeftStickY > 30);
 	if ( ArePlayerControlsDisabled() )
 		return false;
 
@@ -2661,6 +2712,7 @@ bool CPad::SniperZoomOut(void)
 
 int16 CPad::SniperModeLookLeftRight(void)
 {
+	if (IsStandardControls()) return ArePlayerControlsDisabled() ? 0 : (NewState.RightStickX);
 	int16 axis = NewState.LeftStickX;
 	int16 dpad = (NewState.DPadRight - NewState.DPadLeft) / 2;
 
@@ -2672,6 +2724,11 @@ int16 CPad::SniperModeLookLeftRight(void)
 
 int16 CPad::SniperModeLookUpDown(void)
 {
+	#ifdef INVERT_LOOK_FOR_PAD
+	if (IsStandardControls()) return ArePlayerControlsDisabled() ? 0 : (bInvertLook4Pad ? NewState.RightStickY : -NewState.RightStickY);
+#else
+	if (IsStandardControls()) return ArePlayerControlsDisabled() ? 0 : -NewState.RightStickY;
+#endif
 	int16 axis = NewState.LeftStickY;
 	int16 dpad;
 #ifdef FIX_BUGS

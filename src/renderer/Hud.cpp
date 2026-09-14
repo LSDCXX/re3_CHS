@@ -1,4 +1,5 @@
 #include "common.h"
+#include "ClassicAxis.h"
 
 #include "Camera.h"
 #include "DMAudio.h"
@@ -305,7 +306,7 @@ void CHud::SetHelpMessage(wchar *message, bool quick)
 {
 	if (!CReplay::IsPlayingBack()) {
 		CMessages::WideStringCopy(m_HelpMessage, message, HELP_MSG_LENGTH);
-		CMessages::InsertPlayerControlKeysInString(m_HelpMessage);
+		// Keep the action tokens so an already-visible help can follow input changes.
 
 		for (int i = 0; i < HELP_MSG_LENGTH; i++) {
 			m_LastHelpMessage[i] = 0;
@@ -364,6 +365,10 @@ void CHud::Draw()
 					DrawCrossHairPC = true;
 			}
 		}
+		// Garage fixed cameras also report Using3rdPersonMouseCam(). Apply the
+		// aim-only rule there as well, instead of leaking the legacy PC reticle.
+		if (CClassicAxis::Enabled() && (Mode == CCam::MODE_FOLLOWPED || TheCamera.Cams[TheCamera.ActiveCam].Using3rdPersonMouseCam()))
+			DrawCrossHairPC = CClassicAxis::Aiming(FindPlayerPed()) && !FindPlayerPed()->m_pPointGunAt;
 #endif
 
 		if ( DrawCrossHair 
@@ -386,7 +391,8 @@ void CHud::Draw()
 				float f3rdX = SCREEN_WIDTH * TheCamera.m_f3rdPersonCHairMultX;
 				float f3rdY = SCREEN_HEIGHT * TheCamera.m_f3rdPersonCHairMultY;
 #ifdef ASPECT_RATIO_SCALE
-				f3rdY -= SCREEN_SCALE_Y(2.0f);
+				if (!CClassicAxis::Enabled())
+					f3rdY -= SCREEN_SCALE_Y(2.0f);
 #endif
 				if (FindPlayerPed() && WeaponType == WEAPONTYPE_M16) {
 					rect.left = f3rdX - SCREEN_SCALE_X(32.0f * 0.6f);
@@ -1352,7 +1358,10 @@ void CHud::DrawAfterFade()
 				m_HelpMessageState = 2;
 				m_HelpMessageTimer = 0;
 				CMessages::WideStringCopy(m_HelpMessageToPrint, m_HelpMessage, HELP_MSG_LENGTH);
-				m_HelpMessageDisplayTime = CMessages::GetWideStringLength(m_HelpMessage) / 20.0f + 3.0f;
+				wchar timedHelp[HELP_MSG_LENGTH];
+				CMessages::WideStringCopy(timedHelp, m_HelpMessage, HELP_MSG_LENGTH);
+				CMessages::InsertPlayerControlKeysInString(timedHelp);
+				m_HelpMessageDisplayTime = CMessages::GetWideStringLength(timedHelp) / 20.0f + 3.0f;
 
 				if (TheCamera.m_ScreenReductionPercentage == 0.0f)
 					DMAudio.PlayFrontEndSound(SOUND_HUD, 0);
@@ -1439,7 +1448,10 @@ void CHud::DrawAfterFade()
 			CFont::SetBackGroundOnlyTextOff();
 			CFont::SetBackgroundColor(CRGBA(0, 0, 0, fAlpha * 0.9f));
 			CFont::SetColor(CRGBA(175, 175, 175, 255));
-			CFont::PrintString(SCREEN_SCALE_X(26.0f), SCREEN_SCALE_Y(28.0f) + SCREEN_SCALE_Y_FIX((150.0f - PagerXOffset) * 0.6f), m_HelpMessageToPrint);
+			wchar helpWithCurrentKeys[HELP_MSG_LENGTH];
+			CMessages::WideStringCopy(helpWithCurrentKeys, m_HelpMessageToPrint, HELP_MSG_LENGTH);
+			CMessages::InsertPlayerControlKeysInString(helpWithCurrentKeys);
+			CFont::PrintString(SCREEN_SCALE_X(26.0f), SCREEN_SCALE_Y(28.0f) + SCREEN_SCALE_Y_FIX((150.0f - PagerXOffset) * 0.6f), helpWithCurrentKeys);
 			CFont::SetAlphaFade(255.0f);
 		}
 	}

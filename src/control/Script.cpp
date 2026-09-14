@@ -109,6 +109,7 @@ float oldTargetX;
 float oldTargetY;
 int missionRetryScriptIndex;
 bool doingMissionRetry;
+bool MissionRetrySaveValid;
 
 #endif
 
@@ -514,6 +515,11 @@ int CTheScripts::OpenScript()
 
 void CTheScripts::Init()
 {
+#ifdef MISSION_REPLAY
+	MissionRetrySaveValid = false;
+	doingMissionRetry = false;
+	AllowMissionReplay = MISSION_RETRY_STAGE_NORMAL;
+#endif
 	for (int i = 0; i < SIZE_SCRIPT_SPACE; i++)
 		ScriptSpace[i] = 0;
 	pActiveScripts = pIdleScripts = nil;
@@ -2977,6 +2983,8 @@ int8 CRunningScript::ProcessCommands200To299(int32 command)
 
 bool CRunningScript::CanAllowMissionReplay()
 {
+	if (!MissionRetrySaveValid)
+		return false;
 	if (AllowMissionReplay != MISSION_RETRY_STAGE_NORMAL)
 		return false;
 	if (CStats::LastMissionPassedName[0] == '\0')
@@ -3000,8 +3008,13 @@ uint32 AddExtraDeathDelay()
 void RetryMission(int type, int unk)
 {
 	if (type == MISSION_RETRY_TYPE_SUGGEST_TO_PLAYER) {
+		if (!MissionRetrySaveValid) {
+			AllowMissionReplay = MISSION_RETRY_STAGE_NORMAL;
+			return;
+		}
 		doingMissionRetry = true;
 		FrontEndMenuManager.m_nCurrScreen = MENUPAGE_MISSION_RETRY;
+		FrontEndMenuManager.m_nCurrOption = 1;
 		FrontEndMenuManager.RequestFrontEndStartUp();
 	}
 	else if (type == MISSION_RETRY_TYPE_BEGIN_RESTARTING) {

@@ -1994,6 +1994,27 @@ CFont::RenderFontBuffer_Chs(void)
 	RenderChsBatches();
 }
 
+#ifdef BUTTON_ICONS
+static int
+ChineseButtonToken(const wchar *s)
+{
+	if (s[0] != '~' || !s[1] || s[2] != '~') return BUTTON_NONE;
+	switch (s[1]) {
+	case 'X': return BUTTON_CROSS;
+	case 'O': return BUTTON_CIRCLE;
+	case 'Q': return BUTTON_SQUARE;
+	case 'T': return BUTTON_TRIANGLE;
+	case 'K': return BUTTON_L1;
+	case 'M': return BUTTON_L2;
+	case 'A': return BUTTON_L3;
+	case 'J': return BUTTON_R1;
+	case 'V': return BUTTON_R2;
+	case 'C': return BUTTON_R3;
+	default: return BUTTON_NONE;
+	}
+}
+#endif
+
 void
 CFont::PrintString_Chs(float x, float y, wchar *text)
 {
@@ -2033,6 +2054,26 @@ CFont::PrintString_Chs(float x, float y, wchar *text)
 		wchar unused;
 		while (cur < end) {
 			if (*cur == '~') {
+#ifdef BUTTON_ICONS
+				int button = ChineseButtonToken(cur);
+				if (button != BUTTON_NONE) {
+					RenderFontBuffer_Chs();
+					PS2Symbol = button;
+					DrawButton(curX, startY);
+					PS2Symbol = BUTTON_NONE;
+					curX += Details.scaleY * 17.0f;
+					cur += 3;
+					continue;
+				}
+#endif
+				// Parse one token at a time: the normal parser recursively consumes
+				// adjacent tokens, which would swallow the next button before drawing.
+				if (cur[1] && cur[2] == '~') {
+					wchar token[] = { '~', cur[1], '~', 0 };
+					ParseToken(token, &unused);
+					cur += 3;
+					continue;
+				}
 				cur = ParseToken(cur, &unused);
 				continue;
 			}
@@ -2245,6 +2286,12 @@ CFont::GetStringWidth_Chs(wchar *s, bool spaces)
 				break;
 
 			if (result == 0.0f || spaces) {
+#ifdef BUTTON_ICONS
+				if (ChineseButtonToken(s) != BUTTON_NONE) {
+					result += Details.scaleY * 17.0f;
+					if (!spaces) return result;
+				}
+#endif
 				do {
 					++s;
 				} while (*s != '~' && *s != '\0');
@@ -2278,6 +2325,10 @@ CFont::GetNextSpace_Chs(wchar *s)
 	while (*temp != ' ' && *temp != '\0') {
 		if (*temp == '~') {
 			if (temp == s) {
+#ifdef BUTTON_ICONS
+				if (ChineseButtonToken(temp) != BUTTON_NONE)
+					return temp + 3;
+#endif
 				if ((temp[1] == 'n' || temp[1] == 'N') && temp[2] == '~')
 					break;
 

@@ -376,6 +376,10 @@ GenericLoad()
 	}
 
 	DoGameSpecificStuffAfterSucessLoad();
+#ifdef MISSION_REPLAY
+	// LoadAllScripts calls Init, so restore validity only after the entire load succeeds.
+	MissionRetrySaveValid = FrontEndMenuManager.m_nCurrSaveSlot == PAUSE_SAVE_SLOT && qs == SAVE_TYPE_QUICKSAVE_FOR_MISSION_REPLAY;
+#endif
 	debug("Game successfully loaded \n");
 	return true;
 }
@@ -1154,6 +1158,9 @@ void DisplaySaveResult(int unk, char* name)
 
 bool SaveGameForPause(int type)
 {
+	// Never offer an older mission's snapshot after a failed replacement save.
+	if (type == SAVE_TYPE_QUICKSAVE_FOR_MISSION_REPLAY && !CTheScripts::IsPlayerOnAMission())
+		MissionRetrySaveValid = false;
 	if (AllowMissionReplay != MISSION_RETRY_STAGE_NORMAL)
 		return false;
 	if (type != SAVE_TYPE_QUICKSAVE_FOR_MISSION_REPLAY && WaitForSave > CTimer::GetTimeInMilliseconds())
@@ -1166,9 +1173,11 @@ bool SaveGameForPause(int type)
 	IsQuickSave = type;
 	MissionStartTime = 0;
 	int res = PcSaveHelper.SaveSlot(PAUSE_SAVE_SLOT);
+	bool saved = res && PcSaveHelper.nErrorCode == SAVESTATUS_SUCCESSFUL;
+	MissionRetrySaveValid = saved && type == SAVE_TYPE_QUICKSAVE_FOR_MISSION_REPLAY;
 	PcSaveHelper.PopulateSlotInfo();
 	IsQuickSave = 0;
 	DisplaySaveResult(res, CStats::LastMissionPassedName);
-	return true;
+	return saved;
 }
 #endif
