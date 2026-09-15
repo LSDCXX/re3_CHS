@@ -84,6 +84,10 @@ CProjectileInfo::AddProjectile(CEntity *entity, eWeaponType weapon, CVector pos,
 				matrix.GetPosition() += pos;
 		} else {
 			matrix = ped->GetMatrix();
+#ifdef FIX_BUGS
+			// Preserve NPC orientation but spawn at the supplied muzzle position.
+			matrix.GetPosition() = pos;
+#endif
 		}
 		velocity = Multiply3x3(matrix, CVector(0.0f, vy, 0.0f));
 		gravity = false;

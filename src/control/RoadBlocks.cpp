@@ -140,13 +140,30 @@ CRoadBlocks::GenerateRoadBlocks(void)
 					float fOffset = 0.5f * fModelRadius * (float)(radius - 1);
 					for (int16 i = 0; i < radius; i++) {
 						uint8 nRoadblockType = fDotProduct < 0.0f;
+#ifdef FIX_BUGS
+						float offsetRotation;
+#endif
 						if (CGeneral::GetRandomNumber() & 1) {
+#ifdef FIX_BUGS
+							offsetRotation = ((CGeneral::GetRandomNumber() & 0xFF) - 128.0f) * 0.003f + HALFPI;
+#else
 							offsetMatrix.SetRotateZ(((CGeneral::GetRandomNumber() & 0xFF) - 128.0f) * 0.003f + HALFPI);
+#endif
 						}
 						else {
 							nRoadblockType = !nRoadblockType;
+#ifdef FIX_BUGS
+							offsetRotation = ((CGeneral::GetRandomNumber() & 0xFF) - 128.0f) * 0.003f - HALFPI;
+#else
 							offsetMatrix.SetRotateZ(((CGeneral::GetRandomNumber() & 0xFF) - 128.0f) * 0.003f - HALFPI);
+#endif
 						}
+#ifdef FIX_BUGS
+						// East-west road objects use the perpendicular placement axis.
+						if(ThePaths.m_objectFlags[RoadBlockObjects[nRoadblockNode]] & ObjectEastWest)
+							offsetRotation -= HALFPI;
+						offsetMatrix.SetRotateZ(offsetRotation);
+#endif
 						if (ThePaths.m_objectFlags[RoadBlockObjects[nRoadblockNode]] & ObjectEastWest)
 							offsetMatrix.GetPosition() = CVector(0.0f, i * fModelRadius - fOffset, 0.6f);
 						else

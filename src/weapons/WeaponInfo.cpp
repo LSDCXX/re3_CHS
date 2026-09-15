@@ -128,6 +128,16 @@ CWeaponInfo::LoadWeaponData(void)
 
 		weaponType = FindWeaponType(weaponName);
 
+#ifdef FIX_BUGS
+		// SilentPatch III: fix the stock sniper's NPC fire timing, while
+		// preserving timing supplied by modified weapon.dat files.
+		if(!strcasecmp(animToPlay, "WEAPON_sniper") && animLoopStart == 0.0f &&
+			animLoopEnd == 10.0f && delayBetweenAnimAndFire == 3.0f) {
+			animLoopEnd = 99.0f;
+			delayBetweenAnimAndFire = 14.0f;
+		}
+#endif
+
 		animAssoc = CAnimManager::GetAnimAssociation(ASSOCGRP_STD, animToPlay);
 		animId = static_cast<AnimationId>(animAssoc->animId);
 

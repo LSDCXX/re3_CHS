@@ -1042,6 +1042,11 @@ CVehicleModelInfo::SetEnvironmentMap(void)
 	if(m_envMap != ms_pEnvironmentMaps[0]){
 		m_envMap = ms_pEnvironmentMaps[0];
 		RpClumpForAllAtomics(m_clump, SetEnvironmentMapCB, m_envMap);
+#ifdef FIX_BUGS
+		// Extras were detached from the clump by PreprocessHierarchy.
+		for(i = 0; i < m_numComps; i++)
+			SetEnvironmentMapCB(m_comps[i], m_envMap);
+#endif
 		if(m_wheelId != -1){
 			wheelmi = (CSimpleModelInfo*)CModelInfo::GetModelInfo(m_wheelId);
 			for(i = 0; i < wheelmi->m_numAtomics; i++)
@@ -1051,6 +1056,10 @@ CVehicleModelInfo::SetEnvironmentMap(void)
 
 #ifdef EXTENDED_PIPELINES
 	CustomPipes::AttachVehiclePipe(m_clump);
+#ifdef FIX_BUGS
+	for(i = 0; i < m_numComps; i++)
+		CustomPipes::AttachVehiclePipe(m_comps[i]);
+#endif
 #endif
 }
 

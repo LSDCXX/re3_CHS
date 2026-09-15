@@ -182,6 +182,12 @@ CWeapon::Fire(CEntity *shooter, CVector *fireSource)
 
 			case WEAPONTYPE_SNIPERRIFLE:
 			{
+#ifdef FIX_BUGS
+				// NPC shots originate at their weapon, not the player's camera.
+				if(shooter != FindPlayerPed())
+					fired = FireInstantHit(shooter, source);
+				else
+#endif
 				fired = FireSniper(shooter);
 
 				break;
