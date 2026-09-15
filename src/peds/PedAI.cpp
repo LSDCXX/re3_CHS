@@ -4894,6 +4894,11 @@ CPed::DuckAndCover(void)
 		for (int i = 0; i < lastVehicle; i++) {
 			CVehicle *veh = (CVehicle*) vehicles[i];
 			if (veh->m_vecMoveSpeed.Magnitude() <= 0.02f
+#ifdef FIX_BUGS
+				&& veh->IsCar()
+				&& veh->IsComponentPresent(CAR_WHEEL_RF)
+				&& veh->IsComponentPresent(CAR_WHEEL_LF)
+#endif
 				&& !veh->bIsBus
 				&& !veh->bIsVan
 				&& !veh->bIsBig
@@ -4906,6 +4911,17 @@ CPed::DuckAndCover(void)
 			}
 		}
 		if (foundVeh) {
+#ifdef FIX_BUGS
+			// PS2/SilentPatch III: take cover behind the front-wheel midpoint,
+			// on the side opposite the threat rather than a fixed side slot.
+			CVector lfWheelPos, rfWheelPos;
+			foundVeh->GetComponentWorldPosition(CAR_WHEEL_RF, rfWheelPos);
+			foundVeh->GetComponentWorldPosition(CAR_WHEEL_LF, lfWheelPos);
+			CVector wheelMidpoint = (lfWheelPos + rfWheelPos) * 0.5f;
+			CVector duckDir = m_pedInObjective->GetPosition() - wheelMidpoint;
+			duckDir.Normalise();
+			CVector duckPos = wheelMidpoint - duckDir * 1.5f;
+#else
 			// Unused.
 			// CVector lfWheelPos, rfWheelPos;
 			// foundVeh->GetComponentWorldPosition(CAR_WHEEL_RF, rfWheelPos);
@@ -4937,6 +4953,7 @@ CPed::DuckAndCover(void)
 				duckPos = duckAtLeftSide;
 			else
 				duckPos = duckAtRightSide;
+#endif
 
 			if (CWorld::TestSphereAgainstWorld(duckPos, 0.5f, nil, true, true, true, false, false, false)
 				&& CWorld::GetIsLineOfSightClear(GetPosition(), duckPos, 1, 0, 0, 1, 0, 0, 0)) {
