@@ -1,0 +1,696 @@
+<?xml version="1.0"?>
+
+<GTA_XML>
+	<!-- Normal cutscenes should have a default animation condition set for all characters, for all hands (separate left/right) but allow this lookup table to override. -->
+	<!-- Could specify time stamps for enabling / disabling individual animation per hand per character per cutscene -->
+	<!-- This would be nice to implement as an XML file, which would allow easy customisation for designers. It would also allow easy defaults to be enabled. -->
+
+	<!-- Neutral colouring -->
+	<!-- Colours are specified in range 0..255 which is natural for artists -->
+	<!-- 255,255,255,255 is full texture colour, 0,0,0,255 is black -->
+	<HAND red="255" green="255" blue="255" alpha="255"/>
+
+	<!-- All left hands for all characters for all cutscenes default to using handModel, the skinned, animated hand -->
+	<!-- Note that right now it doesn't matter what you put in this model="" because it only uses a single model -->
+	<HAND model="skinned"/>
+	
+	<!-- Rather than break old scripts I have decided to add new attributes to control *which* skinned model is used -->
+	<!--HAND side="left" gender="male" race="black"/-->
+	<!--HAND side="right" gender="female" race="white"/-->
+	<!--HAND side="left" gender="female" race="black"/-->
+
+	<!-- Normal animation -->
+	<ANIMATION TYPE="loop"/>
+
+	<CUTSCENE name="BET">
+		<!-- #780 They look good non-skinned in the intro -->
+		<HAND model="non-skinned"/>
+	</CUTSCENE>
+	
+	<CUTSCENE name="JB">
+		<CHARACTER name="col1">
+			<!-- #778 They look good non-skinned in the intro -->
+			<HAND model="non-skinned"/>
+		</character>
+	</CUTSCENE>
+
+	<CUTSCENE name="L1_LG">		
+		<!-- #810, #1018 Eightball has bandages instead of hands -->
+		<character name="eight2">
+			<hand model="non-skinned"/>
+		</character>
+		
+		<character name="player">
+		        <HAND side="right" positionX="0.01" positionY="-0.01"/>
+		        <HAND side="left" positionX="0.02" positionZ="0.01"/>
+	        </character>
+	        
+	        <character name="micky">
+	                <HAND model="non-skinned"/>	                                        
+		</character>
+		
+		<character name="luigi">
+	                <HAND red="235" green="220" blue="255"/> 
+		        <HAND side="left" positionX="0.02" positionY="0.02"/>      
+                        <HAND side="right" positionX="0.02" positionY="0.02" positionZ="0.01"/>    
+		</character>
+	</CUTSCENE>
+	
+	<CUTSCENE name="L2_DSB">		
+		<character name="micky">
+	                <hand model="non-skinned"/>
+		</character>
+		
+		<character name="player">
+		        <HAND side="right" positionX="0.01" positionY="0.01"/> 		        
+		               <ANIMATION TYPE="static"/>
+	                       <ANIMATION time="2"/>	                 
+		</character>
+	</CUTSCENE>
+	
+	<CUTSCENE name="L3_DM">
+		<character name="micky">
+	                <HAND model="non-skinned"/>	                 
+		</character>
+		
+		<character name="luigi">
+	                <HAND red="235" green="220" blue="255"/>
+	                <HAND side="right" positionX="0.03" positionY="0.02" positionZ="0.02"/>  
+		        <HAND side="left" positionY="0.03"/>                      
+		</character>	 
+	</CUTSCENE>
+	
+	<CUTSCENE name="J0_DM2">
+	        <CHARACTER name="joey">
+			<HAND red="165" green="155" blue="200"/>
+		        <hand side="right" positionY="-0.01"/> 
+		        <HAND side="left" positionZ="0.01"/> 
+		</character>
+		
+		<CHARACTER name="misty">
+		        <hand red="255" green="255" blue="255"/>
+		        <HAND scaleX="0.85" scaleY="0.85" scaleZ="0.85"/>
+		               <ANIMATION TYPE="loop"/>
+                </CHARACTER>
+        </CUTSCENE>
+	
+	<CUTSCENE name="L4_PAP">
+	        <character name="luigi">
+	                <HAND red="235" green="220" blue="255"/>
+	                <HAND side="right" positionX="0.03" positionZ="0.02"/> 
+		        <HAND side="left" positionY="0.02" positionZ="0.01"/>      	                 
+		</character>		
+	</CUTSCENE>
+	
+	<CUTSCENE name="L5_TFB">
+		<character name="micky">
+	                <HAND model="non-skinned"/>	                 
+		</character>
+		
+		<character name="luigi">
+	                <HAND red="235" green="220" blue="255"/>
+	                <HAND side="right" positionX="0.03" positionY="0.02" positionZ="0.02"/> 
+		        <HAND side="left" positionY="0.03"/>      	                 
+		</character>	 
+	</CUTSCENE>				
+	
+        <CUTSCENE name="J1_LFL">
+	        <CHARACTER name="joey">
+			<HAND red="165" green="150" blue="200"/>
+			<hand side="right" positionY="-0.01"/> 
+		        <HAND side="left" positionZ="0.01"/> 
+		</character>
+		
+		<CHARACTER name="misty">
+		        <hand red="240" green="205" blue="185"/>
+		        <hand scaleX="0.85" scaleY="0.85" scaleZ="0.85"/>
+		               <ANIMATION TYPE="static" time="1"/>
+                </CHARACTER>
+        </CUTSCENE>
+        
+        <CUTSCENE name="J2_KCL">
+	        <CHARACTER name="joey">
+			<HAND red="165" green="150" blue="200"/>
+			<HAND side="right" positionY="-0.01"/> 
+			<HAND side="left" positionZ="0.01"/> 
+		</CHARACTER>
+		
+		<CHARACTER name="player">
+			<HAND side="right" positionX="0.01" positionY="-0.03"> 
+			<ANIMATION type="static"/>
+			<ANIMATION time="2"/>
+			</hand>
+			<hand side="left">
+			<ANIMATION type="loop"/>
+			</hand>
+		</CHARACTER>
+        </CUTSCENE>
+        
+        <CUTSCENE name="J3_VH">
+	        <CHARACTER name="joey">
+			<HAND red="165" green="150" blue="200"/>
+			<HAND side="right" positionY="-0.01"/>  
+		        <HAND side="left" positionZ="0.01"/> 
+		</CHARACTER>
+        </CUTSCENE>
+        
+        <CUTSCENE name="J4_ETH">
+	        <CHARACTER name="joey">
+			<hand red="165" green="150" blue="200"/>
+			<hand side="right" positionY="-0.01"/> 
+			<HAND side="left" positionZ="0.01"/> 
+		</character>
+		
+		<CHARACTER name="tony">
+			<hand red="190" green="170" blue="190"/>
+		</CHARACTER>
+        </CUTSCENE>
+        
+        <CUTSCENE name="J5_DST">
+	        <CHARACTER name="joey">
+			<HAND red="165" green="150" blue="200"/>
+			<hand side="right" positionY="-0.01"/> 
+			<HAND side="left" positionZ="0.01"/> 
+		</character>
+        </CUTSCENE>
+        
+        <CUTSCENE name="J6_TBJ">
+	        <CHARACTER name="joey">
+			<hand red="165" green="150" blue="200"/>
+			<hand side="right" positionY="-0.01"/> 
+			<HAND side="left" positionZ="0.01"/> 
+		</CHARACTER>
+        </CUTSCENE>
+        
+        <CUTSCENE name="t1_tol">
+	        <!-- #962 -->
+	        <CHARACTER name="tony">
+		        <hand red="190" green="170" blue="190"/>
+		        <hand positionX="0.01"/> 
+		                <ANIMATION TYPE="static"/>
+		                <ANIMATION time="2"/>
+		</CHARACTER>
+	</CUTSCENE>
+	
+	<CUTSCENE name="T2_TPU">
+		<CHARACTER name="player">
+		        <HAND side="left" positionX="0.02" positionY="-0.03">
+		                <ANIMATION TYPE="static"/>
+		                <ANIMATION time="2"/>		           
+                        </hand>
+                        <hand side="right">
+                                <ANIMATION TYPE="static"/>
+		                <ANIMATION time="2"/>
+		        </hand>
+       		</CHARACTER>                
+	</CUTSCENE>
+	
+	<CUTSCENE name="T3_MAS">
+		        <HAND model="non-skinned"/>
+	</CUTSCENE>
+
+        <CUTSCENE name="S0_MAS">
+	        <CHARACTER name="frankie">
+			<hand red="245" green="230" blue="255"/>
+		        <HAND side="right" positionX="0.02"/> 
+		        <HAND side="left" positionX="0.02"/> 
+		</character>
+		
+		<CHARACTER name="joey2">
+			<hand red="255" green="240" blue="255"/>
+			<hand side="left" positionY="0.02"/>
+			<hand side="right" positionY="0.02"/>
+		</character>
+		
+		<character name="luigi">
+	                <HAND model="skinned" red="235" green="220" blue="255"/>
+	                <hand side="right" positionY="0.02"/>                 
+		</character>
+		
+		<CHARACTER name="tony">
+			<HAND model="skinned" red="190" green="170" blue="190"/>
+		</character>
+		
+		<character name="player">
+		        <hand model="non-skinned"/>
+		</character>
+	</CUTSCENE>
+		
+        <CUTSCENE name="t5_bf">	 
+	        <CHARACTER name="tony">
+			<HAND side="right" red="190" green="170" blue="190">
+			         <animation type="loop"/>
+			</hand>
+			<hand side="left" red="190" green="170" blue="190">
+			         <animation type="static"/>
+			         <animation time="2"/>
+			</hand>
+		</CHARACTER>
+	</CUTSCENE>	
+	
+	<CUTSCENE name="S1_PF">	 
+		<CHARACTER name="maria">
+		        <hand red="200" green="200" blue="200"/>
+		        <hand scaleX="0.8" scaleY="0.8" scaleZ="0.8"/>
+		        <hand side="left" positionY="-0.03" positionZ="0.03"/> 
+		</CHARACTER>
+		
+	        <CHARACTER name="frankie">
+			<hand red="245" green="230" blue="255"/>
+		        <HAND side="right" positionX="0.02"/> 
+		        <HAND side="left" positionX="0.02"/> 
+		</character>		
+	</CUTSCENE>
+	
+	<CUTSCENE name="S2_CTG">	
+	        <CHARACTER name="frankie">
+			<hand red="255" green="240" blue="255"/>
+			<hand side="right" positionX="0.02"/> 
+		        <HAND side="left" positionX="0.02"/> 
+		</character>		
+	</CUTSCENE>
+	
+	<CUTSCENE name="S2_CTG2">	
+	        <CHARACTER name="cat">
+			<hand red="245" green="235" blue="245"/>
+			<hand scaleX="0.85" scaleY="0.85" scaleZ="0.85"/>
+		</character>
+		
+		<CHARACTER name="curly">
+			<hand red="185" green="170" blue="145"/>
+			<hand scaleX="0.9" scaleY="0.9" scaleZ="0.9"/>
+		</character>
+		
+		<CHARACTER name="miguel">
+			<hand red="255" green="230" blue="250"/>
+			<HAND side="right" positionX="-0.01" positionZ="-0.01"/> 
+		        <HAND side="left" positionZ="0.02"/>
+		</CHARACTER>
+	</CUTSCENE>
+	
+	<CUTSCENE name="S3_RTC">	
+	        <CHARACTER name="frankie">
+			<hand red="255" green="240" blue="255"/>
+			<hand side="right" positionX="0.02"/> 
+		        <HAND side="left" positionX="0.02"/> 
+		</CHARACTER>
+	</CUTSCENE>
+	
+	<CUTSCENE name="s4_bdba">
+		<!-- #810 -->
+		<CHARACTER name="eight2">
+		        <HAND model="non-skinned"/>
+		</CHARACTER>
+	</CUTSCENE>
+	
+	<CUTSCENE name="s4_bdbb">
+		<!-- #810 -->
+		<CHARACTER name="eight2">
+		        <HAND model="non-skinned"/>
+		</CHARACTER>
+	</CUTSCENE>
+	
+	<CUTSCENE name="s4_bdbd">
+	        <!-- #810 -->
+		<CHARACTER name="eight2">
+		        <HAND model="non-skinned"/>
+		</CHARACTER>
+	</CUTSCENE>
+	
+	<CUTSCENE name="S5_LRQ">
+		<!-- #1020 -->
+		<CHARACTER name="frankie">
+		        <HAND model="non-skinned"/>
+		</character>
+		
+		<CHARACTER name="maria">
+		        <hand red="200" green="200" blue="200"/>
+		        <hand scaleX="0.8" scaleY="0.8" scaleZ="0.8"/>
+		        <hand side="left" positionY="-0.03" positionZ="0.03"/> 
+		</CHARACTER>       
+	</CUTSCENE>
+	
+	<CUTSCENE name="S5_LRQB">
+	        <CHARACTER name="asuka">
+		        <hand red="255" green="230" blue="215"/>
+		        <hand scaleX="0.8" scaleY="0.8" scaleZ="0.8"/>
+		</CHARACTER>		
+		
+		<CHARACTER name="maria">
+		        <hand red="200" green="200" blue="200"/>
+		        <hand scaleX="0.8" scaleY="0.8" scaleZ="0.8"/>
+		        <hand side="left" positionY="-0.04" positionZ="0.03"/> 
+		</CHARACTER>       
+	</CUTSCENE>
+	
+	<CUTSCENE name="S5_LRQC">
+	        <CHARACTER name="asuka">		      
+		        <hand red="255" green="230" blue="215"/>
+		        <hand scaleX="0.8" scaleY="0.8" scaleZ="0.8"/> 
+		</CHARACTER>
+		
+		<CHARACTER name="maria">
+		        <hand red="200" green="200" blue="200"/>
+		        <hand scaleX="0.8" scaleY="0.8" scaleZ="0.8"/>
+		        <hand side="left" positionY="-0.04" positionZ="0.03"> 
+		                <ANIMATION TYPE="static"/>
+		                <ANIMATION time="2"/>
+		        </hand>	
+		        <hand side="left"> 
+		                <ANIMATION TYPE="static"/>
+		                <ANIMATION time="2"/>
+		        </hand>	
+		</CHARACTER>        
+	</CUTSCENE>
+	
+	<CUTSCENE name="A1_SS0">
+		<CHARACTER name="asuka">  
+		        <hand red="255" green="230" blue="215"/>
+		        <hand scaleX="0.8" scaleY="0.8" scaleZ="0.8"/>
+	        </character>
+	        
+	        <CHARACTER name="maria">
+		        <hand red="200" green="200" blue="200"/>
+		        <hand scaleX="0.8" scaleY="0.8" scaleZ="0.8"/>
+		</CHARACTER>
+	</CUTSCENE>
+	
+        <CUTSCENE name="A2_PP">	        
+		<CHARACTER name="player">  
+		        <hand model="non-skinned"/>		        
+	        </CHARACTER>
+	</CUTSCENE>
+	
+	<CUTSCENE name="A3_SS">	        
+		<CHARACTER name="asuka">  
+		        <hand red="255" green="230" blue="215"/>
+		        <hand scaleX="0.8" scaleY="0.8" scaleZ="0.8"/>
+	        </CHARACTER>
+	</CUTSCENE>
+	
+        <CUTSCENE name="A4_PDR">
+		<CHARACTER name="asuka">  
+		        <hand side="right" red="255" green="230" blue="215" scaleX="0.8" scaleY="0.8" scaleZ="0.8">
+		               <ANIMATION type="static"/>
+		               <ANIMATION time="2"/>
+		        </hand>
+		        <hand side="left" red="255" green="230" blue="215" scaleX="0.8" scaleY="0.8" scaleZ="0.8">
+		               <ANIMATION type="loop"/>
+		        </hand>
+	        </CHARACTER>
+	</CUTSCENE>
+	
+	<CUTSCENE name="R0_PDR2">
+		<CHARACTER name="ray">
+	                <hand red="255" green="230" blue="250" scaleX="0.93" scaleY="0.93" scaleZ="0.93"/>	 
+		        <HAND side="right" positionX="0.02" positionY="0.03" positionZ="0.01"/> 
+		        <HAND side="left" positionX="0.02" positionY="0.03"/>
+	        </CHARACTER>
+	</CUTSCENE>
+	
+	<CUTSCENE name="K1_KBO">
+		<CHARACTER name="kenji">  
+		        <hand red="255" green="230" blue="250" scaleX="0.9" scaleY="0.9" scaleZ="0.9"/>
+		        <HAND side="right" positionX="0.02" positionZ="0.02"/> 
+	        </CHARACTER>
+	</CUTSCENE>
+	
+	<CUTSCENE name="k2_gis">
+	        <!-- #962 -->
+	        <CHARACTER name="kenji">
+	                <HAND side="right" red="255" green="230" blue="250" scaleX="0.9" scaleY="0.9" scaleZ="0.9"
+		              positionY="0.02" positionZ="0.04">
+		              <ANIMATION TYPE="static"/>
+		                <ANIMATION time="0.6"/>
+		               </hand> 
+		        <HAND side="left" red="255" green="230" blue="250" scaleX="0.9" scaleY="0.9" scaleZ="0.9"
+		              positionX="0.02" positionY="0.04" positionZ="0.03">
+		               <ANIMATION TYPE="static"/>
+		                <ANIMATION time="2"/>
+		                </hand>	        	               		        
+		</character>
+		
+		<CHARACTER name="player">
+	                <HAND side="right">
+		              <ANIMATION TYPE="static"/>
+		                <ANIMATION time="0.7"/> 
+		                </hand>
+		        <HAND side="left">
+		               <ANIMATION TYPE="static"/>
+		                <ANIMATION time="2"/>
+		                </hand>
+	        </character>
+	</CUTSCENE>
+	
+	<CUTSCENE name="K3_DS">	        
+	        <CHARACTER name="kenji">  
+		       <HAND side="right" red="255" green="230" blue="250" 
+		             scaleX="0.9" scaleY="0.9" scaleZ="0.9" positionX="0.02" positionZ="-0.02"/>
+		       <HAND side="left" red="255" green="230" blue="250" positionZ="0.02"
+		             scaleX="0.9" scaleY="0.9" scaleZ="0.9"/>
+	        </character>
+	        
+	        <character name="player">
+	               <animation type="static"/>
+	               <animation time="2"/>
+	        </character>
+	</CUTSCENE>
+	
+	<CUTSCENE name="K4_SHI">
+		<CHARACTER name="kenji">  
+		        <HAND red="240" green="235" blue="240" scaleX="0.9" scaleY="0.9" scaleZ="0.9"/>
+	        </character>
+	        
+	        <character name="player">
+	               <animation type="static"/>
+	               <animation time="2"/>
+	        </character>
+	</CUTSCENE>
+	
+	<CUTSCENE name="K4_SHI2">
+		<CHARACTER name="player">
+		        <HAND model="non-skinned"/>							
+	        </character>
+	        
+	        <character name="keeper">
+	                <hand red="90" green="90" blue="90"/>
+	        </character>
+	</CUTSCENE>
+	
+        <CUTSCENE name="K5_SD">
+		<CHARACTER name="kenji">  
+		        <HAND red="240" green="235" blue="240" scaleX="0.9" scaleY="0.9" scaleZ="0.9"/>
+	        </CHARACTER>
+	</CUTSCENE>
+	
+	<CUTSCENE name="R1_SW">
+		<CHARACTER name="ray">  
+		        <hand red="255" green="230" blue="250" scaleX="0.93" scaleY="0.93" scaleZ="0.93"/>
+		        <HAND side="right" positionX="0.02" positionY="0.03" positionZ="0.01"/> 
+		        <HAND side="left" positionX="0.02" positionY="0.03"/>
+	        </CHARACTER>
+	</CUTSCENE>
+	
+	<CUTSCENE name="R2_ap"> 
+		<CHARACTER name="ray">  
+		        <hand red="255" green="230" blue="250" scaleX="0.93" scaleY="0.93" scaleZ="0.93"/>
+		        <HAND side="right" positionX="0.02" positionY="0.03" positionZ="0.01"/> 
+		        <HAND side="left" positionX="0.02" positionY="0.03"/>
+	        </character>
+	        
+	        <character name="player">
+	               <animation type="static"/>
+	               <animation time="2"/>
+	        </character>
+	</CUTSCENE>
+	
+        <CUTSCENE name="R3_ED"> 	        
+	        <character name="player">
+	               <animation type="static"/>
+	               <animation time="2"/>
+	        </character>
+	</CUTSCENE>
+	
+	<CUTSCENE name="R4_gf">
+		<CHARACTER name="ray">  
+		        <hand red="255" green="230" blue="250" scaleX="0.93" scaleY="0.93" scaleZ="0.93"/>
+		        <HAND side="right" positionX="0.02" positionY="0.03"/> 
+		        <HAND side="left" positionX="0.02" positionY="0.03"/>
+	        </CHARACTER>
+	</CUTSCENE>
+	
+	<CUTSCENE name="R5_pb">
+		<CHARACTER name="ray">  
+		        <hand red="255" green="230" blue="250" scaleX="0.93" scaleY="0.93" scaleZ="0.93"/>
+		        <HAND side="right" positionX="0.02" positionY="0.03" positionZ="0.01"/> 
+		        <HAND side="left" positionX="0.02" positionY="0.03"/>
+	        </CHARACTER>
+	</CUTSCENE>
+	
+	<CUTSCENE name="R6_mm">
+		<CHARACTER name="ray">  
+		        <hand red="255" green="230" blue="250" scaleX="0.93" scaleY="0.93" scaleZ="0.93"/>
+		        <HAND side="right" positionX="0.02" positionY="0.03" positionZ="0.01"/> 
+		        <HAND side="left" positionX="0.02" positionY="0.03"/>
+	        </CHARACTER>
+	</CUTSCENE>
+		
+	<CUTSCENE name="d1_stog">
+	      	<CHARACTER name="love2">
+	      		<HAND red="190" green="185" blue="200">
+		        </hand>
+		</character>
+	</CUTSCENE>	
+	
+	<CUTSCENE name="d2_kk">
+	      	<CHARACTER name="love">
+	      		<HAND red="190" green="185" blue="200">
+		               <ANIMATION TYPE="static"/>
+		        </hand>
+		</character>
+	</CUTSCENE>	
+	
+	<CUTSCENE name="D3_ADO">
+	        <!-- #1059 -->
+		<CHARACTER name="love2">
+		        <hand red="190" green="185" blue="200"
+		        positionZ="0.01" positionX="-0.01" positionY="0.01"> 
+		               <ANIMATION TYPE="static"/>
+			       <ANIMATION time="0"/>
+		        </hand>
+                </character>
+	</CUTSCENE>
+	
+        <CUTSCENE name="D4_GTA">
+	 	<CHARACTER name="love">
+	 	       <HAND red="180" green="170" blue="200" positionX="0.02" positionY="0.02" positionZ="0.02"/>
+		</CHARACTER>	 	
+	</CUTSCENE>
+	
+	<CUTSCENE name="D4_GTA2">
+	 	<CHARACTER name="cat">	
+                        <hand red="245" green="235" blue="245"/>
+                        <hand side="right" red="185" green="170" blue="145"
+                              scaleX="0.85" scaleY="0.85" scaleZ="0.85"
+                              positionY="0.01" positionZ="0.02">
+                               <ANIMATION TYPE="static"/>
+			       <ANIMATION time="0.3"/>
+			</hand>
+                        <hand side="left" red="245" green="235" blue="245"
+                              scaleX="0.85" scaleY="0.85" scaleZ="0.85" positionY="0.02">
+                               <ANIMATION TYPE="loop"/>
+		        </hand>
+                </CHARACTER>
+        
+                <CHARACTER name="asuka">
+		        <hand side="right" model="skinned-stick" red="190" green="160" blue="140" positionX="0.02"		       
+			      scaleX="1.1" scaleY="1.1" scaleZ="1.1">
+			       <ANIMATION TYPE="static"/>
+			       <ANIMATION time="1.2"/>
+			</hand>
+			<hand side="left" red="255" green="230" blue="215"
+		              scaleX="0.8" scaleY="0.8" scaleZ="0.8">
+		               <ANIMATION TYPE="static"/>
+			       <ANIMATION time="1"/>
+			</hand>
+                </character> 
+                
+                <CHARACTER name="miguel">
+			<HAND side="right" red="255" green="230" blue="250" positionX="-0.01" positionZ="-0.01"> 
+			         <ANIMATION type="static"/>
+			         <ANIMATION time="0.2"/>			         
+			</hand>
+		        <HAND side="left" red="255" green="230" blue="250" positionZ="0.02">
+		                 <ANIMATION type="loop"/>
+		        </hand>
+		</character>
+        </CUTSCENE>
+        
+        <CUTSCENE name="D5_ES">
+                <CHARACTER name="love">
+	 	       <HAND side="right" red="180" green="170" blue="200" positionY="0.02"/>
+		       <HAND side="left" red="180" green="170" blue="200" positionX="0.03" positionZ="-0.03"/>
+		</character>                 
+        </CUTSCENE>
+        
+         <CUTSCENE name="D6_STS">
+                <CHARACTER name="love2">
+	 	       <HAND red="180" green="170" blue="200"/>
+		</character>                 
+        </CUTSCENE>
+        
+        <CUTSCENE name="A6_BAIT">
+                <CHARACTER name="asuka">
+		        <hand side="right" model="skinned-stick" red="190" green="160" blue="140" positionX="0.02"
+		              scaleX="1.1" scaleY="1.1" scaleZ="1.1">
+		               <ANIMATION TYPE="static"/>
+			       <ANIMATION time="1.0"/>
+			</hand>		       
+			<hand side="left" red="255" green="230" blue="215"
+		              scaleX="0.8" scaleY="0.8" scaleZ="0.8">
+		               <ANIMATION TYPE="static"/>
+			       <ANIMATION time="1.0"/>
+			</hand>
+                </character>         
+        </CUTSCENE>
+        
+        <CUTSCENE name="A7_ETG">
+                <CHARACTER name="asuka">
+		        <hand side="right" model="skinned-stick" red="190" green="160" blue="140" positionX="0.02"
+		              scaleX="1.0" scaleY="1.0" scaleZ="1.0">
+		               <ANIMATION TYPE="static"/>
+			       <ANIMATION time="1.1"/>
+			</hand>			       
+			<hand side="left" red="255" green="230" blue="215"
+		              scaleX="0.8" scaleY="0.8" scaleZ="0.8">
+		               <ANIMATION TYPE="static"/>
+			       <ANIMATION time="1.2"/>
+			</hand>
+                </character>          
+        </CUTSCENE>
+
+        <CUTSCENE name="A8_PS">
+                <CHARACTER name="asuka">
+		        <hand side="right" red="255" green="230" blue="215" 
+		              scaleX="0.8" scaleY="0.8" scaleZ="0.8" positionX="0.01"/>
+			<hand side="left" red="255" green="230" blue="215" positionZ="-0.02" 
+			      scaleX="0.8" scaleY="0.8" scaleZ="0.8"/>
+                </character>
+        
+                <CHARACTER name="maria">
+		        <hand side="right" model="skinned-stick" red="210" green="185" blue="165"
+		              scaleX="1.0" scaleY="1.0" scaleZ="1.0">
+		                <animation type="static"/>
+		                <animation time="2"/>
+		        </hand>
+                        <hand side="left" scaleX="0.8" scaleY="0.8" scaleZ="0.8" positionX="0.01" positionY="-0.03">
+                                <ANIMATION TYPE="static"/>
+			        <ANIMATION time="0.1"/>
+			</hand>
+                </character>
+        </CUTSCENE>
+	
+	<CUTSCENE name="C1_TEX">	
+	        <CHARACTER name="player">
+	 	       <HAND side="left" positionY="-0.01" positionZ="-0.01"/>
+		</character>
+		
+	 	<CHARACTER name="cat">	
+                        <hand side="right" gender="female" race="white" red="185" green="170" blue="145"
+                              positionY="0.01" positionZ="0.02">
+                               <ANIMATION TYPE="static"/>
+			       <ANIMATION time="2"/>
+			</hand>
+                        <hand side="left" gender="female" race="white" red="185" green="170" blue="145"
+                              positionY="0.02">
+                               <ANIMATION TYPE="loop"/>
+		        </hand>
+                </character>
+                
+                <CHARACTER name="maria">
+		        <hand red="200" green="200" blue="200"/>
+		        <hand scaleX="0.8" scaleY="0.8" scaleZ="0.8"/>
+		</CHARACTER>	
+        </CUTSCENE>
+         
+</GTA_XML>
