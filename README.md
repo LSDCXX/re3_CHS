@@ -1,19 +1,49 @@
+# re3
+
+**简体中文** | [English](README.en.md)
+
+## 本次整合的功能与修复
+
+- **过场动画可动手指**：原生适配 aap/iii_anim，每只手使用独立动画状态；缺少兼容资源时使用原手部。III 的手部资源需另行安装，详见 [资源说明](docs/cutscene-hands-menu-map.md)。
+- **全屏大地图**：适配 LSDCXX/MenuMapIII，保留黄色底栏；上方居中图例、右下角黄条上方地名、鼠标悬停名称，调整字号、背景和阴影，修复玩家方向与返回按钮。
+- **地图交互**：从暂停菜单进入，取消 M 打开/关闭地图；Esc、返回按钮或 B 返回上一级，Start 恢复游戏。左摇杆移动、LT/RT 缩放、X/方块标点、LB/L1 图例。
+- **Classic Axis**：Standard Controls 下支持越肩第三人称瞄准、居中准星与蹲下射击，Free Cam 独立；修复走路偏移、跳跃和车库误显示准星、连续射击/蹲射节奏、先蹲后瞄无法开火、持续瞄准走跑异常及自定义步行键。喷火器站立使用原版动画。
+- **GInput 第五套风格手柄布局**：LT 瞄准、RT 开火、A 奔跑、X 跳跃、Y 上车、LS 蹲下；载具 RT 油门、LT 刹车/倒车、A 手刹、B 开火、LB/RB 左右看，同时按向后看。
+- **锁定与自由瞄准**：手柄锁定、十字键左右切换目标，目标死亡后选择附近最近的有效敌人；推动右摇杆转自由瞄准，松开 LT 后才重新允许自动锁定。
+- **中文手柄图标**：左上角操作提示随设备和设置中的手柄类型显示对应图标，修复中文不显示按键；图标宽度参与换行与对齐。
+- **任务重试**：保留并完善已有移动版任务重试实现，加入快照有效性检查、中英文提示和取消操作；防止失败写入使用旧快照，保留任务开始时的快照。
+
+完整配置、修复迭代与验证限制见 [Classic Axis 说明](docs/CLASSIC_AXIS.md)；最新章节取代文档中早期修订的旧行为。本次未系统移植最新版 SilentPatch，也不将未经证实的爆炸音效问题列为已修复。
+
+当前仓库克隆命令：
+
+```sh
+git clone --recursive --branch master https://github.com/LSDCXX/re3_CHS.git re3
+```
+
+**旧版说明保留在下方**：历史上游下载链接、平台测试范围和 C++ 限制不代表本分支新增代码。新增功能的构建与隔离测试不替代完整游戏测试。
+
+来源与致谢：[iii_anim](https://github.com/aap/iii_anim)、[MenuMapIII](https://github.com/LSDCXX/menu-map-iii)、[原 MenuMap](https://github.com/gennariarmando/menu-map)、[Classic Axis](https://github.com/gennariarmando/classic-axis)、[GInput III](https://silentsblog.com/mods/gta-iii/#ginput)、[ZeptoBST/re3](https://github.com/ZeptoBST/re3)。中文术语参考 [GTAMODX 介绍译文](https://gtamodx.com/mods/BmUYhBABACsQ)。原有署名、截图、链接、配置、构建说明、历史和许可均保留；[未经改写的旧 README](docs/README_LEGACY.md) 可供对照。
+
+
+---
+
 <img src="https://github.com/hezkore/re3/blob/master/res/images/logo_1024.png?raw=true" alt="re3 logo" width="200">
 
-## About this fork of re3
-This fork fixes some issues I've had with the original re3.\
-They're currently only applied to GTA 3.
 
-* The camera now has the same vertical and horizontal speed.
-* The mouse is generally slower, letting you adjust the mouse sensitivity at a finer-granularity level.
-* Particles are no longer affected by framerate.\
-_(via a dirty fixed rate hack)_
+## 关于这个 re3 分支
 
-## Intro
+本分支修复了作者在原版 re3 中遇到的问题，旧版这些改动仅应用于 GTA III：
 
-## Dynamic Chinese fonts
+* 镜头水平与垂直速度一致。
+* 整体降低鼠标速度，使灵敏度可以更细致地调整。
+* 粒子不再受帧率影响（原说明注明使用了简易固定更新频率处理）。
 
-On Windows, Chinese text can now be rasterized on demand from installed system fonts or local TTF/TTC/OTF files. Configure it in `re3.ini`:
+## 简介
+
+## 动态中文字库
+
+Windows 下可从已安装字体或本地 TTF/TTC/OTF 文件按需生成中文字形。在 `re3.ini` 中配置：
 
 ```ini
 [Fonts]
@@ -29,113 +59,99 @@ SlantWeight=700
 RareWeight=400
 ```
 
-`TextRenderer=3` uses DirectWrite (default), `2` uses the compatible GDI renderer, and `1` keeps the legacy `MODELS/CHINESE.TXD` plus `data/Chinese.dat` path. Dynamic modes cache glyphs in atlas pages as characters are encountered, so they are not limited to the glyphs bundled in the static texture.
+`TextRenderer=3` 使用默认 DirectWrite，`2` 使用兼容的 GDI，`1` 保留旧 `MODELS/CHINESE.TXD` 加 `data/Chinese.dat` 路径。动态模式在遇到字符时将字形缓存在纹理图集中，不受静态纹理所带字形数量限制；实际覆盖取决于字体。
 
-When Chinese is loaded, the normal glyphs referenced by `CHINESE.GXT` are pre-rendered while the loading screen is active, regardless of whether the font system or GXT data finishes loading first. This makes the first load slightly longer, but prevents new cutscene subtitles from stalling gameplay. GXT-external characters in one string share a single atlas lock/upload. Chinese HUD glyphs are displayed 10% larger. As in reVC, glyph quads are grouped by atlas texture and submitted in separate shadow/main batches with linear filtering; Latin text keeps the original game's sizing and rendering path.
+加载中文时，`CHINESE.GXT` 引用的常规字形会在加载画面期间预生成，不论字体系统还是 GXT 先加载完成。首次加载稍长，但避免新过场字幕在游戏中触发卡顿。同一字符串内不在 GXT 中的字符共用一次图集锁定／上传。中文 HUD 字形放大 10%；与 reVC 一样，按图集纹理分组，阴影与正文分别批量提交并使用线性过滤。拉丁文字保留原版尺寸与渲染路径。
 
-In this repository you'll find the fully reversed source code for GTA III ([master](https://github.com/hezkore/re3/tree/master/) branch) and GTA VC ([miami](https://github.com/GTAmodding/re3/tree/miami/) branch).
+旧上游仓库提供 GTA III（[master](https://github.com/hezkore/re3/tree/master/)）与 GTA Vice City（[miami](https://github.com/GTAmodding/re3/tree/miami/)）的完整逆向源代码。
 
-It has been tested and works on Windows, Linux, MacOS and FreeBSD, on x86, amd64, arm and arm64.\
-Rendering is handled either by original RenderWare (D3D8)
-or the reimplementation [librw](https://github.com/aap/librw) (D3D9, OpenGL 2.1 or above, OpenGL ES 2.0 or above).\
-Audio is done with MSS (using dlls from original GTA) or OpenAL.
+原项目曾在 Windows、Linux、macOS、FreeBSD 以及 x86、amd64、ARM、ARM64 上测试运行。图形可使用原版 RenderWare（D3D8），或重新实现的 [librw](https://github.com/aap/librw)（D3D9、OpenGL 2.1+、OpenGL ES 2.0+）；音频可使用 MSS（原版 GTA DLL）或 OpenAL。
 
-The project has also been ported to the [Nintendo Switch](https://github.com/AGraber/re3-nx/),
-[Playstation Vita](https://github.com/Rinnegatamante/re3) and
-[Nintendo Wii U](https://github.com/GaryOderNichts/re3-wiiu/).
+项目也被移植到 [Nintendo Switch](https://github.com/AGraber/re3-nx/)、[PlayStation Vita](https://github.com/Rinnegatamante/re3) 和 [Nintendo Wii U](https://github.com/GaryOderNichts/re3-wiiu/)。旧版说明指出尚不能构建 PS2 或 Xbox 版本，有意参与者可联系原开发者。
 
-We cannot build for PS2 or Xbox yet. If you're interested in doing so, get in touch with us.
+## 安装
 
-## Installation
+- re3 需要 PC 原版游戏资源才能运行，必须拥有一份正版 GTA III。以下保留旧版商店与构建链接（历史地址）：
+- [原游戏商店链接](https://store.steampowered.com/app/12100/Grand_Theft_Auto_III/)。编译 re3，或参考旧版列出的构建包：
+  - [Windows D3D9 MSS 32 位](https://nightly.link/GTAmodding/re3/workflows/re3_msvc_x86/master/re3_Release_win-x86-librw_d3d9-mss.zip)
+  - [Windows D3D9 64 位](https://nightly.link/GTAmodding/re3/workflows/re3_msvc_amd64/master/re3_Release_win-amd64-librw_d3d9-oal.zip)
+  - [Windows OpenGL 64 位](https://nightly.link/GTAmodding/re3/workflows/re3_msvc_amd64/master/re3_Release_win-amd64-librw_gl3_glfw-oal.zip)
+  - [Linux 64 位](https://nightly.link/GTAmodding/re3/workflows/build-cmake-conan/master/ubuntu-18.04-gl3.zip)
+  - [macOS 64 位 x86-64](https://nightly.link/GTAmodding/re3/workflows/build-cmake-conan/master/macos-latest-gl3.zip)
+- 将下载的运行包解压到 GTA III 游戏目录并运行 re3。原说明中的 ZIP 包含可执行文件、更新与额外资源；OpenAL 版本还包含必需 DLL。源码 ZIP 本身不含已编译程序。
 
-- re3 requires PC game assets to work, so you **must** own [a copy of GTA III](https://store.steampowered.com/app/12100/Grand_Theft_Auto_III/).
-- Build re3 or download the latest build:
-  - [Windows D3D9 MSS 32bit](https://nightly.link/GTAmodding/re3/workflows/re3_msvc_x86/master/re3_Release_win-x86-librw_d3d9-mss.zip)
-  - [Windows D3D9 64bit](https://nightly.link/GTAmodding/re3/workflows/re3_msvc_amd64/master/re3_Release_win-amd64-librw_d3d9-oal.zip)
-  - [Windows OpenGL 64bit](https://nightly.link/GTAmodding/re3/workflows/re3_msvc_amd64/master/re3_Release_win-amd64-librw_gl3_glfw-oal.zip)
-  - [Linux 64bit](https://nightly.link/GTAmodding/re3/workflows/build-cmake-conan/master/ubuntu-18.04-gl3.zip)
-  - [MacOS 64bit x86-64](https://nightly.link/GTAmodding/re3/workflows/build-cmake-conan/master/macos-latest-gl3.zip)
-- Extract the downloaded zip over your GTA 3 directory and run re3. The zip includes the binary, updated and additional gamefiles and in case of OpenAL the required dlls.
 
-## Screenshots
+## 截图
 
 ![re3 2021-02-11 22-57-03-23](https://user-images.githubusercontent.com/1521437/107704085-fbdabd00-6cbc-11eb-8406-8951a80ccb16.png)
 ![re3 2021-02-11 22-43-44-98](https://user-images.githubusercontent.com/1521437/107703339-cbdeea00-6cbb-11eb-8f0b-07daa105d470.png)
 ![re3 2021-02-11 22-46-33-76](https://user-images.githubusercontent.com/1521437/107703343-cd101700-6cbb-11eb-9ccd-012cb90524b7.png)
 ![re3 2021-02-11 22-50-29-54](https://user-images.githubusercontent.com/1521437/107703348-d00b0780-6cbb-11eb-8afd-054249c2b95e.png)
 
-## Improvements
 
-We have implemented a number of changes and improvements to the original game.
-They can be configured in `core/config.h`.
-Some of them can be toggled at runtime, some cannot.
+## 改进
 
-* Fixed a lot of smaller and bigger bugs
-* User files (saves and settings) stored in GTA root directory
-* Settings stored in re3.ini file instead of gta3.set
-* Debug menu to do and change various things (Ctrl-M to open)
-* Debug camera (Ctrl-B to toggle)
-* Rotatable camera
-* XInput controller support (Windows)
-* No loading screens between islands ("map memory usage" in menu)
-* Skinned ped support (models from Xbox or Mobile)
-* Rendering
-  * Widescreen support (properly scaled HUD, Menu and FOV)
-  * PS2 MatFX (vehicle reflections)
-  * PS2 alpha test (better rendering of transparency)
-  * PS2 particles
-  * Xbox vehicle rendering
-  * Xbox world lightmap rendering (needs Xbox map)
-  * Xbox ped rim light
-  * Xbox screen rain droplets
-  * More customizable colourfilter
-* Menu
-  * Map
-  * More options
-  * Controller configuration menu
-  * ...
-* Can load DFFs and TXDs from other platforms, possibly with a performance penalty
-* ...
+我们对原版游戏进行了多项修改和改进，可在 `src/core/config.h` 中配置；部分可在运行时切换，其他需要编译时选择。
 
-## To-Do
+* 修复大量大小 Bug。
+* 用户文件（存档和设置）存放在 GTA 游戏根目录。
+* 设置保存在 `re3.ini` 而不是原版 `gta3.set`。
+* 支持带骨骼的行人模型（Xbox 或移动版）。
+* PS2 粒子效果。
+* 菜单地图。
+* 增加调试菜单（Ctrl-M），用于执行或修改各种内容。
+* 增加调试摄像机（Ctrl-B 切换）。
+* 支持旋转摄像机。
+* Windows 支持 XInput 手柄。
+* 岛屿间可取消加载画面（菜单中的“地图内存使用量”）。
+* 渲染：
+  * 宽屏支持，正确缩放 HUD、菜单与 FOV。
+  * PS2 MatFX 车辆反射。
+  * PS2 Alpha Test，改善透明材质。
+  * Xbox 车辆渲染。
+  * Xbox 世界光照贴图（需要 Xbox 地图）。
+  * Xbox 行人边缘光。
+  * Xbox 屏幕雨滴。
+  * 更自由的颜色滤镜设置。
+* 菜单：更多选项、手柄配置菜单等。
+* 可加载其他平台的 DFF 和 TXD，但可能有性能损失。
+* ……
 
-The following things would be nice to have/do:
+## 待办事项
 
-* Fix physics for high FPS
-* Improve performance on lower end devices, especially the OpenGL layer on the Raspberry Pi (if you have experience with this, please get in touch)
-* Compare code with PS2 code (tedious, no good decompiler)
-* [PS2 port](https://github.com/GTAmodding/re3/wiki/PS2-port)
-* Xbox port (not quite as important)
-* reverse remaining unused/debug functions
-* compare CodeWarrior build with original binary for more accurate code (very tedious)
+以下为原版 README 的开发方向，不表示本分支已经完成：
 
-## Modding
+* 修复高帧率物理问题。
+* 与 PS2 代码对比（工作繁琐，缺乏好用的反编译器）。
+* 改善低端设备性能，尤其是 Raspberry Pi 的 OpenGL 图形层；欢迎有经验的开发者参与。
+* [PS2 移植](https://github.com/GTAmodding/re3/wiki/PS2-port)。
+* Xbox 移植（优先级较低）。
+* 逆向剩余未使用与调试函数。
+* 将 CodeWarrior 编译结果与原始二进制对比，提高还原准确性（工作繁琐）。
 
-Asset modifications (models, texture, handling, script, ...) should work the same way as with original GTA for the most part.
+## Mod 支持
 
-CLEO scripts work with [CLEO Redux](https://github.com/cleolibrary/CLEO-Redux).
+模型、纹理、操控参数、脚本等资源修改，在大多数情况下与原版 GTA 的 Mod 制作方式相同。
 
-Mods that make changes to the code (dll/asi, limit adjusters) will *not* work.
-Some things these mods do are already implemented in re3 (much of SkyGFX, GInput, SilentPatch, Widescreen fix),
-others can easily be achieved (increasing limis, see `config.h`),
-others will simply have to be rewritten and integrated into the code directly.
-Sorry for the inconvenience.
+修改原版程序代码的 DLL/ASI、限制调整器通常不能直接使用。它们的部分功能已在 re3 中实现，例如 SkyGFX、GInput、SilentPatch、Widescreen Fix 的部分功能；其他功能可以通过 `config.h` 提高限制，或重写后直接集成到源码中。对于这种不便，原项目表示歉意。
 
-## Building from Source  
+CLEO 脚本可通过 [CLEO Redux](https://github.com/cleolibrary/CLEO-Redux) 工作。
 
-When using premake, you may want to point GTA_III_RE_DIR environment variable to GTA3 root folder if you want the executable to be moved there via post-build script.
+## 从源代码编译
 
-Clone the repository with `git clone --recursive https://github.com/GTAmodding/re3.git`. Then `cd re3` into the cloned repository.
+使用 Premake 时，可将 `GTA_III_RE_DIR` 环境变量指向游戏根目录，通过编译后脚本复制可执行程序。
+
+旧版上游克隆命令：`git clone --recursive https://github.com/GTAmodding/re3.git`。然后 `cd re3` 进入目录。本分支地址请使用本页开头的新命令。
 
 <details><summary>Linux Premake</summary>
 
-For Linux using premake, proceed: [Building on Linux](https://github.com/GTAmodding/re3/wiki/Building-on-Linux)
+Linux 使用 Premake 请参考：[在 Linux 上编译](https://github.com/GTAmodding/re3/wiki/Building-on-Linux)
 
 </details>
 
 <details><summary>Linux Conan</summary>
 
-Install python and conan, and then run build.
+安装 Python 与 Conan，然后执行旧版构建命令（依赖版本以工程要求为准）：
 ```
 conan export vendor/librw librw/master@
 mkdir build
@@ -147,88 +163,64 @@ conan build .. -if build -bf build -pf package
 
 <details><summary>MacOS Premake</summary>
 
-For MacOS using premake, proceed: [Building on MacOS](https://github.com/GTAmodding/re3/wiki/Building-on-MacOS)
+macOS 使用 Premake 请参考：[在 macOS 上编译](https://github.com/GTAmodding/re3/wiki/Building-on-MacOS)
 
 </details>
 
 <details><summary>FreeBSD</summary>
 
-For FreeBSD using premake, proceed: [Building on FreeBSD](https://github.com/GTAmodding/re3/wiki/Building-on-FreeBSD)
+FreeBSD 使用 Premake 请参考：[在 FreeBSD 上编译](https://github.com/GTAmodding/re3/wiki/Building-on-FreeBSD)
 
 </details>
 
 <details><summary>Windows</summary>
 
-Assuming you have Visual Studio 2015/2017/2019:
-- Run one of the `premake-vsXXXX.cmd` variants on root folder.
-- Open build/re3.sln with Visual Studio and compile the solution.
+旧版以 Visual Studio 2015/2017/2019 为例；当前新增代码应使用符合工程要求的工具集：
+- 运行根目录对应的 `premake-vsXXXX.cmd`。
+- 在 Visual Studio 中打开 `build/re3.sln` 并编译解决方案。
 
-Microsoft recently discontinued its downloads of the DX9 SDK. You can download an archived version here: https://archive.org/details/dxsdk_jun10
+旧文记载微软已停止提供 DX9 SDK 下载，可参考归档版本： https://archive.org/details/dxsdk_jun10
 
-**If you choose OpenAL on Windows** You must read [Running OpenAL build on Windows](https://github.com/GTAmodding/re3/wiki/Running-OpenAL-build-on-Windows).
+**Windows 选择 OpenAL 时**，请阅读 [在 Windows 上运行 OpenAL 构建](https://github.com/GTAmodding/re3/wiki/Running-OpenAL-build-on-Windows).
 </details>
 
-> :information_source: premake has an `--with-lto` option if you want the project to be compiled with Link Time Optimization.
+> :information_source: Premake 的 `--with-lto` 选项用于链接时优化（LTO）。
 
-> :information_source: There are various settings in [config.h](https://github.com/GTAmodding/re3/tree/master/src/core/config.h), you may want to take a look there.
+> :information_source: 各种配置开关见 [config.h](https://github.com/GTAmodding/re3/tree/master/src/core/config.h)，建议查阅。
 
-> :information_source: re3 uses completely homebrew RenderWare-replacement rendering engine; [librw](https://github.com/aap/librw/). librw comes as submodule of re3, but you also can use LIBRW enviorenment variable to specify path to your own librw.
+> :information_source: 项目使用自行开发的 RenderWare 替代引擎 [librw](https://github.com/aap/librw/)。它作为 Git 子模块提供，也可以通过 `LIBRW` 环境变量指定自己的 librw 路径。
 
-If you feel the need, you can also use CodeWarrior 7 to compile re3 using the supplied codewarrior/re3.mcp project - this requires the original RW33 libraries, and the DX8 SDK. The build is unstable compared to the MSVC builds though, and is mostly meant to serve as a reference.
-
-## Contributing
-As long as it's not linux/cross-platform skeleton/compatibility layer, all of the code on the repo that's not behind a preprocessor condition(like FIX_BUGS) are **completely** reversed code from original binaries.  
-
-We **don't** accept custom codes, as long as it's not wrapped via preprocessor conditions, or it's linux/cross-platform skeleton/compatibility layer.
-
-We accept only these kinds of PRs;
-
-- A new feature that exists in at least one of the GTAs (if it wasn't in III/VC then it doesn't have to be decompilation)  
-- Game, UI or UX bug fixes (if it's a fix to original code, it should be behind FIX_BUGS)
-- Platform-specific and/or unused code that's not been reversed yet
-- Makes reversed code more understandable/accurate, as in "which code would produce this assembly".
-- A new cross-platform skeleton/compatibility layer, or improvements to them
-- Translation fixes, for languages original game supported
-- Code that increase maintainability  
-
-We have a [Coding Style](https://github.com/GTAmodding/re3/blob/master/CODING_STYLE.md) document that isn't followed or enforced very well.
-
-Do not use features from C++11 or later.
+如有需要，也可使用 CodeWarrior 7 与 `codewarrior/re3.mcp` 工程编译，需要原版 RW33 库和 DX8 SDK。相比 MSVC，此构建方式不稳定，主要用作参考。
 
 
-## History
+## 贡献代码
 
-re3 was started sometime in the spring of 2018,
-initially as a way to test reversed collision and physics code
-inside the game.
-This was done by replacing single functions of the game
-with their reversed counterparts using a dll.
+以下保留原项目的贡献约定：除 Linux／跨平台框架／兼容层代码外，未放在预处理条件（如 `FIX_BUGS`）内的代码，均来自原始二进制的逆向。自定义代码应由预处理条件封装，或属于上述跨平台部分。
 
-After a bit of work the project lay dormant for about a year
-and was picked up again and pushed to github in May 2019.
-At the time I (aap) had reversed around 10k lines of code and estimated
-the final game to have around 200-250k.
-Others quickly joined the effort (Fire_Head, shfil, erorcun and Nick007J
-in time order, and Serge a bit later) and we made very quick progress
-throughout the summer of 2019
-after which the pace slowed down a bit.
+原项目接受的 PR 类型：
 
-Due to everyone staying home during the start of the Corona pandemic
-everybody had a lot of time to work on re3 again and
-we finally got a standalone exe in April 2020 (around 180k lines by then).
+- 至少在一部 GTA 中存在的新功能；若 III/VC 原本没有，不要求来自反编译。
+- 游戏、界面或体验修复；原始游戏代码的 Bug 修复应位于 `FIX_BUGS` 条件下。
+- 尚未逆向的平台专用代码及未使用代码。
+- 使逆向代码更易理解、更准确，例如更接近原始汇编生成方式。
+- 新的跨平台框架／兼容层及其改进。
+- 原游戏支持语言的翻译修复。
+- 提高代码可维护性的修改。
 
-After the initial excitement and fixing and polishing the code further,
-reVC was started in early May 2020 by starting from re3 code,
-not by starting from scratch replacing functions with a dll.
-After a few months of mostly steady progress we considered reVC
-finished in December.
+原项目提供 [代码风格说明](https://github.com/GTAmodding/re3/blob/master/CODING_STYLE.md)，但执行并不严格。
 
-Since then we have started reLCS, which is currently work in progress.
+旧版要求“不要使用 C++11 或更新特性”。这是保留的历史要求；当前分支的构建要求和已集成代码以本页开头及工程配置为准。
 
+## 历史
 
-## License
+re3 始于 2018 年春，最初用于在游戏内测试逆向得到的碰撞与物理代码，通过 DLL 将原游戏的单个函数替换成逆向实现。
 
-We don't feel like we're in a position to give this code a license.\
-The code should only be used for educational, documentation and modding purposes.\
-We do not encourage piracy or commercial use.\
-Please keep derivate work open source and give proper credit.
+项目开发一段时间后停滞约一年，于 2019 年 5 月恢复并上传 GitHub。当时 aap 已逆向约一万行，估计完整游戏约有 20 万至 25 万行代码。Fire_Head、shfil、erorcun、Nick007J 依次加入，Serge 稍后加入；2019 年夏进展迅速，此后速度放缓。
+
+疫情初期大家居家，有更多时间参与。2020 年 4 月，项目终于生成独立可执行程序，当时代码约 18 万行。继续修复和完善后，2020 年 5 月初开始 reVC：它直接基于 re3，而不是重新从 DLL 替换函数起步。经过数月稳定开发，团队于当年 12 月认为 reVC 已完成。
+
+旧版 README 随后记载开始了 reLCS，且当时仍在开发；此处保留其历史描述，不代表当前进度。
+
+## 许可
+
+原项目表示不认为自己有权为这些代码授予许可。代码仅用于教育、文档和 Mod 制作目的；不鼓励盗版或商业用途。请让衍生作品保持开源，并保留适当署名。
