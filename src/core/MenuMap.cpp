@@ -280,8 +280,21 @@ void ProcessInput(CMenuManager &menu) {
 		view.x *= SCREEN_WIDTH/screenWidth; view.y *= SCREEN_HEIGHT/screenHeight; view.halfSize *= SCREEN_HEIGHT/screenHeight;
 		screenWidth=SCREEN_WIDTH; screenHeight=SCREEN_HEIGHT;
 	}
-	cursor = menu.m_bShowMouse ? Point{(float)menu.m_nMousePosX,(float)menu.m_nMousePosY} : Point{SCREEN_WIDTH/2.0f,(viewport.top+viewport.bottom)/2};
 	CPad *pad=CPad::GetPad(0);
+	// The map bypasses normal menu navigation, including its mouse-hiding
+	// logic. Select the cursor before panning, zooming or placing a waypoint.
+	bool mouseInput = pad->GetMouseX() != 0.0f || pad->GetMouseY() != 0.0f ||
+		pad->GetLeftMouse() || pad->GetRightMouse() || pad->GetMouseWheelUp() || pad->GetMouseWheelDown();
+	bool controllerInput = abs(pad->GetLeftStickX()) > 12 || abs(pad->GetLeftStickY()) > 12 ||
+		pad->GetDPadLeft() || pad->GetDPadRight() || pad->GetDPadUp() || pad->GetDPadDown() ||
+		pad->GetLeftShoulder2() || pad->GetRightShoulder2() || pad->GetSquareJustDown() || pad->GetLeftShoulder1JustDown();
+	if(mouseInput)
+		menu.m_bShowMouse = true;
+	else if(controllerInput) {
+		menu.m_bShowMouse = false;
+		lastClick = 0;
+	}
+	cursor = menu.m_bShowMouse ? Point{(float)menu.m_nMousePosX,(float)menu.m_nMousePosY} : Point{SCREEN_WIDTH/2.0f,(viewport.top+viewport.bottom)/2};
 	if(menu.m_nMenuFadeAlpha >= 255) {
 		if(pad->GetCharJustDown('L') || pad->GetLeftShoulder1JustDown()) showLegend=!showLegend;
 		if(pad->GetCharJustDown('R')) centering=true;
