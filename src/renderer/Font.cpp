@@ -1540,6 +1540,9 @@ CFont::GetNextSpace(wchar *s)
 wchar*
 CFont::ParseToken(wchar *s, wchar* ss, bool japShit)
 {
+#ifdef FIX_BUGS
+	const uint8 alpha = Details.color.a;
+#endif
 	s++;
 	if ((Details.color.r || Details.color.g || Details.color.b) && !japShit) {
 		wchar c = *s;
@@ -1575,6 +1578,10 @@ CFont::ParseToken(wchar *s, wchar* ss, bool japShit)
 		if ((*s & 0x7FFF) == 'N' || (*s & 0x7FFF) == 'n')
 			NewLine = true;
 	}
+#ifdef FIX_BUGS
+	// Colour tokens change RGB only; keep the message's current fade alpha.
+	Details.color.a = alpha;
+#endif
 	while ((!IsJapanese() || (*s != JAP_TERMINATION)) && *s != '~') s++;
 #ifdef FIX_BUGS
 	if (*(++s) == '~')
@@ -1588,6 +1595,9 @@ CFont::ParseToken(wchar *s, wchar* ss, bool japShit)
 wchar*
 CFont::ParseToken(wchar *s, wchar*)
 {
+#ifdef FIX_BUGS
+	const uint8 alpha = Details.color.a;
+#endif
 	s++;
 	if(Details.color.r || Details.color.g || Details.color.b)
 		switch(*s){
@@ -1616,6 +1626,9 @@ CFont::ParseToken(wchar *s, wchar*)
 		case 'C': PS2Symbol = BUTTON_R3; break;
 #endif
 		}
+#ifdef FIX_BUGS
+	Details.color.a = alpha;
+#endif
 	while(*s != '~') s++;
 	return s+1;
 }

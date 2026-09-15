@@ -621,10 +621,18 @@ CGlass::WindowRespondsToCollision(CEntity *entity, float amount, CVector speed, 
 	CColModel *col = object->GetColModel();
 	ASSERT(col!=nil);
 	
+#ifdef FIX_BUGS
+	// Find the pane bounds in model space, then rotate its origin and axes.
+	CVector a = col->vertices[0].Get();
+	CVector b = col->vertices[1].Get();
+	CVector c = col->vertices[2].Get();
+	CVector d = col->vertices[3].Get();
+#else
 	CVector a = object->GetMatrix() * col->vertices[0].Get();
 	CVector b = object->GetMatrix() * col->vertices[1].Get();
 	CVector c = object->GetMatrix() * col->vertices[2].Get();
 	CVector d = object->GetMatrix() * col->vertices[3].Get();
+#endif
 
 	float minx = Min(Min(a.x, b.x), Min(c.x, d.x));
 	float maxx = Max(Max(a.x, b.x), Max(c.x, d.x));
@@ -633,15 +641,22 @@ CGlass::WindowRespondsToCollision(CEntity *entity, float amount, CVector speed, 
 	float minz = Min(Min(a.z, b.z), Min(c.z, d.z));
 	float maxz = Max(Max(a.z, b.z), Max(c.z, d.z));
 
+	CVector paneOrigin(minx, miny, minz);
+	CVector paneUp(0.0f, 0.0f, maxz-minz);
+	CVector paneRight(maxx-minx, maxy-miny, 0.0f);
+#ifdef FIX_BUGS
+	const CMatrix &matrix = object->GetMatrix();
+	paneOrigin = matrix * paneOrigin;
+	paneUp = Multiply3x3(matrix, paneUp);
+	paneRight = Multiply3x3(matrix, paneRight);
+#endif
 
 	if ( amount > 300.0f )
 	{
 		PlayOneShotScriptObject(SCRIPT_SOUND_GLASS_BREAK_L, object->GetPosition());
 
 		GeneratePanesForWindow(0,
-			CVector(minx,      miny,      minz),
-			CVector(0.0f,      0.0f,      maxz-minz),
-			CVector(maxx-minx, maxy-miny, 0.0f),
+			paneOrigin, paneUp, paneRight,
 			speed, point, 0.1f, !!object->bGlassCracked, explosion);
 	}
 	else
@@ -649,9 +664,7 @@ CGlass::WindowRespondsToCollision(CEntity *entity, float amount, CVector speed, 
 		PlayOneShotScriptObject(SCRIPT_SOUND_GLASS_BREAK_S, object->GetPosition());
 
 		GeneratePanesForWindow(1,
-			CVector(minx,      miny,      minz),
-			CVector(0.0f,      0.0f,      maxz-minz),
-			CVector(maxx-minx, maxy-miny, 0.0f),
+			paneOrigin, paneUp, paneRight,
 			speed, point, 0.1f, !!object->bGlassCracked, explosion);
 	}
 

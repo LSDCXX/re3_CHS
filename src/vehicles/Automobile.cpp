@@ -1877,6 +1877,13 @@ CAutomobile::PreRender(void)
 		// Lights off
 
 		CVector lightPos = mi->m_positions[CAR_POS_TAILLIGHTS];
+#ifdef FIX_BUGS
+		// Restore the PS2 brake/reverse dummy, retaining compatibility with
+		// vehicles that only provide a tail-light dummy (SilentPatch III).
+		const CVector &brakePos = mi->m_positions[CAR_POS_BRAKELIGHTS];
+		if(brakePos.x != 0.0f || brakePos.y != 0.0f || brakePos.z != 0.0f)
+			lightPos = brakePos;
+#endif
 		CVector lightR = GetMatrix() * lightPos;
 		CVector lightL = lightR;
 		lightL -= GetRight()*2.0f*lightPos.x;

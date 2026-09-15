@@ -167,6 +167,10 @@ void CMissionCleanup::RemoveEntityFromList(int32 id, uint8 type)
 
 void CMissionCleanup::Process()
 {
+#ifdef FIX_BUGS
+	CPed::nEnterCarRangeMultiplier = 1;
+	CPed::nThreatReactionRangeMultiplier = 1;
+#endif
 	CPopulation::m_AllRandomPedsThisType = -1;
 	CPopulation::PedDensityMultiplier = 1.0f;
 	CCarCtrl::CarDensityMultiplier = 1.0f;
@@ -515,6 +519,10 @@ int CTheScripts::OpenScript()
 
 void CTheScripts::Init()
 {
+#ifdef FIX_BUGS
+	CPed::nEnterCarRangeMultiplier = 1;
+	CPed::nThreatReactionRangeMultiplier = 1;
+#endif
 #ifdef MISSION_REPLAY
 	MissionRetrySaveValid = false;
 	doingMissionRetry = false;

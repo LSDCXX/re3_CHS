@@ -775,12 +775,20 @@ CVehicle::DoFixedMachineGuns(void)
 void
 CVehicle::ExtinguishCarFire(void)
 {
+#ifdef FIX_BUGS
+	// Extinguishing a cutscene fire must not repair an already wrecked vehicle.
+	if(GetStatus() != STATUS_WRECKED)
+#endif
 	m_fHealth = Max(m_fHealth, 300.0f);
 	if(m_pCarFire)
 		m_pCarFire->Extinguish();
 	if(IsCar()){
 		CAutomobile *car = (CAutomobile*)this;
-		if(car->Damage.GetEngineStatus() >= ENGINE_STATUS_ON_FIRE)
+		if(car->Damage.GetEngineStatus() >= ENGINE_STATUS_ON_FIRE
+#ifdef FIX_BUGS
+			&& GetStatus() != STATUS_WRECKED
+#endif
+		)
 			car->Damage.SetEngineStatus(ENGINE_STATUS_ON_FIRE-10);
 		car->m_fFireBlowUpTimer = 0.0f;
 	}
@@ -1113,8 +1121,12 @@ CVehicle::SetDriver(CPed *driver)
 	pDriver->RegisterReference((CEntity**)&pDriver);
 
 	if(bFreebies && driver == FindPlayerPed()){
-		if(GetModelIndex() == MI_AMBULAN)
+		if(GetModelIndex() == MI_AMBULAN) {
+#ifdef FIX_BUGS
+			if(FindPlayerPed()->m_fHealth < 100.0f)
+#endif
 			FindPlayerPed()->m_fHealth = Min(FindPlayerPed()->m_fHealth + 20.0f, 100.0f);
+		}
 		else if(GetModelIndex() == MI_TAXI)
 			CWorld::Players[CWorld::PlayerInFocus].m_nMoney += 25;
 		else if(GetModelIndex() == MI_POLICE)
