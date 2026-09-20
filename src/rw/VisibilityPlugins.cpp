@@ -1,4 +1,5 @@
 #include "common.h"
+#include "VisualTuning.h"
 
 #include "RwHelper.h"
 #include "templates.h"
@@ -243,11 +244,11 @@ CVisibilityPlugins::SetRenderWareCamera(RwCamera *camera)
 	else
 		ms_cullCompsDist = sq(TheCamera.LODDistMultiplier * 20.0f);
 
-        ms_vehicleLod0Dist = sq(70.0f * VEHICLE_LODDIST_MULTIPLIER);
-        ms_vehicleLod1Dist = sq(90.0f * VEHICLE_LODDIST_MULTIPLIER);
-        ms_vehicleFadeDist = sq(100.0f * VEHICLE_LODDIST_MULTIPLIER);
-        ms_bigVehicleLod0Dist = sq(60.0f * VEHICLE_LODDIST_MULTIPLIER);
-        ms_bigVehicleLod1Dist = sq(150.0f * VEHICLE_LODDIST_MULTIPLIER);
+        ms_vehicleLod0Dist = sq(VisualTuning::VehicleHighDetail * VEHICLE_LODDIST_MULTIPLIER);
+        ms_vehicleLod1Dist = sq(VisualTuning::VehicleLowDetail * VEHICLE_LODDIST_MULTIPLIER);
+        ms_vehicleFadeDist = sq(VisualTuning::VehicleFade * VEHICLE_LODDIST_MULTIPLIER);
+        ms_bigVehicleLod0Dist = sq(VisualTuning::VehicleHighDetail * VEHICLE_LODDIST_MULTIPLIER);
+        ms_bigVehicleLod1Dist = sq(VisualTuning::VehicleLowDetail * VEHICLE_LODDIST_MULTIPLIER);
         ms_pedLod0Dist = sq(25.0f * TheCamera.LODDistMultiplier);
         ms_pedLod1Dist = sq(60.0f * TheCamera.LODDistMultiplier);
         ms_pedFadeDist = sq(70.0f * TheCamera.LODDistMultiplier);

@@ -1,4 +1,5 @@
 #include "common.h"
+#include "VisualTuning.h"
 
 #include "Camera.h"
 #include "Clock.h"
@@ -84,7 +85,7 @@ CTrafficLights::DisplayActualLight(CEntity *ent)
 		r*CTimeCycle::GetLightOnGroundBrightness()/8.0f,
 		g*CTimeCycle::GetLightOnGroundBrightness()/8.0f,
 		0*CTimeCycle::GetLightOnGroundBrightness()/8.0f,
-		12.0f, 1.0f, 40.0f, false, 0.0f);
+		12.0f, 1.0f, VisualTuning::TrafficLight, false, 0.0f);
 
 	if(DotProduct(TheCamera.GetForward(), ent->GetForward()) < 0.0f)
 		CCoronas::RegisterCorona((uintptr)ent + id,
@@ -92,7 +93,7 @@ CTrafficLights::DisplayActualLight(CEntity *ent)
 			g*CTimeCycle::GetSpriteBrightness()*0.7f,
 			0*CTimeCycle::GetSpriteBrightness()*0.7f,
 			255,
-			pos1, 1.75f*CTimeCycle::GetSpriteSize(), 50.0f,
+			pos1, 1.75f*CTimeCycle::GetSpriteSize(), VisualTuning::TrafficLight,
 			CCoronas::TYPE_STAR, CCoronas::FLARE_NONE, CCoronas::REFLECTION_ON,
 			CCoronas::LOSCHECK_OFF, CCoronas::STREAK_OFF, 0.0f);
 	else
@@ -101,7 +102,7 @@ CTrafficLights::DisplayActualLight(CEntity *ent)
 			g*CTimeCycle::GetSpriteBrightness()*0.7f,
 			0*CTimeCycle::GetSpriteBrightness()*0.7f,
 			255,
-			pos2, 1.75f*CTimeCycle::GetSpriteSize(), 50.0f,
+			pos2, 1.75f*CTimeCycle::GetSpriteSize(), VisualTuning::TrafficLight,
 			CCoronas::TYPE_STAR, CCoronas::FLARE_NONE, CCoronas::REFLECTION_ON,
 			CCoronas::LOSCHECK_OFF, CCoronas::STREAK_OFF, 0.0f);
 

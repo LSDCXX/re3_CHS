@@ -1,4 +1,5 @@
 #include "common.h"
+#include "VisualTuning.h"
 
 #include "CarCtrl.h"
 
@@ -730,8 +731,8 @@ CCarCtrl::PossiblyRemoveVehicle(CVehicle* pVehicle)
 			return;
 		}
 		float distanceToPlayer = (pVehicle->GetPosition() - vecPlayerPos).Magnitude2D();
-		float threshold = 50.0f;
-#ifndef EXTENDED_OFFSCREEN_DESPAWN_RANGE
+		float threshold = VisualTuning::VehicleDespawnOffScreen;
+		// Explicit on/off-screen distances supersede the old single-range option.
 		if (pVehicle->GetIsOnScreen() ||
 			TheCamera.Cams[TheCamera.ActiveCam].LookingLeft ||
 			TheCamera.Cams[TheCamera.ActiveCam].LookingRight ||
@@ -743,9 +744,8 @@ CCarCtrl::PossiblyRemoveVehicle(CVehicle* pVehicle)
 			pVehicle->bIsLawEnforcer ||
 			pVehicle->bIsCarParkVehicle
 			)
-#endif
 		{
-			threshold = 130.0f * TheCamera.GenerationDistMultiplier;
+			threshold = VisualTuning::VehicleDespawnOnScreen * TheCamera.GenerationDistMultiplier;
 		}
 		if (pVehicle->bExtendedRange)
 			threshold *= 1.5f;
@@ -762,7 +762,7 @@ CCarCtrl::PossiblyRemoveVehicle(CVehicle* pVehicle)
 	if ((pVehicle->GetStatus() == STATUS_SIMPLE || pVehicle->GetStatus() == STATUS_PHYSICS && pVehicle->AutoPilot.m_nDrivingStyle == DRIVINGSTYLE_STOP_FOR_CARS) &&
 		CTimer::GetTimeInMilliseconds() - pVehicle->AutoPilot.m_nTimeToStartMission > 5000 &&
 		!pVehicle->GetIsOnScreen() &&
-		(pVehicle->GetPosition() - vecPlayerPos).Magnitude2D() > 25.0f &&
+		(pVehicle->GetPosition() - vecPlayerPos).Magnitude2D() > VisualTuning::VehicleDespawnOffScreen &&
 		!IsThisVehicleInteresting(pVehicle) &&
 		!pVehicle->bIsLocked &&
 		pVehicle->CanBeDeleted() &&

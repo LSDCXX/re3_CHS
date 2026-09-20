@@ -560,6 +560,11 @@ void CHud::Draw()
 		/*
 			DrawWeaponIcon
 		*/
+#ifdef FIX_BUGS
+		uint32 weaponIconFilter = rwFILTERLINEAR;
+		RwRenderStateGet(rwRENDERSTATETEXTUREFILTER, &weaponIconFilter);
+		RwRenderStateSet(rwRENDERSTATETEXTUREFILTER, (void*)rwFILTERLINEAR);
+#endif
 		Sprites[WeaponType].Draw(
 			CRect(
 				SCREEN_SCALE_FROM_RIGHT(WEAPON_X),
@@ -567,6 +572,10 @@ void CHud::Draw()
 				SCREEN_SCALE_FROM_RIGHT(WEAPON_X)+SCREEN_SCALE_X(64.0f),
 				SCREEN_SCALE_Y(27.0f)+SCREEN_SCALE_Y(64.0f)),
 			CRGBA(255, 255, 255, 255),
+#ifdef FIX_BUGS
+			0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f);
+		RwRenderStateSet(rwRENDERSTATETEXTUREFILTER, (void*)(uintptr)weaponIconFilter);
+#else
 			0.015f,
 			0.015f,
 			1.0f,
@@ -575,6 +584,7 @@ void CHud::Draw()
 			1.0f,
 			1.0f,
 			1.0f);
+#endif
 		
 		CFont::SetBackgroundOff();
 		CFont::SetScale(SCREEN_SCALE_X(0.4f), SCREEN_SCALE_Y(0.6f));
