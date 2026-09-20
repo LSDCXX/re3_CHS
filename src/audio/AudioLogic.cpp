@@ -8827,11 +8827,6 @@ void
 cAudioManager::ClearMissionAudio()
 {
 	if (m_bIsInitialised) {
-#ifdef FIX_BUGS
-		// Clear the actual playback as well as the mission audio state.
-		SampleManager.StopStreamedFile(1);
-		SampleManager.StopChannel(CHANNEL_MISSION_AUDIO);
-#endif
 		m_nMissionAudioSampleIndex = NO_SAMPLE;
 		m_nMissionAudioLoadingStatus = LOADING_STATUS_NOT_LOADED;
 		m_nMissionAudioPlayStatus = PLAY_STATUS_STOPPED;

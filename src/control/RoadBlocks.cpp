@@ -122,22 +122,12 @@ CRoadBlocks::GenerateRoadBlocks(void)
 					CWanted *pPlayerWanted = FindPlayerPed()->m_pWanted;
 					float fMapObjectRadius = 2.0f * mapObject->GetColModel()->boundingBox.max.x;
 					int32 vehicleId = MI_POLICE;
-#ifdef FIX_BUGS
-					// Script-forced SWAT takes precedence, notably during Decoy.
-					if (pPlayerWanted->AreSwatRequired())
-						vehicleId = MI_ENFORCER;
-					else if (pPlayerWanted->AreFbiRequired())
-						vehicleId = MI_FBICAR;
-					else if (pPlayerWanted->AreArmyRequired())
-						vehicleId = MI_BARRACKS;
-#else
 					if (pPlayerWanted->AreArmyRequired())
 						vehicleId = MI_BARRACKS;
 					else if (pPlayerWanted->AreFbiRequired())
 						vehicleId = MI_FBICAR;
 					else if (pPlayerWanted->AreSwatRequired())
 						vehicleId = MI_ENFORCER;
-#endif
 					if (!CStreaming::HasModelLoaded(vehicleId))
 						vehicleId = MI_POLICE;
 					CColModel *pVehicleColModel = CModelInfo::GetColModel(vehicleId);

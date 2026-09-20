@@ -542,16 +542,6 @@ CPickups::GenerateNewOne(CVector pos, uint32 modelIndex, uint8 type, uint32 quan
 
 	if (slot >= NUMPICKUPS) return -1;
 
-#ifdef FIX_BUGS
-	// A full pickup pool can reuse a live temporary pickup's slot.
-	// Release its world object before replacing the only stored pointer.
-	if (aPickUps[slot].m_pObject) {
-		CWorld::Remove(aPickUps[slot].m_pObject);
-		delete aPickUps[slot].m_pObject;
-		aPickUps[slot].m_pObject = nil;
-	}
-#endif
-
 	aPickUps[slot].m_eType = type;
 	aPickUps[slot].m_bRemoved = false;
 	aPickUps[slot].m_nQuantity = quantity;
