@@ -695,8 +695,17 @@ cAudioManager::AddSampleToRequestedQueue()
 
 		AddDetailsToRequestedOrderList(sampleIndex);
 #ifdef AUDIO_REFLECTIONS
-		if (bReflections)
+		if (bReflections) {
+#ifdef FIX_BUGS
+			const CVector sourcePos = m_sQueueSample.m_vecPos;
+			const float sourceDistance = m_sQueueSample.m_fDistance;
+#endif
 			AddReflectionsToRequestedQueue();
+#ifdef FIX_BUGS
+			m_sQueueSample.m_vecPos = sourcePos;
+			m_sQueueSample.m_fDistance = sourceDistance;
+#endif
+		}
 #endif
 	}
 }

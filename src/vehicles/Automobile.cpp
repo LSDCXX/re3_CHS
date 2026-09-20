@@ -1497,14 +1497,24 @@ CAutomobile::PreRender(void)
 
 			switch(GetModelIndex()){
 			case MI_FIRETRUCK:
+#ifdef FIX_BUGS
+				pos1 = CVector(0.95f, 3.2f, 1.4f);
+				pos2 = CVector(-0.95f, 3.2f, 1.4f);
+#else
 				pos1 = CVector(1.1f,  1.7f, 2.0f);
 				pos2 = CVector(-1.1f, 1.7f, 2.0f);
+#endif
 				r1 = 255; g1 = 0; b1 = 0;
 				r2 = 255; g2 = 255; b2 = 0;
 				break;
 			case MI_AMBULAN:
+#ifdef FIX_BUGS
+				pos1 = CVector(0.7f, 0.65f, 1.55f);
+				pos2 = CVector(-0.7f, 0.65f, 1.55f);
+#else
 				pos1 = CVector(1.1f,  0.9f, 1.6f);
 				pos2 = CVector(-1.1f, 0.9f, 1.6f);
+#endif
 				r1 = 255; g1 = 0; b1 = 0;
 				r2 = 255; g2 = 255; b2 = 255;
 				break;
@@ -1515,8 +1525,13 @@ CAutomobile::PreRender(void)
 				r2 = 0; g2 = 0; b2 = 255;
 				break;
 			case MI_ENFORCER:
+#ifdef FIX_BUGS
+				pos1 = CVector(0.6f, 1.05f, 1.4f);
+				pos2 = CVector(-0.6f, 1.05f, 1.4f);
+#else
 				pos1 = CVector(1.1f,  0.8f, 1.2f);
 				pos2 = CVector(-1.1f, 0.8f, 1.2f);
+#endif
 				r1 = 255; g1 = 0; b1 = 0;
 				r2 = 0; g2 = 0; b2 = 255;
 				break;
@@ -1610,6 +1625,11 @@ CAutomobile::PreRender(void)
 	case MI_BORGNINE:
 		if(bTaxiLight){
 			CVector pos = GetPosition() + GetUp()*0.95f;
+#ifdef FIX_BUGS
+			// SilentPatch's stock III taxi correction does not apply to Cabbie/Borgnine.
+			if (GetModelIndex() == MI_TAXI)
+				pos = GetMatrix() * CVector(0.0f, -0.25f, 0.9f);
+#endif
 			CCoronas::RegisterCorona((uintptr)this + 21,
 				128, 128, 0, 255,
 				pos, 0.8f, 50.0f,

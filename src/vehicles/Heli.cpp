@@ -651,7 +651,11 @@ CHeli::PreRenderAlways(void)
 			80*m_fSearchLightIntensity, 80*m_fSearchLightIntensity, 80*m_fSearchLightIntensity, 80*m_fSearchLightIntensity,
 			50.0f, true, 1.0f);
 
+#ifdef FIX_BUGS
+		CVector front = GetMatrix() * CVector(0.0f, 3.0f, -1.25f);
+#else
 		CVector front = GetMatrix() * CVector(0.0f, 7.0f, 0.0f);
+#endif
 		CVector toPlayer = FindPlayerCoors() - front;
 		toPlayer.Normalise();
 		float intensity = m_fSearchLightIntensity*sq(CTimeCycle::GetSpriteBrightness());

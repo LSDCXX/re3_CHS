@@ -8827,6 +8827,14 @@ void
 cAudioManager::ClearMissionAudio()
 {
 	if (m_bIsInitialised) {
+#ifdef FIX_BUGS
+		// Match the playback backend used by ProcessMissionAudio.
+#ifdef GTA_PS2
+		SampleManager.StopChannel(CHANNEL_MISSION_AUDIO);
+#else
+		SampleManager.StopStreamedFile(1);
+#endif
+#endif
 		m_nMissionAudioSampleIndex = NO_SAMPLE;
 		m_nMissionAudioLoadingStatus = LOADING_STATUS_NOT_LOADED;
 		m_nMissionAudioPlayStatus = PLAY_STATUS_STOPPED;
