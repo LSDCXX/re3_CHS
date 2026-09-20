@@ -352,6 +352,15 @@ CVisibilityPlugins::RenderWheelAtomicCB(RpAtomic *atomic)
 #else
 	lodatm = mi->GetAtomicFromDistance(len);
 #endif
+	// Wheel IDE distances are independent of the vehicle's high-detail range.
+	// Keep an available wheel mesh while the parent still draws its high LOD;
+	// use the parent origin so front/rear wheels cannot disappear separately.
+	if(lodatm == nil){
+		RpClump *clump = RpAtomicGetClump(atomic);
+		if(clump && GetDistanceSquaredFromCamera(RpClumpGetFrame(clump)) <
+		   Max(ms_vehicleLod0Dist, ms_bigVehicleLod0Dist))
+			lodatm = mi->GetAtomicFromDistance(0.0f);
+	}
 	if(lodatm){
 		if(RpAtomicGetGeometry(lodatm) != RpAtomicGetGeometry(atomic))
 			RpAtomicSetGeometry(atomic, RpAtomicGetGeometry(lodatm), rpATOMICSAMEBOUNDINGSPHERE);

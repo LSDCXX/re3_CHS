@@ -39,3 +39,9 @@ These are subsystem limits, not a guarantee that all entities are spawned/render
 
 64 位 D3D9/OpenAL、32 位 D3D9/Miles Release 编译与链接均通过（VS 2026 / v145）；差异格式检查通过。尚未验证游戏内视觉效果、交通密度变化或性能。
 Both 64-bit D3D9/OpenAL and 32-bit D3D9/Miles Release builds compile and link successfully. Diff whitespace checks pass. In-game visuals, traffic behavior and performance have not been measured.
+
+### 车轮距离补充 / Wheel range follow-up
+
+车轮有独立的 IDE 模型距离表。延长车身高模距离后，车轮可能先超出自己的距离表而停止绘制。现在保留原有车轮 LOD 选择；当没有可用距离级别、但车辆中心仍在车身高模范围内时，使用其近距离车轮模型继续绘制。以车辆中心判定，避免前后轮在边界分别消失。32 位 Miles 和 64 位 OpenAL Release 均编译通过，尚未进游戏验证。
+
+Wheel IDE ranges remain independent of body LOD. If the original wheel lookup returns no mesh while the parent vehicle is still in its high-detail range, use the near wheel mesh. The range check uses the vehicle origin, keeping all wheels consistent. Both Release configurations build successfully; in-game verification is pending.
