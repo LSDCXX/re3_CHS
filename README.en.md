@@ -4,6 +4,8 @@
 
 ## Integrated features and fixes
 
+- **ParticleEx particle systems**: keep PC as the default, with configurable PS2/Xbox effects and PC fallback for missing resources. See [ParticleEx installation and configuration](docs/PARTICLEEX.md).
+
 - **Animated cutscene fingers**: native aap/iii_anim adaptation with independent animation state per hand; missing compatible assets retain the original hands. III hand assets must be installed separately: see [asset instructions](docs/cutscene-hands-menu-map.md).
 - **Fullscreen map**: adapt LSDCXX/MenuMapIII with the yellow footer, upper-centre legend, lower-right area label above the footer, hover labels, refined font sizes/background/shadows, and corrected player heading and Back button.
 - **Map navigation**: enter through the pause menu; M no longer opens or closes it. Escape, Back or B returns one level; Start resumes play. Left stick pans, LT/RT zoom, X/Square toggles waypoints, LB/L1 toggles the legend.

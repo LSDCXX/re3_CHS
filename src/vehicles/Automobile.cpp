@@ -16,6 +16,7 @@
 #include "Fire.h"
 #include "Explosion.h"
 #include "Particle.h"
+#include "ParticleEx.h"
 #include "ParticleObject.h"
 #include "Antennas.h"
 #include "Skidmarks.h"
@@ -580,7 +581,7 @@ CAutomobile::ProcessControl(void)
 				ApplyTurnSpeed();
 			}
 			bIsInSafePosition = true;
-			bIsStuck = false;			
+			bIsStuck = false;
 		}
 
 		CPhysical::ProcessControl();
@@ -1088,17 +1089,27 @@ CAutomobile::ProcessControl(void)
 	if(m_fHealth < 250.0f && GetStatus() != STATUS_WRECKED){
 		// Car is on fire
 
-		CParticle::AddParticle(PARTICLE_CARFLAME, damagePos,
-			CVector(0.0f, 0.0f, CGeneral::GetRandomNumberInRange(0.01125f, 0.09f)),
-			nil, 0.9f);
+		if (ParticleEx::ActiveSystem == ParticleEx::Xbox) {
+			// Use the vehicle's fire timer rather than one global timer shared by every car.
+			const float elapsed = CTimer::GetTimeStepInMilliseconds();
+			if ((SQR(m_vecMoveSpeed.x) + SQR(m_vecMoveSpeed.y)) > 0.003f ||
+			    int32(m_fFireBlowUpTimer / 100.0f) != int32((m_fFireBlowUpTimer + elapsed) / 100.0f))
+				ParticleEx::AddVehicleFire(damagePos, m_vecMoveSpeed);
+			CParticle::AddParticle(PARTICLE_ENGINE_SMOKE2, damagePos, CVector(0.0f, 0.0f, 0.0f), nil, 1.1f);
+		} else {
+			CParticle::AddParticle(PARTICLE_CARFLAME, damagePos,
+				CVector(0.0f, 0.0f, CGeneral::GetRandomNumberInRange(0.01125f, 0.09f)),
+				nil, 0.9f);
 
-		CVector coors = damagePos;
-		coors.x += CGeneral::GetRandomNumberInRange(-0.5625f, 0.5625f),
-		coors.y += CGeneral::GetRandomNumberInRange(-0.5625f, 0.5625f),
-		coors.z += CGeneral::GetRandomNumberInRange(0.5625f, 2.25f);
-		CParticle::AddParticle(PARTICLE_CARFLAME_SMOKE, coors, CVector(0.0f, 0.0f, 0.0f));
+			CVector coors = damagePos;
+			coors.x += CGeneral::GetRandomNumberInRange(-0.5625f, 0.5625f),
+			coors.y += CGeneral::GetRandomNumberInRange(-0.5625f, 0.5625f),
+			coors.z += CGeneral::GetRandomNumberInRange(0.5625f, 2.25f);
+			CParticle::AddParticle(PARTICLE_CARFLAME_SMOKE, coors, CVector(0.0f, 0.0f, 0.0f));
 
-		CParticle::AddParticle(PARTICLE_ENGINE_SMOKE2, damagePos, CVector(0.0f, 0.0f, 0.0f), nil, 0.5f);
+			CParticle::AddParticle(PARTICLE_ENGINE_SMOKE2, damagePos, CVector(0.0f, 0.0f, 0.0f), nil, 0.5f);
+
+		}
 
 		// Blow up car after 5 seconds
 		m_fFireBlowUpTimer += CTimer::GetTimeStepInMilliseconds();
@@ -1654,7 +1665,7 @@ CAutomobile::PreRender(void)
 #else
 	const float lightRandomRange = 50000.0f;
 #endif
-	bool shouldLightsBeOn = 
+	bool shouldLightsBeOn =
 		CClock::GetHours() > 20 ||
 		CClock::GetHours() > 19 && CClock::GetMinutes() > (m_randomSeed & 0x3F) ||
 		CClock::GetHours() < 7 ||
@@ -2419,7 +2430,7 @@ CAutomobile::FireTruckControl(void)
 			return;
 #ifdef FREE_CAM
 		if (!CCamera::bFreeCam)
-#endif 
+#endif
 		{
 			m_fCarGunLR += CPad::GetPad(0)->GetCarGunLeftRight() * 0.00025f * CTimer::GetTimeStep();
 			m_fCarGunUD += CPad::GetPad(0)->GetCarGunUpDown() * 0.0001f * CTimer::GetTimeStep();
@@ -2889,7 +2900,7 @@ CAutomobile::HydraulicControl(void)
 }
 
 void
-CAutomobile::ProcessBuoyancy(void)	
+CAutomobile::ProcessBuoyancy(void)
 {
 	int i;
 	CVector impulse, point;
@@ -2929,39 +2940,39 @@ CAutomobile::ProcessBuoyancy(void)
 		static uint32 nGenerateWaterCircles = 0;
 
 		if(initialSpeed.z < -0.3f && impulse.z > 0.3f){
-#if defined(PC_PARTICLE) || defined (PS2_ALTERNATIVE_CARSPLASH)
-			RwRGBA color;
-			color.red = (0.5f * CTimeCycle::GetDirectionalRed() + CTimeCycle::GetAmbientRed())*0.45f*255;
-			color.green = (0.5f * CTimeCycle::GetDirectionalGreen() + CTimeCycle::GetAmbientGreen())*0.45f*255;
-			color.blue = (0.5f * CTimeCycle::GetDirectionalBlue() + CTimeCycle::GetAmbientBlue())*0.45f*255;
-			color.alpha = CGeneral::GetRandomNumberInRange(0, 32) + 128;
-			CParticleObject::AddObject(POBJECT_CAR_WATER_SPLASH, GetPosition(),
-				CVector(0.0f, 0.0f, CGeneral::GetRandomNumberInRange(0.15f, 0.3f)),
-				0.0f, 75, color, true);
-#else
-			CVector pos = (initialSpeed * 2.0f) + (GetPosition() + point);
-	
-			for ( int32 i = 0; i < 360; i += 4 )
-			{
-				float fSin = Sin(float(i));
-				float fCos = Cos(float(i));
-				
-				CVector dir(fSin*0.01f, fCos*0.01f, CGeneral::GetRandomNumberInRange(0.25f, 0.45f));
-				
-				CParticle::AddParticle(PARTICLE_CAR_SPLASH,
-					pos + CVector(fSin*4.5f, fCos*4.5f, 0.0f),
-					dir, NULL, 0.0f, CRGBA(225, 225, 255, 180));
-	
-				for ( int32 j = 0; j < 3; j++ )
+			if (ParticleEx::ActiveSystem != ParticleEx::PS2) {
+				RwRGBA color;
+				color.red = (0.5f * CTimeCycle::GetDirectionalRed() + CTimeCycle::GetAmbientRed())*0.45f*255;
+				color.green = (0.5f * CTimeCycle::GetDirectionalGreen() + CTimeCycle::GetAmbientGreen())*0.45f*255;
+				color.blue = (0.5f * CTimeCycle::GetDirectionalBlue() + CTimeCycle::GetAmbientBlue())*0.45f*255;
+				color.alpha = CGeneral::GetRandomNumberInRange(0, 32) + 128;
+				CParticleObject::AddObject(POBJECT_CAR_WATER_SPLASH, GetPosition(),
+					CVector(0.0f, 0.0f, CGeneral::GetRandomNumberInRange(0.15f, 0.3f)),
+					0.0f, 75, color, true);
+			} else {
+				CVector pos = (initialSpeed * 2.0f) + (GetPosition() + point);
+
+				for ( int32 i = 0; i < 360; i += 4 )
 				{
-					float fMul = 1.5f * float(j + 1);
-					
+					float fSin = Sin(float(i));
+					float fCos = Cos(float(i));
+
+					CVector dir(fSin*0.01f, fCos*0.01f, CGeneral::GetRandomNumberInRange(0.25f, 0.45f));
+
 					CParticle::AddParticle(PARTICLE_CAR_SPLASH,
-						pos + CVector(fSin * fMul, fCos * fMul, 0.0f),
-						dir, NULL, 0.0f, CRGBA(225, 225, 255, 180));                      
+						pos + CVector(fSin*4.5f, fCos*4.5f, 0.0f),
+						dir, NULL, 0.0f, CRGBA(225, 225, 255, 180));
+
+					for ( int32 j = 0; j < 3; j++ )
+					{
+						float fMul = 1.5f * float(j + 1);
+
+						CParticle::AddParticle(PARTICLE_CAR_SPLASH,
+							pos + CVector(fSin * fMul, fCos * fMul, 0.0f),
+							dir, NULL, 0.0f, CRGBA(225, 225, 255, 180));
+					}
 				}
 			}
-#endif
 
 			nGenerateRaindrops = CTimer::GetTimeInMilliseconds() + 300;
 			nGenerateWaterCircles = CTimer::GetTimeInMilliseconds() + 60;
@@ -3021,55 +3032,55 @@ CAutomobile::ProcessBuoyancy(void)
 				ApplyMoveForce(moveForce.x, moveForce.y, moveForce.z);
 #endif
 				float fSpeed = vSpeed.MagnitudeSqr();
-#ifdef PC_PARTICLE
-				if(fSpeed > sq(0.05f)){
-					fSpeed = Sqrt(fSpeed);
-
-					float size = Min((fSpeed < 0.15f ? 0.25f : 0.75f)*fSpeed, 0.6f);
-					CVector right = 0.2f*fSpeed*GetRight() + 0.2f*vSpeed;
-
-					CParticle::AddParticle(PARTICLE_PED_SPLASH,
-						pos + GetPosition(), -0.5f*right,
-						nil, size, splashCol,
-						CGeneral::GetRandomNumberInRange(0.0f, 10.0f),
-						CGeneral::GetRandomNumberInRange(0.0f, 90.0f), 1, 0);
-
-					CParticle::AddParticle(PARTICLE_RUBBER_SMOKE,
-						pos + GetPosition(), -0.6f*right,
-						nil, size, smokeCol, 0, 0, 0, 0);
-				
-					if((CTimer::GetFrameCounter() & 0xF) == 0)
-						DMAudio.PlayOneShot(m_audioEntityId, SOUND_CAR_SPLASH, 2000.0f*fSpeed);
-				}
-#else
-				if ( ( (CTimer::GetFrameCounter() + i) & 3 ) == 0 )
-				{
-					if(fSpeed > sq(0.05f))
-					{
+				if (ParticleEx::ActiveSystem != ParticleEx::PS2) {
+					if(fSpeed > sq(0.05f)){
 						fSpeed = Sqrt(fSpeed);
-						CRGBA color(155, 185, 155, 255);
-						float boxY = GetColModel()->boundingBox.max.y;
-						CVector right = 0.5f * GetRight();
-						
-						if ( i == 2 )
-						{
-							CParticle::AddParticle(PARTICLE_PED_SPLASH,
-								GetPosition() + (boxY * GetForward()) + right,
-								0.75f*m_vecMoveSpeed, NULL, 0.0f, color);
-			
-						}
-						else if ( i == 0 )
-						{
-							CParticle::AddParticle(PARTICLE_PED_SPLASH,
-								GetPosition() + (boxY * GetForward()) - right,
-								0.75f*m_vecMoveSpeed, NULL, 0.0f, color);
-						}
-						
+
+						float size = Min((fSpeed < 0.15f ? 0.25f : 0.75f)*fSpeed, 0.6f);
+						CVector right = 0.2f*fSpeed*GetRight() + 0.2f*vSpeed;
+
+						CParticle::AddParticle(PARTICLE_PED_SPLASH,
+							pos + GetPosition(), -0.5f*right,
+							nil, size, splashCol,
+							CGeneral::GetRandomNumberInRange(0.0f, 10.0f),
+							CGeneral::GetRandomNumberInRange(0.0f, 90.0f), 1, 0);
+
+						CParticle::AddParticle(PARTICLE_RUBBER_SMOKE,
+							pos + GetPosition(), -0.6f*right,
+							nil, size, smokeCol, 0, 0, 0, 0);
+
 						if((CTimer::GetFrameCounter() & 0xF) == 0)
 							DMAudio.PlayOneShot(m_audioEntityId, SOUND_CAR_SPLASH, 2000.0f*fSpeed);
 					}
+				} else {
+					if ( ( (CTimer::GetFrameCounter() + i) & 3 ) == 0 )
+					{
+						if(fSpeed > sq(0.05f))
+						{
+							fSpeed = Sqrt(fSpeed);
+							CRGBA color(155, 185, 155, 255);
+							float boxY = GetColModel()->boundingBox.max.y;
+							CVector right = 0.5f * GetRight();
+
+							if ( i == 2 )
+							{
+								CParticle::AddParticle(PARTICLE_PED_SPLASH,
+									GetPosition() + (boxY * GetForward()) + right,
+									0.75f*m_vecMoveSpeed, NULL, 0.0f, color);
+
+							}
+							else if ( i == 0 )
+							{
+								CParticle::AddParticle(PARTICLE_PED_SPLASH,
+									GetPosition() + (boxY * GetForward()) - right,
+									0.75f*m_vecMoveSpeed, NULL, 0.0f, color);
+							}
+
+							if((CTimer::GetFrameCounter() & 0xF) == 0)
+								DMAudio.PlayOneShot(m_audioEntityId, SOUND_CAR_SPLASH, 2000.0f*fSpeed);
+						}
+					}
 				}
-#endif	
 			}
 		}
 	}
@@ -3629,29 +3640,20 @@ CAutomobile::AddWheelDirtAndWater(CColPoint *colpoint, uint32 belowEffectSpeed)
 		}
 		return 0;
 	default:
-		if ( CWeather::WetRoads > 0.01f 
-#ifdef PC_PARTICLE	
-			&& CTimer::GetFrameCounter() & 1
-#endif	
+		if ( CWeather::WetRoads > 0.01f
+
+			&& ((ParticleEx::ActiveSystem == ParticleEx::PS2) || (CTimer::GetFrameCounter() & 1))
 			)
 		{
 			CParticle::AddParticle(
-#if defined(FIX_BUGS) && !defined(PC_PARTICLE) // looks wrong on PC particles
-				PARTICLE_WHEEL_WATER,
-#else
-				PARTICLE_WATERSPRAY,
-#endif
+(ParticleEx::ActiveSystem == ParticleEx::PS2) ? PARTICLE_WHEEL_WATER : PARTICLE_WATERSPRAY,
 				colpoint->point + CVector(0.0f, 0.0f, 0.25f+0.25f),
-#ifdef PC_PARTICLE
-				CVector(0.0f, 0.0f, 1.0f),
-#else	
-				CVector(0.0f, 0.0f, CGeneral::GetRandomNumberInRange(0.005f, 0.04f)),
-#endif		
+CVector(0.0f, 0.0f, (ParticleEx::ActiveSystem == ParticleEx::PS2) ? CGeneral::GetRandomNumberInRange(0.005f, 0.04f) : 1.0f),
 				nil,
 				CGeneral::GetRandomNumberInRange(0.1f, 0.5f), waterCol);
 			return 0;
 		}
-		
+
 		return 1;
 	}
 }
@@ -4302,7 +4304,7 @@ CPed::MakeTyresMuddySectorList(CPtrList &list)
 										DMAudio.PlayOneShot(veh->m_audioEntityId, SOUND_SPLATTER, 0.0f);
 									}
 									veh->ApplyMoveForce(CVector(0.0f, 0.0f, 50.0f));
-									
+
 									CVector vehAndWheelDist = wheelPos - veh->GetPosition();
 									veh->ApplyTurnForce(CVector(0.0f, 0.0f, 50.0f), vehAndWheelDist);
 

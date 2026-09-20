@@ -13,6 +13,7 @@
 #include "Darkel.h"
 #include "Explosion.h"
 #include "Particle.h"
+#include "ParticleEx.h"
 #include "WaterLevel.h"
 #include "Floater.h"
 #include "World.h"
@@ -354,46 +355,41 @@ CBoat::ProcessControl(void)
 							else
 								jetPos.z = 0.0f;
 
-#ifdef PC_PARTICLE
-							CVector wakePos = GetPosition() + sternPos;
-							wakePos.z -= 0.65f;
-#else
-							CVector wakePos = GetPosition() + sternPos;
-							wakePos.z = -0.3f;
-#endif
+CVector wakePos = GetPosition() + sternPos;
+							wakePos.z = (ParticleEx::ActiveSystem == ParticleEx::PS2) ? -0.3f : wakePos.z - 0.65f;
 
 							CVector wakeDir = 0.75f * jetDir;
 
 							CParticle::AddParticle(PARTICLE_BOAT_THRUSTJET, jetPos, jetDir, nil, 0.0f, jetColor);
-#ifdef PC_PARTICLE
-							CParticle::AddParticle(PARTICLE_CAR_SPLASH, jetPos, 0.25f * jetDir, nil, 1.0f, splashColor,
-								CGeneral::GetRandomNumberInRange(0, 30),
-								CGeneral::GetRandomNumberInRange(0, 90), 3);
-#endif
+							if (ParticleEx::ActiveSystem != ParticleEx::PS2) {
+								CParticle::AddParticle(PARTICLE_CAR_SPLASH, jetPos, 0.25f * jetDir, nil, 1.0f, splashColor,
+									CGeneral::GetRandomNumberInRange(0, 30),
+									CGeneral::GetRandomNumberInRange(0, 90), 3);
+							}
 							if(!cameraHack)
 								CParticle::AddParticle(PARTICLE_BOAT_WAKE, wakePos, wakeDir, nil, 0.0f, jetColor);
 						}else if((CTimer::GetFrameCounter() + m_randomSeed) & 1){
-#ifdef PC_PARTICLE
-							jetDir.z = 0.018f;
-							jetDir.x *= 0.01f;
-							jetDir.y *= 0.01f;
-							propellerWorld.z += 1.5f;
-							
-							CParticle::AddParticle(PARTICLE_BOAT_SPLASH, propellerWorld, jetDir, nil, 1.5f, jetColor);
-#else
-							jetDir.z = 0.018f;
-							jetDir.x *= 0.03f;
-							jetDir.y *= 0.03f;
-							propellerWorld.z += 1.0f;
-							
-							CParticle::AddParticle(PARTICLE_BOAT_SPLASH, propellerWorld, jetDir, nil, 0.0f, jetColor);
-#endif
-							
-#ifdef PC_PARTICLE
-							CParticle::AddParticle(PARTICLE_CAR_SPLASH, propellerWorld, 0.1f * jetDir, nil, 0.5f, splashColor,
-								CGeneral::GetRandomNumberInRange(0, 30),
-								CGeneral::GetRandomNumberInRange(0, 90), 3);
-#endif
+							if (ParticleEx::ActiveSystem != ParticleEx::PS2) {
+								jetDir.z = 0.018f;
+								jetDir.x *= 0.01f;
+								jetDir.y *= 0.01f;
+								propellerWorld.z += 1.5f;
+
+								CParticle::AddParticle(PARTICLE_BOAT_SPLASH, propellerWorld, jetDir, nil, 1.5f, jetColor);
+							} else {
+								jetDir.z = 0.018f;
+								jetDir.x *= 0.03f;
+								jetDir.y *= 0.03f;
+								propellerWorld.z += 1.0f;
+
+								CParticle::AddParticle(PARTICLE_BOAT_SPLASH, propellerWorld, jetDir, nil, 0.0f, jetColor);
+							}
+
+							if (ParticleEx::ActiveSystem != ParticleEx::PS2) {
+								CParticle::AddParticle(PARTICLE_CAR_SPLASH, propellerWorld, 0.1f * jetDir, nil, 0.5f, splashColor,
+									CGeneral::GetRandomNumberInRange(0, 30),
+									CGeneral::GetRandomNumberInRange(0, 90), 3);
+							}
 						}
 					}
 				}else if(!onLand){
@@ -449,11 +445,7 @@ CBoat::ProcessControl(void)
 		}
 
 		// Spray particles on sides of boat
-#ifdef PC_PARTICLE
-		if(m_nDeltaVolumeUnderWater > 75)
-#else
-		if(m_nDeltaVolumeUnderWater > 120)
-#endif
+if(m_nDeltaVolumeUnderWater > ((ParticleEx::ActiveSystem == ParticleEx::PS2) ? 120 : 75))
 		{
 			float speed = m_vecMoveSpeed.Magnitude();
 			float splash1Size = speed;
@@ -464,51 +456,51 @@ CBoat::ProcessControl(void)
 			CVector dir, pos;
 
 			// right
-#ifdef PC_PARTICLE
-			dir = -0.5f*m_vecMoveSpeed;
-			dir.z += 0.1f*speed;
-			dir += 0.5f*GetRight()*speed;
-			pos = front*GetForward() + 0.5f*GetRight() + GetPosition() + m_vecBuoyancePoint;
-			CWaterLevel::GetWaterLevel(pos, &pos.z, true);
-#else
-			dir = 0.3f*m_vecMoveSpeed;
-			dir.z += 0.05f*speed;
-			dir += 0.5f*GetRight()*speed;
-			pos = (GetPosition() + m_vecBuoyancePoint) + (1.5f*GetRight());
-#endif
-			
-#ifdef PC_PARTICLE
-			CParticle::AddParticle(PARTICLE_CAR_SPLASH, pos, 0.75f * dir, nil, splash1Size, splashColor,
-				CGeneral::GetRandomNumberInRange(0, 30),
-				CGeneral::GetRandomNumberInRange(0, 90), 1);
-			CParticle::AddParticle(PARTICLE_BOAT_SPLASH, pos, dir, nil, splash2Size, jetColor);
-#else
-			CParticle::AddParticle(PARTICLE_BOAT_SPLASH, pos, dir, nil, splash2Size);
-#endif
-			
+			if (ParticleEx::ActiveSystem != ParticleEx::PS2) {
+				dir = -0.5f*m_vecMoveSpeed;
+				dir.z += 0.1f*speed;
+				dir += 0.5f*GetRight()*speed;
+				pos = front*GetForward() + 0.5f*GetRight() + GetPosition() + m_vecBuoyancePoint;
+				CWaterLevel::GetWaterLevel(pos, &pos.z, true);
+			} else {
+				dir = 0.3f*m_vecMoveSpeed;
+				dir.z += 0.05f*speed;
+				dir += 0.5f*GetRight()*speed;
+				pos = (GetPosition() + m_vecBuoyancePoint) + (1.5f*GetRight());
+			}
+
+			if (ParticleEx::ActiveSystem != ParticleEx::PS2) {
+				CParticle::AddParticle(PARTICLE_CAR_SPLASH, pos, 0.75f * dir, nil, splash1Size, splashColor,
+					CGeneral::GetRandomNumberInRange(0, 30),
+					CGeneral::GetRandomNumberInRange(0, 90), 1);
+				CParticle::AddParticle(PARTICLE_BOAT_SPLASH, pos, dir, nil, splash2Size, jetColor);
+			} else {
+				CParticle::AddParticle(PARTICLE_BOAT_SPLASH, pos, dir, nil, splash2Size);
+			}
+
 
 			// left
-#ifdef PC_PARTICLE
-			dir = -0.5f*m_vecMoveSpeed;
-			dir.z += 0.1f*speed;
-			dir -= 0.5f*GetRight()*speed;
-			pos = front*GetForward() - 0.5f*GetRight() + GetPosition() + m_vecBuoyancePoint;
-			CWaterLevel::GetWaterLevel(pos, &pos.z, true);
-#else
-			dir = 0.3f*m_vecMoveSpeed;
-			dir.z += 0.05f*speed;
-			dir -= 0.5f*GetRight()*speed;
-			pos = (GetPosition() + m_vecBuoyancePoint) - (1.5f*GetRight());
-#endif
-			
-#ifdef PC_PARTICLE
-			CParticle::AddParticle(PARTICLE_CAR_SPLASH, pos, 0.75f * dir, nil, splash1Size, splashColor,
-				CGeneral::GetRandomNumberInRange(0, 30),
-				CGeneral::GetRandomNumberInRange(0, 90), 1);
-			CParticle::AddParticle(PARTICLE_BOAT_SPLASH, pos, dir, nil, splash2Size, jetColor);
-#else
-			CParticle::AddParticle(PARTICLE_BOAT_SPLASH, pos, dir, nil, splash2Size);
-#endif
+			if (ParticleEx::ActiveSystem != ParticleEx::PS2) {
+				dir = -0.5f*m_vecMoveSpeed;
+				dir.z += 0.1f*speed;
+				dir -= 0.5f*GetRight()*speed;
+				pos = front*GetForward() - 0.5f*GetRight() + GetPosition() + m_vecBuoyancePoint;
+				CWaterLevel::GetWaterLevel(pos, &pos.z, true);
+			} else {
+				dir = 0.3f*m_vecMoveSpeed;
+				dir.z += 0.05f*speed;
+				dir -= 0.5f*GetRight()*speed;
+				pos = (GetPosition() + m_vecBuoyancePoint) - (1.5f*GetRight());
+			}
+
+			if (ParticleEx::ActiveSystem != ParticleEx::PS2) {
+				CParticle::AddParticle(PARTICLE_CAR_SPLASH, pos, 0.75f * dir, nil, splash1Size, splashColor,
+					CGeneral::GetRandomNumberInRange(0, 30),
+					CGeneral::GetRandomNumberInRange(0, 90), 1);
+				CParticle::AddParticle(PARTICLE_BOAT_SPLASH, pos, dir, nil, splash2Size, jetColor);
+			} else {
+				CParticle::AddParticle(PARTICLE_BOAT_SPLASH, pos, dir, nil, splash2Size);
+			}
 		}
 
 		m_fPrevVolumeUnderWater = m_fVolumeUnderWater;
@@ -595,7 +587,7 @@ GetBoatAtomicObjectCB(RwObject *object, void *data)
 		*(RpAtomic**)data = atomic;
 	return object;
 
-	
+
 }
 
 void
@@ -808,20 +800,20 @@ bool
 CBoat::IsSectorAffectedByWake(CVector2D sector, float fSize, CBoat **apBoats)
 {
 	uint8 numVerts = 0;
-	
+
 	if ( apFrameWakeGeneratingBoats[0] == NULL )
 		return false;
-	
+
 	for ( int32 i = 0; i < 4; i++ )
 	{
 		CBoat *pBoat = apFrameWakeGeneratingBoats[i];
 		if ( !pBoat )
 			break;
-		
+
 		for ( int j = 0; j < pBoat->m_nNumWakePoints; j++ )
 		{
 			 float fDist = (WAKE_LIFETIME - pBoat->m_afWakePointLifeTime[j]) * fShapeTime + float(j) * fShapeLength + fSize;
-			 
+
 			 if ( Abs(pBoat->m_avec2dWakePoints[j].x - sector.x) < fDist
 				&& Abs(pBoat->m_avec2dWakePoints[i].y - sector.y) < fDist )
 			 {
@@ -831,7 +823,7 @@ CBoat::IsSectorAffectedByWake(CVector2D sector, float fSize, CBoat **apBoats)
 			 }
 		}
 	}
-	
+
 	return numVerts != 0;
 }
 
@@ -841,11 +833,11 @@ CBoat::IsVertexAffectedByWake(CVector vecVertex, CBoat *pBoat)
 	for ( int i = 0; i < pBoat->m_nNumWakePoints; i++ )
 	{
 		float fMaxDist = (WAKE_LIFETIME - pBoat->m_afWakePointLifeTime[i]) * fShapeTime + float(i) * fShapeLength;
-		
+
 		CVector2D vecDist = pBoat->m_avec2dWakePoints[i] - CVector2D(vecVertex);
-		
+
 		float fDist = vecDist.MagnitudeSqr();
-		
+
 		if ( fDist < SQR(fMaxDist) )
 			return 1.0f - Min(fRangeMult * Sqrt(fDist / SQR(fMaxDist)) + (WAKE_LIFETIME - pBoat->m_afWakePointLifeTime[i]) * fTimeMult, 1.0f);
 	}
@@ -866,7 +858,7 @@ void
 CBoat::FillBoatList()
 {
 	int16 frameId = 0;
-	
+
 	apFrameWakeGeneratingBoats[0] = nil;
 	apFrameWakeGeneratingBoats[1] = nil;
 	apFrameWakeGeneratingBoats[2] = nil;

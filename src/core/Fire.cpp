@@ -5,6 +5,7 @@
 #include "Entity.h"
 #include "PointLights.h"
 #include "Particle.h"
+#include "ParticleEx.h"
 #include "Timer.h"
 #include "Vehicle.h"
 #include "Shadows.h"
@@ -92,7 +93,7 @@ CFire::ProcessFire(void)
 	}
 	if (!FindPlayerVehicle() &&
 #ifdef FIX_BUGS
-		FindPlayerPed() && 
+		FindPlayerPed() &&
 #endif
 		!FindPlayerPed()->m_pFire && !(FindPlayerPed()->bFireProof)
 		&& ((FindPlayerPed()->GetPosition() - m_vecPos).MagnitudeSqr() < 2.0f)) {
@@ -100,7 +101,7 @@ CFire::ProcessFire(void)
 		gFireManager.StartFire(FindPlayerPed(), m_pSource, 0.8f, 1);
 	}
 	if (CTimer::GetTimeInMilliseconds() > m_nNextTimeToAddFlames) {
-		m_nNextTimeToAddFlames = CTimer::GetTimeInMilliseconds() + 80;
+		m_nNextTimeToAddFlames = CTimer::GetTimeInMilliseconds() + (ParticleEx::ActiveSystem == ParticleEx::Xbox ? 50 : 80);
 		firePos = m_vecPos;
 
 		if (veh && veh->IsVehicle() && veh->IsCar()) {
@@ -113,14 +114,19 @@ CFire::ProcessFire(void)
 			firePos.z = ModelInfo.z + 0.15f;
 		}
 
-		CParticle::AddParticle(PARTICLE_CARFLAME, firePos,
-			CVector(0.0f, 0.0f, CGeneral::GetRandomNumberInRange(0.0125f, 0.1f) * m_fStrength),
-				0, m_fStrength, 0, 0, 0, 0);
+		if (ParticleEx::ActiveSystem == ParticleEx::Xbox) {
+			if (ParticleEx::AddFire(firePos, m_pEntity))
+				m_nNextTimeToAddFlames = CTimer::GetTimeInMilliseconds() + 5;
+		} else {
+			CParticle::AddParticle(PARTICLE_CARFLAME, firePos,
+				CVector(0.0f, 0.0f, CGeneral::GetRandomNumberInRange(0.0125f, 0.1f) * m_fStrength),
+					0, m_fStrength, 0, 0, 0, 0);
 
-		CGeneral::GetRandomNumber(); CGeneral::GetRandomNumber(); CGeneral::GetRandomNumber(); /* unsure why these three rands are called */
+			CGeneral::GetRandomNumber(); CGeneral::GetRandomNumber(); CGeneral::GetRandomNumber(); /* unsure why these three rands are called */
 
-		CParticle::AddParticle(PARTICLE_CARFLAME_SMOKE, firePos,
-			CVector(0.0f, 0.0f, 0.0f), 0, 0.0f, 0, 0, 0, 0);
+			CParticle::AddParticle(PARTICLE_CARFLAME_SMOKE, firePos,
+				CVector(0.0f, 0.0f, 0.0f), 0, 0.0f, 0, 0, 0, 0);
+		}
 	}
 	if (CTimer::GetTimeInMilliseconds() < m_nExtinguishTime || m_bIsScriptFire) {
 		if (CTimer::GetTimeInMilliseconds() > m_nStartTime)

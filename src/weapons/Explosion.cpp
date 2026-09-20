@@ -12,6 +12,7 @@
 #include "Fire.h"
 #include "Pad.h"
 #include "Particle.h"
+#include "ParticleEx.h"
 #include "PointLights.h"
 #include "Shadows.h"
 #include "Timer.h"
@@ -184,7 +185,7 @@ CExplosion::AddExplosion(CEntity *explodingEntity, CEntity *culprit, eExplosionT
 			if (explosion.m_pVictimEntity->IsVehicle() && ((CVehicle*)explosion.m_pVictimEntity)->IsBoat())
 				explosion.m_bIsBoat = true;
 			CEventList::RegisterEvent(EVENT_EXPLOSION, EVENT_ENTITY_VEHICLE, explosion.m_pVictimEntity, nil, 1000);
-		} else 
+		} else
 			CEventList::RegisterEvent(EVENT_EXPLOSION, pos, 1000);
 
 		if (explosion.m_pVictimEntity != nil && !explosion.m_bIsBoat) {
@@ -194,7 +195,7 @@ CExplosion::AddExplosion(CEntity *explodingEntity, CEntity *culprit, eExplosionT
 				CParticle::AddParticle(PARTICLE_EXPLOSION_LFAST, explosion.m_pVictimEntity->GetPosition(), CVector(0.0f, 0.0f, 0.0f), nil, 5.5f, color);
 			}
 			CVehicle *veh = (CVehicle*)explosion.m_pVictimEntity;
-			int32 component = CAR_WING_LR;
+			int32 component = ParticleEx::ActiveSystem == ParticleEx::PC ? CAR_WING_LR : CAR_WING_LF;
 
 			// miami leftover
 			if (veh->IsBike())
@@ -248,7 +249,7 @@ CExplosion::AddExplosion(CEntity *explodingEntity, CEntity *culprit, eExplosionT
 		explosion.m_fStopTime = lifetime + CTimer::GetTimeInMilliseconds() + 750;
 		explosion.m_fPropagationRate = 0.5f;
 		posGround = pos;
-		//posGround.z = 
+		//posGround.z =
 			CWorld::FindGroundZFor3DCoord(pos.x, pos.y, pos.z + 4.0f, nil); // BUG? result is unused
 		CEventList::RegisterEvent(EVENT_EXPLOSION, posGround, 250);
 		break;
@@ -273,7 +274,7 @@ CExplosion::AddExplosion(CEntity *explodingEntity, CEntity *culprit, eExplosionT
 			CParticle::AddParticle(PARTICLE_EXPLOSION_MEDIUM, randpos, CVector(0.0f, 0.0f, 0.0f), nil, 0.0f, colorMedium);
 		}
 		posGround = pos;
-		//posGround.z = 
+		//posGround.z =
 			CWorld::FindGroundZFor3DCoord(pos.x, pos.y, pos.z + 4.0f, nil); // BUG? result is unused
 		CEventList::RegisterEvent(EVENT_EXPLOSION, posGround, 250);
 		break;
@@ -283,7 +284,7 @@ CExplosion::AddExplosion(CEntity *explodingEntity, CEntity *culprit, eExplosionT
 		explosion.m_fStopTime = lifetime + CTimer::GetTimeInMilliseconds() + 750;
 		explosion.m_fPropagationRate = 0.5f;
 		posGround = pos;
-		//posGround.z = 
+		//posGround.z =
 			CWorld::FindGroundZFor3DCoord(pos.x, pos.y, pos.z + 4.0f, nil); // BUG? result is unused
 		CEventList::RegisterEvent(EVENT_EXPLOSION, posGround, 250);
 		break;
@@ -293,7 +294,7 @@ CExplosion::AddExplosion(CEntity *explodingEntity, CEntity *culprit, eExplosionT
 		explosion.m_fStopTime = lifetime + CTimer::GetTimeInMilliseconds() + 750;
 		explosion.m_fPropagationRate = 0.5f;
 		posGround = pos;
-		//posGround.z = 
+		//posGround.z =
 			CWorld::FindGroundZFor3DCoord(pos.x, pos.y, pos.z + 4.0f, nil); // BUG? result is unused
 		CEventList::RegisterEvent(EVENT_EXPLOSION, posGround, 250);
 		break;
@@ -374,7 +375,7 @@ CExplosion::Update()
 					if (explosion.m_pVictimEntity != nil && !explosion.m_bIsBoat) {
 						if ((CGeneral::GetRandomNumber() & 0xF) == 0) {
 							CVehicle *veh = (CVehicle*)explosion.m_pVictimEntity;
-							uint8 component = CAR_WING_LR;
+							uint8 component = ParticleEx::ActiveSystem == ParticleEx::PC ? CAR_WING_LR : CAR_WING_LF;
 
 							// miami leftover
 							if (veh->IsBike())

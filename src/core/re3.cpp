@@ -43,6 +43,7 @@
 #include "ControllerConfig.h"
 #include "CarCtrl.h"
 #include "Population.h"
+#include "ParticleEx.h"
 #include "IniFile.h"
 #include "Zones.h"
 #ifdef _WIN32
@@ -543,6 +544,7 @@ bool LoadINISettings()
 	ReadIniIfExists("General", "Language", &FrontEndMenuManager.m_PrefsLanguage);
 #ifdef FIX_BUGS
 	ReadIniIfExists("Gameplay", "GangFormations", &CPopulation::GangFormations);
+	ReadIniIfExists("ParticleEx", "System", &ParticleEx::SelectedSystem);
 #endif
 
 #ifdef EXTENDED_COLOURFILTER
@@ -648,6 +650,7 @@ void SaveINISettings()
 	StoreIni("General", "Language", FrontEndMenuManager.m_PrefsLanguage);
 #ifdef FIX_BUGS
 	StoreIni("Gameplay", "GangFormations", CPopulation::GangFormations);
+	StoreIni("ParticleEx", "System", ParticleEx::SelectedSystem);
 #endif
 
 #ifdef EXTENDED_COLOURFILTER

@@ -15,6 +15,7 @@
 #include "Object.h"
 #include "Pad.h"
 #include "Particle.h"
+#include "ParticleEx.h"
 #include "Ped.h"
 #include "PointLights.h"
 #include "Pools.h"
@@ -1538,6 +1539,15 @@ CWeapon::FireProjectile(CEntity *shooter, CVector *fireSource, float power)
 void
 CWeapon::GenerateFlameThrowerParticles(CVector pos, CVector dir)
 {
+	if (ParticleEx::ActiveSystem == ParticleEx::Xbox) {
+		dir *= 0.4f;
+		const CVector step = dir * 0.15f;
+		for (int i = 0; i < 10; ++i) {
+			pos += step;
+			CParticle::AddParticle(PARTICLE_FIREBALL, pos, dir, nil, 0.0f, 0, int32(CGeneral::GetRandomNumberInRange(0.0f, 360.0f)));
+		}
+		return;
+	}
 	dir *= 0.7f;
 	CParticle::AddParticle(PARTICLE_FIREBALL, pos, dir);
 
