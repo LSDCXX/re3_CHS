@@ -7,6 +7,13 @@ inline float Bound(float value, float lo, float hi) { return value < lo ? lo : v
 struct Point { float x, y; };
 struct View {
 	float x, y, halfSize;
+	void Constrain(float left, float top, float right, float bottom) {
+		// The square atlas must cover both dimensions of the viewport.
+		float minimum = (right-left > bottom-top ? right-left : bottom-top) * 0.5f;
+		if(halfSize < minimum) halfSize = minimum;
+		x = Bound(x, right-halfSize, left+halfSize);
+		y = Bound(y, bottom-halfSize, top+halfSize);
+	}
 	Point ToScreen(float wx, float wy) const { return {x + wx * halfSize / 2000.0f, y - wy * halfSize / 2000.0f}; }
 	Point ToWorld(float sx, float sy) const { return {(sx - x) * 2000.0f / halfSize, (y - sy) * 2000.0f / halfSize}; }
 	void Zoom(float factor, Point anchor, float minimum, float maximum) {

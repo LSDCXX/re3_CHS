@@ -2,6 +2,7 @@
 #include "ClassicAxis.h"
 
 #include "Camera.h"
+#include "Draw.h"
 #include "DMAudio.h"
 #include "Clock.h"
 #include "Darkel.h"
@@ -46,6 +47,17 @@
 #define SUBS_Y 68.0f
 #define WASTEDBUSTED_Y 82.0f
 #define BIGMESSAGE_Y 84.0f
+#endif
+
+#ifdef CONSOLE_BOTTOM_TEXT_PLACEMENTS
+#undef ZONE_Y
+#undef VEHICLE_Y
+#undef SUBS_Y
+#undef WASTEDBUSTED_Y
+#define ZONE_Y 61.0f
+#define VEHICLE_Y 81.0f
+#define SUBS_Y 83.0f
+#define WASTEDBUSTED_Y 122.0f
 #endif
 
 #ifdef FIX_BUGS
@@ -1214,14 +1226,30 @@ void CHud::Draw()
 #ifdef XBOX_SUBTITLES
 			float radarBulge = SCREEN_SCALE_X(45.0f) + SCREEN_SCALE_X(16.0f);
 			float rectWidth = SCREEN_WIDTH - SCREEN_SCALE_X(45.0f) - SCREEN_SCALE_X(16.0f) - radarBulge;
+#ifdef VC_STYLE_SUBTITLES
+			radarBulge = TheCamera.m_WideScreenOn ? SCREEN_SCALE_X(48.0f) : SCREEN_SCALE_X(RADAR_LEFT + RADAR_WIDTH + 8.0f);
+			rectWidth = SCREEN_WIDTH - radarBulge - (TheCamera.m_WideScreenOn ? SCREEN_SCALE_X(48.0f) : SCREEN_SCALE_X(18.0f));
+#endif
+			float subtitleBottom = 48.0f;
+#ifdef CONSOLE_BOTTOM_TEXT_PLACEMENTS
+			subtitleBottom = SUBS_Y;
+#endif
+			float subtitleY = SCREEN_SCALE_Y(4.0f) + SCREEN_SCALE_FROM_BOTTOM(subtitleBottom) - SCREEN_SCALE_Y(1);
+#ifdef VC_STYLE_SUBTITLES
+			if (!TheCamera.m_WideScreenOn) subtitleY -= SCREEN_SCALE_Y_PC(1.12f) * 20.0f;
+#endif
 			CFont::SetCentreSize(rectWidth);
 			CFont::SetColor(CRGBA(180, 180, 180, 255));
 
-			CFont::PrintOutlinedString(rectWidth / 2.0f + radarBulge, SCREEN_SCALE_Y(4.0f) + SCREEN_SCALE_FROM_BOTTOM(48.0f) - SCREEN_SCALE_Y(1), m_Message,
+			CFont::PrintOutlinedString(rectWidth / 2.0f + radarBulge, subtitleY, m_Message,
 				2.0f, true, CRGBA(0, 0, 0, 255));
 #else
 			float radarBulge = SCREEN_SCALE_X(40.0f) + SCREEN_SCALE_X(8.0f);
 			float rectWidth = SCREEN_SCALE_FROM_RIGHT(50.0f) - SCREEN_SCALE_X(8.0f) - radarBulge;
+#ifdef VC_STYLE_SUBTITLES
+			radarBulge = TheCamera.m_WideScreenOn ? SCREEN_SCALE_X(48.0f) : SCREEN_SCALE_X(RADAR_LEFT + RADAR_WIDTH + 8.0f);
+			rectWidth = SCREEN_WIDTH - radarBulge - (TheCamera.m_WideScreenOn ? SCREEN_SCALE_X(48.0f) : SCREEN_SCALE_X(18.0f));
+#endif
 			
 			CFont::SetCentreSize(rectWidth);
 
@@ -1231,7 +1259,13 @@ void CHud::Draw()
 			CFont::SetColor(CRGBA(235, 235, 235, 255));
 
 			// I'm not sure shadow substaction was intentional here, might be a leftover if CFont::PrintString was used for a shadow draw call
-			CFont::PrintString(rectWidth / 2.0f + radarBulge - SCREEN_SCALE_X_FIX(shadow), SCREEN_SCALE_Y_PC(4.0f) + SCREEN_SCALE_FROM_BOTTOM(SUBS_Y) - SCREEN_SCALE_Y_FIX(shadow), m_Message);
+			float subtitleX = rectWidth / 2.0f + radarBulge - SCREEN_SCALE_X_FIX(shadow);
+			float subtitleY = SCREEN_SCALE_Y_PC(4.0f) + SCREEN_SCALE_FROM_BOTTOM(SUBS_Y) - SCREEN_SCALE_Y_FIX(shadow);
+#ifdef VC_STYLE_SUBTITLES
+			if (TheCamera.m_WideScreenOn) subtitleX = SCREEN_WIDTH * 0.5f;
+			else subtitleY -= SCREEN_SCALE_Y_PC(1.12f) * 20.0f;
+#endif
+			CFont::PrintString(subtitleX, subtitleY, m_Message);
 			CFont::SetDropShadowPosition(0);
 #endif // #ifdef XBOX_SUBTITLES
 			#ifdef CHINESE

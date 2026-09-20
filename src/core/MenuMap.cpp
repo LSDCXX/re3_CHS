@@ -16,7 +16,6 @@
 #include "main.h"
 #include "Game.h"
 #include "World.h"
-#include "Stats.h"
 #include "Zones.h"
 #include "Pools.h"
 #include "Vehicle.h"
@@ -171,30 +170,6 @@ void TextureRect(RwTexture *texture, const CRect &rect, CRGBA color) {
 	sprite.Draw(clipped,color,u0,v0,u1,v0,u0,v1,u1,v1);
 	sprite.m_pTexture = nil; // borrowed; TXD reference owns it
 }
-void DarkenLockedAreas(CMenuManager &menu) {
-	// Progress masks adapted from LSDCXX's GTA III map. Redraw the clipped tile
-	// textures, rather than an opaque rectangle, to preserve their alpha.
-	float tileSize=view.halfSize/4, left=view.x-view.halfSize, top=view.y-view.halfSize;
-	CRect oldViewport=viewport;
-	std::vector<CRect> masks;
-	if(!CStats::IndustrialPassed)
-		masks.push_back(CRect(left+3.3f*tileSize,top+3.4f*tileSize,left+5.4f*tileSize,top+8*tileSize));
-	if(!CStats::CommercialPassed) {
-		masks.push_back(CRect(left,top+3.4f*tileSize,left+3.3f*tileSize,top+8*tileSize));
-		masks.push_back(CRect(left,top,left+8*tileSize,top+3.4f*tileSize));
-	}
-	for(size_t i=0;i<masks.size();i++) {
-		viewport=CRect(Max(oldViewport.left,masks[i].left),Max(oldViewport.top,masks[i].top),
-			Min(oldViewport.right,masks[i].right),Min(oldViewport.bottom,masks[i].bottom));
-		if(viewport.left>=viewport.right || viewport.top>=viewport.bottom)continue;
-		for(int y=0;y<8;y++) for(int x=0;x<8;x++) {
-			int slot=tiles[x+y*8];
-			RwTexture *texture=slot>=0 && CTxdStore::GetSlot(slot)->texDict ? GetFirstTexture(CTxdStore::GetSlot(slot)->texDict) : nil;
-			TextureRect(texture,CRect(left+x*tileSize,top+y*tileSize,left+(x+1)*tileSize,top+(y+1)*tileSize),Fade(menu,CRGBA(0,0,0,110)));
-		}
-	}
-	viewport=oldViewport;
-}
 void LoadMap() {
 	ReadSettings();
 	for(int i=0;i<64;i++) {
@@ -212,12 +187,11 @@ void LoadMap() {
 	screenWidth = SCREEN_WIDTH; screenHeight = SCREEN_HEIGHT;
 	view = {SCREEN_WIDTH/2.0f,SCREEN_HEIGHT/2.0f,SCREEN_HEIGHT*2.0f};
 }
-bool Unlocked(int island) { return island == 0 || (island == 1 ? CStats::IndustrialPassed : CStats::CommercialPassed); }
 bool NearService(const CVector &position, int sprite) {
 	if(!settings.forceServices) return false;
 	for(size_t i=0;i<settings.services.size();i++) {
 		const Service &s=settings.services[i];
-		if(s.sprite == sprite && Unlocked(s.island) && SQR(s.x-position.x)+SQR(s.y-position.y) < SQR(25.0f)) return true;
+		if(s.sprite == sprite && SQR(s.x-position.x)+SQR(s.y-position.y) < SQR(25.0f)) return true;
 	}
 	return false;
 }
@@ -269,7 +243,7 @@ void DrawBlips(CMenuManager &menu) {
 	}
 	if(settings.forceServices) for(size_t i=0;i<settings.services.size();i++) {
 		const Service &s=settings.services[i];
-		if(Unlocked(s.island)) Blip(menu,s.sprite,CVector(s.x,s.y,0),CRGBA(255,255,255,255));
+		Blip(menu,s.sprite,CVector(s.x,s.y,0),CRGBA(255,255,255,255));
 	}
 	Blip(menu,RADAR_SPRITE_CENTRE,FindPlayerCoors(),CRGBA(255,255,255,255));
 }
@@ -317,7 +291,7 @@ void ProcessInput(CMenuManager &menu) {
 		else if(pad->GetMouseWheelDown())factor=1.0f/1.15f;
 		else if(pad->GetPageUp()||pad->GetRightShoulder2())factor=expf(dt*1.8f);
 		else if(pad->GetPageDown()||pad->GetLeftShoulder2())factor=expf(-dt*1.8f);
-		if(factor!=1.0f) {view.Zoom(factor,Inside(cursor)?cursor:Point{SCREEN_WIDTH/2.0f,SCREEN_HEIGHT/2.0f},SCREEN_HEIGHT*0.5f,SCREEN_HEIGHT*8.0f);centering=false;}
+		if(factor!=1.0f) {view.Zoom(factor,Inside(cursor)?cursor:Point{SCREEN_WIDTH/2.0f,SCREEN_HEIGHT/2.0f},Max(SCREEN_WIDTH,SCREEN_HEIGHT)*0.5f,Max(SCREEN_WIDTH,SCREEN_HEIGHT)*8.0f);centering=false;}
 	}
 	if(centering) {
 		CVector player=FindPlayerCoors();
@@ -326,9 +300,7 @@ void ProcessInput(CMenuManager &menu) {
 		float amount=1.0f-expf(-12.0f*dt);view.x+=dx*amount;view.y+=dy*amount;
 		if(fabsf(dx)+fabsf(dy)<0.5f)centering=false;
 	}
-	float midY=(viewport.top+viewport.bottom)/2;
-	view.x=Bound(view.x,SCREEN_WIDTH/2.0f-view.halfSize,SCREEN_WIDTH/2.0f+view.halfSize);
-	view.y=Bound(view.y,midY-view.halfSize,midY+view.halfSize);
+	view.Constrain(viewport.left,viewport.top,viewport.right,viewport.bottom);
 	if(menu.m_nMenuFadeAlpha >= 255 && Inside(cursor) && (pad->GetRightMouseJustDown()||pad->GetSquareJustDown()||pad->GetCharJustDown('T'))) {
 		Point pos=view.ToWorld(cursor.x,cursor.y);
 		if(fabsf(pos.x)<=2000 && fabsf(pos.y)<=2000) {
@@ -369,7 +341,7 @@ void CMenuMap::Draw(CMenuManager &menu) {
 		CRect tile(view.x-view.halfSize+x*size,view.y-view.halfSize+y*size,view.x-view.halfSize+(x+1)*size,view.y-view.halfSize+(y+1)*size);
 		TextureRect(texture,tile,Fade(menu,settings.map));
 	}
-	DarkenLockedAreas(menu);
+
 	DrawBlips(menu);
 	if(Inside(cursor)) {
 		CRGBA col=Fade(menu,settings.crosshair);float t=Scale(0.65f);

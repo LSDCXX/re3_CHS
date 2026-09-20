@@ -365,8 +365,13 @@ CCoronas::Render(void)
 							(spriteCoors.x - (screenw/2)) * flare->position + (screenw/2),
 							(spriteCoors.y - (screenh/2)) * flare->position + (screenh/2),
 							spriteCoors.z,
+#ifdef FIX_BUGS
+							SCREEN_SCALE_X(4.0f*flare->size * spritew/spriteh),
+							SCREEN_SCALE_Y(4.0f*flare->size),
+#else
 							4.0f*flare->size * spritew/spriteh,
 							4.0f*flare->size,
+#endif
 							(flare->red * aCoronas[i].red)>>8,
 							(flare->green * aCoronas[i].green)>>8,
 							(flare->blue * aCoronas[i].blue)>>8,
