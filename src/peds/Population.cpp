@@ -51,6 +51,7 @@ const RegenerationPoint aSafeZones[] = {
 };
 
 PedGroup CPopulation::ms_pPedGroups[NUMPEDGROUPS];
+bool CPopulation::GangFormations = true;
 bool CPopulation::ms_bGivePedsWeapons;
 int32 CPopulation::m_AllRandomPedsThisType = -1;
 float CPopulation::PedDensityMultiplier = 1.0f;
@@ -625,6 +626,9 @@ CPopulation::AddToPopulation(float minDist, float maxDist, float minDistOffScree
 
 		if (pedTypeToAdd >= PEDTYPE_GANG1 && pedTypeToAdd <= PEDTYPE_GANG9) {
 			int randVal = CGeneral::GetRandomNumber() % 100;
+#ifdef FIX_BUGS
+			if (!GangFormations) randVal = 50; // One member per request, no 50% empty spawn.
+#endif
 			if (randVal < 50)
 				return;
 
@@ -650,6 +654,7 @@ CPopulation::AddToPopulation(float minDist, float maxDist, float minDistOffScree
 		if (!foundCoors)
 			return;
 
+		const CVector originalCoors = generatedCoors;
 		for (int i = 0; i < pedAmount; ++i) {
 			if (pedTypeToAdd >= PEDTYPE_GANG1 && pedTypeToAdd <= PEDTYPE_GANG9)
 				modelToAdd = ChooseGangOccupation(pedTypeToAdd - PEDTYPE_GANG1);
@@ -674,6 +679,24 @@ CPopulation::AddToPopulation(float minDist, float maxDist, float minDistOffScree
 			} else if (!CModelInfo::GetModelInfo(modelToAdd)->GetRwObject()) {
 				return;
 			}
+#ifdef FIX_BUGS
+			// Restore the original path position each time, avoiding accumulated Z.
+			generatedCoors = originalCoors;
+			generatedCoors.z += 0.7f;
+			if (i + 1 < pedAmount) {
+				float ratio = (CGeneral::GetRandomNumber() % 256) / 256.0f;
+				const CVector &a = ThePaths.m_pathNodes[node1].GetPosition();
+				const CVector &b = ThePaths.m_pathNodes[node2].GetPosition();
+				generatedCoors = b + (a - b) * ratio;
+				bool foundGround;
+				float groundZ = CWorld::FindGroundZFor3DCoord(generatedCoors.x, generatedCoors.y,
+					generatedCoors.z + 2.0f, &foundGround);
+				if (!foundGround) return;
+				generatedCoors.z = Max(generatedCoors.z, groundZ + 0.7f);
+			}
+			if (!CPedPlacement::IsPositionClearForPed(&generatedCoors))
+				break;
+#else
 			generatedCoors.z += 0.7f;
 
 			// What? How can this not be met?
@@ -705,6 +728,7 @@ CPopulation::AddToPopulation(float minDist, float maxDist, float minDistOffScree
 
 				generatedCoors.z = Max(generatedCoors.z, groundZ);
 			}
+#endif
 			bool farEnoughToAdd = true;
 			if (TheCamera.IsSphereVisible(generatedCoors, 2.0f)) {
 				if (PedCreationDistMultiplier() * MIN_CREATION_DIST > (generatedCoors - playerCentreOfWorld).Magnitude2D())

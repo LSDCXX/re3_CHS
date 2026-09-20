@@ -1648,13 +1648,19 @@ CAutomobile::PreRender(void)
 	// Process lights
 
 	// Turn lights on/off
+#ifdef FIX_BUGS
+	// SilentPatch's 25000 for 15-bit PC RNG corresponds to 50000 for 16-bit RNG.
+	const float lightRandomRange = 50000.0f * ((MYRAND_MAX + 1.0f) / 65536.0f);
+#else
+	const float lightRandomRange = 50000.0f;
+#endif
 	bool shouldLightsBeOn = 
 		CClock::GetHours() > 20 ||
 		CClock::GetHours() > 19 && CClock::GetMinutes() > (m_randomSeed & 0x3F) ||
 		CClock::GetHours() < 7 ||
 		CClock::GetHours() < 8 && CClock::GetMinutes() < (m_randomSeed & 0x3F) ||
-		m_randomSeed/50000.0f < CWeather::Foggyness ||
-		m_randomSeed/50000.0f < CWeather::WetRoads;
+		m_randomSeed/lightRandomRange < CWeather::Foggyness ||
+		m_randomSeed/lightRandomRange < CWeather::WetRoads;
 	if(shouldLightsBeOn != bLightsOn && GetStatus() != STATUS_WRECKED){
 		if(GetStatus() == STATUS_ABANDONED){
 			// Turn off lights on abandoned vehicles only when we they're far away

@@ -33,6 +33,7 @@ struct RegenerationPoint
 class CPopulation
 {
 public:
+	static bool GangFormations;
 	static PedGroup ms_pPedGroups[NUMPEDGROUPS];
 	static bool ms_bGivePedsWeapons;
 	static int32 m_AllRandomPedsThisType;

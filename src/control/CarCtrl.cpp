@@ -343,11 +343,13 @@ CCarCtrl::GenerateOneRandomCar()
 			pVehicle->AutoPilot.m_nDrivingStyle = DRIVINGSTYLE_STOP_FOR_CARS;
 			pVehicle->AutoPilot.m_nCarMission = MISSION_CRUISE;
 		}
+#ifndef FIX_BUGS
 		if (carModel == MI_FBICAR){
 			pVehicle->m_currentColour1 = 0;
 			pVehicle->m_currentColour2 = 0;
 			/* FBI cars are gray in carcols, but we want them black if they going after player. */
 		}
+#endif
 	default:
 		break;
 	}
