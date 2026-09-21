@@ -1089,7 +1089,7 @@ CAutomobile::ProcessControl(void)
 	if(m_fHealth < 250.0f && GetStatus() != STATUS_WRECKED){
 		// Car is on fire
 
-		if (ParticleEx::ActiveSystem == ParticleEx::Xbox) {
+		if (ParticleEx::UsesXboxFire()) {
 			// Use the vehicle's fire timer rather than one global timer shared by every car.
 			const float elapsed = CTimer::GetTimeStepInMilliseconds();
 			if ((SQR(m_vecMoveSpeed.x) + SQR(m_vecMoveSpeed.y)) > 0.003f ||
@@ -3642,13 +3642,13 @@ CAutomobile::AddWheelDirtAndWater(CColPoint *colpoint, uint32 belowEffectSpeed)
 	default:
 		if ( CWeather::WetRoads > 0.01f
 
-			&& ((ParticleEx::ActiveSystem == ParticleEx::PS2) || (CTimer::GetFrameCounter() & 1))
+			&& ((ParticleEx::UsesPS2Emitters()) || (CTimer::GetFrameCounter() & 1))
 			)
 		{
 			CParticle::AddParticle(
-(ParticleEx::ActiveSystem == ParticleEx::PS2) ? PARTICLE_WHEEL_WATER : PARTICLE_WATERSPRAY,
+(ParticleEx::UsesPS2Emitters()) ? PARTICLE_WHEEL_WATER : PARTICLE_WATERSPRAY,
 				colpoint->point + CVector(0.0f, 0.0f, 0.25f+0.25f),
-CVector(0.0f, 0.0f, (ParticleEx::ActiveSystem == ParticleEx::PS2) ? CGeneral::GetRandomNumberInRange(0.005f, 0.04f) : 1.0f),
+CVector(0.0f, 0.0f, (ParticleEx::UsesPS2Emitters()) ? CGeneral::GetRandomNumberInRange(0.005f, 0.04f) : 1.0f),
 				nil,
 				CGeneral::GetRandomNumberInRange(0.1f, 0.5f), waterCol);
 			return 0;

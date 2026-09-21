@@ -10,7 +10,17 @@ ParticleEx::System ParticleEx::ActiveSystem = ParticleEx::PC;
 void ParticleEx::Initialise()
 {
 	ActiveSystem = PC;
-	if (SelectedSystem == PS2 && REPS2::ParticleEngine::LoadResources()) {
+	if (SelectedSystem == PS2Xbox) {
+		if (REPS2::ParticleEngine::LoadResources()) {
+			REPS2::ParticleEngine::Initialise();
+			if (REXBOX::ParticleEngine::LoadResources()) {
+				REXBOX::ParticleEngine::Initialise();
+				ActiveSystem = PS2Xbox;
+			} else {
+				REPS2::ParticleEngine::Shutdown();
+			}
+		}
+	} else if (SelectedSystem == PS2 && REPS2::ParticleEngine::LoadResources()) {
 		REPS2::ParticleEngine::Initialise();
 		ActiveSystem = PS2;
 	} else if (SelectedSystem == Xbox && REXBOX::ParticleEngine::LoadResources()) {
@@ -23,8 +33,8 @@ void ParticleEx::Initialise()
 
 void ParticleEx::Shutdown()
 {
-	if (ActiveSystem == PS2) REPS2::ParticleEngine::Shutdown();
-	if (ActiveSystem == Xbox) REXBOX::ParticleEngine::Shutdown();
+	if (UsesPS2Emitters()) REPS2::ParticleEngine::Shutdown();
+	if (UsesXboxFire()) REXBOX::ParticleEngine::Shutdown();
 	ActiveSystem = PC;
 }
 
@@ -82,12 +92,12 @@ void ParticleEx::ConfigureObject(CParticleObject *object)
 	case POBJECT_PAVEMENT_STEAM:
 	case POBJECT_WALL_STEAM:
 	case POBJECT_FIRE_TRAIL:
-		object->m_nSkipFrames = ActiveSystem == PS2 ? 1 : 3;
+		object->m_nSkipFrames = UsesPS2Emitters() ? 1 : 3;
 		break;
 	case POBJECT_DARK_SMOKE:
 		object->m_ParticleType = ActiveSystem == Xbox ? PARTICLE_ENGINE_SMOKE2 : PARTICLE_STEAM_NY;
 		object->m_nNumEffectCycles = ActiveSystem == Xbox ? 4 : 1;
-		object->m_nSkipFrames = ActiveSystem == PS2 ? 1 : 3;
+		object->m_nSkipFrames = UsesPS2Emitters() ? 1 : 3;
 		object->m_Color = ActiveSystem == Xbox ? CRGBA(0, 0, 0, 0) : CRGBA(16, 16, 16, 255);
 		break;
 	case POBJECT_CAR_WATER_SPLASH:
@@ -99,9 +109,29 @@ void ParticleEx::ConfigureObject(CParticleObject *object)
 		break;
 	case POBJECT_SMALL_FIRE:
 	case POBJECT_BIG_FIRE:
-		object->m_nSkipFrames = ActiveSystem == PS2 ? 1 : 2;
+		object->m_nSkipFrames = UsesPS2Emitters() ? 1 : 2;
 		break;
 	default:
 		break;
+	}
+}
+
+// Hybrid keeps PS2 smoke, dust and scene effects, with Xbox fire and water.
+ParticleEx::System ParticleEx::SystemForParticle(::tParticleType type)
+{
+	if (ActiveSystem != PS2Xbox) return ActiveSystem;
+	switch (type) {
+	case PARTICLE_FLAME: case PARTICLE_FIREBALL: case PARTICLE_CARFLAME:
+	case PARTICLE_EXPLOSION_MEDIUM: case PARTICLE_EXPLOSION_LARGE:
+	case PARTICLE_EXPLOSION_MFAST: case PARTICLE_EXPLOSION_LFAST:
+	case PARTICLE_WATER: case PARTICLE_SPLASH:
+	case PARTICLE_RAIN_SPLASH: case PARTICLE_RAIN_SPLASH_BIGGROW:
+	case PARTICLE_RAIN_SPLASHUP: case PARTICLE_WATERSPRAY:
+	case PARTICLE_CAR_SPLASH: case PARTICLE_PED_SPLASH:
+	case PARTICLE_BOAT_SPLASH: case PARTICLE_BOAT_THRUSTJET: case PARTICLE_BOAT_WAKE:
+	case PARTICLE_WATER_HYDRANT: case PARTICLE_WATER_CANNON:
+		return Xbox;
+	default:
+		return PS2;
 	}
 }

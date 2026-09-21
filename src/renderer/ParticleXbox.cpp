@@ -1,5 +1,6 @@
 // Native re3 adaptation of ParticleEx by Fire_Head. See docs/PARTICLEEX.md.
 #include "ParticleXbox.h"
+#include "ParticleEx.h"
 #include "ParticleExCompat.h"
 
 
@@ -1133,7 +1134,8 @@ void ParticleEngine::UpdateStep(float timeStep)
 	float fFricDeccel96 = pow(0.96f, timeStep);
 	float fFricDeccel99 = pow(0.99f, timeStep);
 
-	CParticleObject::UpdateAll();
+	// PS2 owns emitter updates in hybrid mode; never emit twice per tick.
+	if (ParticleEx::ActiveSystem != ParticleEx::PS2Xbox) CParticleObject::UpdateAll();
 
 	for ( int32 i = 0; i < MAX_PARTICLES; i++ )
 	{

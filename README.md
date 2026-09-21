@@ -4,7 +4,7 @@
 
 ## 本次整合的功能与修复
 
-- **ParticleEx 粒子系统**：保留 PC 为默认，可通过配置选择 PS2／Xbox；包括对应火焰、烟雾和水花，资源缺失时回退 PC。切换与安装见 [ParticleEx 说明](docs/PARTICLEEX.md)。
+- **ParticleEx 粒子系统**：保留 PC 为默认，可通过配置选择 PS2／Xbox／PS2+Xbox 混合模式；包括对应火焰、烟雾和水花，资源缺失时回退 PC。切换与安装见 [ParticleEx 说明](docs/PARTICLEEX.md)。
 
 - **过场动画可动手指**：原生适配 aap/iii_anim，每只手使用独立动画状态；缺少兼容资源时使用原手部。III 的手部资源需另行安装，详见 [资源说明](docs/cutscene-hands-menu-map.md)。
 - **全屏大地图**：适配 LSDCXX/MenuMapIII，保留黄色底栏；上方居中图例、右下角黄条上方地名、鼠标悬停名称，调整字号、背景和阴影，修复玩家方向与返回按钮。

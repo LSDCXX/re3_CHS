@@ -101,7 +101,7 @@ CFire::ProcessFire(void)
 		gFireManager.StartFire(FindPlayerPed(), m_pSource, 0.8f, 1);
 	}
 	if (CTimer::GetTimeInMilliseconds() > m_nNextTimeToAddFlames) {
-		m_nNextTimeToAddFlames = CTimer::GetTimeInMilliseconds() + (ParticleEx::ActiveSystem == ParticleEx::Xbox ? 50 : 80);
+		m_nNextTimeToAddFlames = CTimer::GetTimeInMilliseconds() + (ParticleEx::UsesXboxFire() ? 50 : 80);
 		firePos = m_vecPos;
 
 		if (veh && veh->IsVehicle() && veh->IsCar()) {
@@ -114,7 +114,7 @@ CFire::ProcessFire(void)
 			firePos.z = ModelInfo.z + 0.15f;
 		}
 
-		if (ParticleEx::ActiveSystem == ParticleEx::Xbox) {
+		if (ParticleEx::UsesXboxFire()) {
 			if (ParticleEx::AddFire(firePos, m_pEntity))
 				m_nNextTimeToAddFlames = CTimer::GetTimeInMilliseconds() + 5;
 		} else {

@@ -3384,7 +3384,7 @@ CPed::PlayFootSteps(void)
 
 	if ( IsPlayer() )
 	{
-		runStopAsoc = RpAnimBlendClumpGetAssociation(GetClump(), ANIM_STD_RUNSTOP2);
+		runStopAsoc = RpAnimBlendClumpGetAssociation(GetClump(), ANIM_STD_RUNSTOP1);
 
 		if ( runStopAsoc == NULL )
 			runStopAsoc = RpAnimBlendClumpGetAssociation(GetClump(), ANIM_STD_RUNSTOP2);

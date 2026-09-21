@@ -241,7 +241,7 @@ CParticleObject::AddObject(uint16 type, CVector const &pos, CVector const &targe
 				pobj->m_nSkipFrames      = 1;
 				pobj->m_nCreationChance  = 0;
 				pobj->m_vecTarget        = CVector(0.0f, 0.0f, 0.3f);
-				pobj->m_nRemoveTimer     = ParticleEx::ActiveSystem == ParticleEx::Xbox ? 15000 : 5000;
+				pobj->m_nRemoveTimer     = ParticleEx::UsesXboxFire() ? 15000 : 5000;
 				CAudioHydrant::Add(pobj);
 				break;
 			}
@@ -392,7 +392,11 @@ CParticleObject::AddObject(uint16 type, CVector const &pos, CVector const &targe
 		}
 	}
 
-	if (pobj) ParticleEx::ConfigureObject(pobj);
+	if (pobj) {
+		if (pobj->m_nRemoveTimer != 0)
+			pobj->m_nRemoveTimer += CTimer::GetTimeInMilliseconds();
+		ParticleEx::ConfigureObject(pobj);
+	}
 	return pobj;
 }
 
@@ -511,8 +515,8 @@ void CParticleObject::UpdateClose(void)
 					flamevel.y = vel.y;
 					flamevel.z = CGeneral::GetRandomNumberInRange(0.0125f*size, 0.1f*size);
 
-					if (ParticleEx::ActiveSystem == ParticleEx::Xbox) flamevel.z = 0.0f;
-					CParticle::AddParticle(PARTICLE_FLAME, pos, flamevel, NULL, ParticleEx::ActiveSystem == ParticleEx::Xbox ? 0.0f : size);
+					if (ParticleEx::UsesXboxFire()) flamevel.z = 0.0f;
+					CParticle::AddParticle(PARTICLE_FLAME, pos, flamevel, NULL, ParticleEx::UsesXboxFire() ? 0.0f : size);
 
 
 					CVector possmoke = pos;
@@ -543,8 +547,8 @@ void CParticleObject::UpdateClose(void)
 
 					float flamesize = 0.8f*size;
 
-					if (ParticleEx::ActiveSystem == ParticleEx::Xbox) flamevel.z = 0.0f;
-					CParticle::AddParticle(PARTICLE_FLAME, pos, flamevel, NULL, ParticleEx::ActiveSystem == ParticleEx::Xbox ? 0.0f : flamesize);
+					if (ParticleEx::UsesXboxFire()) flamevel.z = 0.0f;
+					CParticle::AddParticle(PARTICLE_FLAME, pos, flamevel, NULL, ParticleEx::UsesXboxFire() ? 0.0f : flamesize);
 
 
 					for ( int32 i = 0; i < 4; i++ )
@@ -1091,7 +1095,7 @@ void CParticleObject::UpdateClose(void)
 		}
 	}
 
-	if ( this->m_nRemoveTimer != 0 )
+	if (this->m_nRemoveTimer != 0 && int32(CTimer::GetTimeInMilliseconds() - this->m_nRemoveTimer) >= 0)
 	{
 		MoveToList(&pCloseListHead, &pUnusedListHead, this);
 		this->m_nState = POBJECTSTATE_FREE;
@@ -1104,13 +1108,14 @@ void CParticleObject::UpdateClose(void)
 void
 CParticleObject::UpdateFar(void)
 {
-	if ( this->m_nRemoveTimer != 0 )
+	if (this->m_nRemoveTimer != 0 && int32(CTimer::GetTimeInMilliseconds() - this->m_nRemoveTimer) >= 0)
 	{
 		MoveToList(&pFarListHead, &pUnusedListHead, this);
 		this->m_nState = POBJECTSTATE_FREE;
 
 		if ( this->m_Type == POBJECT_FIRE_HYDRANT )
 			CAudioHydrant::Remove(this);
+		return;
 	}
 
 	CVector2D dist = this->GetPosition() - TheCamera.GetPosition();

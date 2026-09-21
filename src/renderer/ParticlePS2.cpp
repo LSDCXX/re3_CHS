@@ -1,5 +1,6 @@
 // Native re3 adaptation of ParticleEx by Fire_Head. See docs/PARTICLEEX.md.
 #include "ParticlePS2.h"
+#include "ParticleEx.h"
 #include "ParticleExCompat.h"
 
 
@@ -1030,6 +1031,8 @@ void ParticleEngine::Update()
 	while (updateAccumulator >= tick) {
 		updateAccumulator -= tick;
 		UpdateStep(tick);
+		if (ParticleEx::ActiveSystem == ParticleEx::PS2Xbox)
+			REXBOX::ParticleEngine::UpdateStep(tick);
 	}
 }
 

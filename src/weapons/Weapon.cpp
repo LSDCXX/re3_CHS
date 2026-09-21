@@ -1539,7 +1539,7 @@ CWeapon::FireProjectile(CEntity *shooter, CVector *fireSource, float power)
 void
 CWeapon::GenerateFlameThrowerParticles(CVector pos, CVector dir)
 {
-	if (ParticleEx::ActiveSystem == ParticleEx::Xbox) {
+	if (ParticleEx::UsesXboxFire()) {
 		dir *= 0.4f;
 		const CVector step = dir * 0.15f;
 		for (int i = 0; i < 10; ++i) {

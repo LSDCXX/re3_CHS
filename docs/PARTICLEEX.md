@@ -16,10 +16,21 @@ System=0
 | `0` | PC，默认 |
 | `1` | PS2 |
 | `2` | Xbox |
+| `3` | PS2+Xbox 混合 |
 
 修改后重新启动游戏。此编号是本分支的配置约定，不是上游 ASI 的内部枚举。无需安装 `IIIParticleEx.asi`，也不读取上游 `IIIParticleEx.ini`。
 
 PC 模式不需要新增资源。选中的 PS2／Xbox 配置文件缺失、格式不完整，或 TXD 加载失败、缺少所需纹理时，启动回退到 PC，并在日志中提示。缺少原游戏本身的 PC 资源不在此回退范围内。
+
+## PS2+Xbox 混合模式
+
+设置 `[ParticleEx] System=3`，需要同时安装 PS2 和 XBOX 两个资源目录，缺少任意一套时回退 PC。
+
+- PS2：烟雾、Particle objects / 2dfx 场景发射器、脚步扬尘、雨天车轮水花、爆炸喷流。
+- Xbox：车辆／行人落水水花、地面／人物／车辆火焰、普通爆炸、喷火器、消防栓。
+- 船只和行人踩水保留非 PS2 分支。已有浅水阻力和地面黑斑不改。
+- 消防栓持续时间：PC／PS2 为 5 秒，Xbox／PS2+Xbox 为 15 秒。修正了限时发射器首次更新便被删除的问题；远处到期的发射器不会重新进入活动列表。
+- 两套引擎按同一个 30 Hz 时钟逐步更新，场景发射器每步只更新一次；每套保留 1000 个粒子的容量。
 
 ## 移植内容
 
@@ -48,13 +59,17 @@ PC 模式不需要新增资源。选中的 PS2／Xbox 配置文件缺失、格�
 
 ## English
 
-The existing **PC particle system remains the default**. Copy `gamefiles/ParticleEx` beside `re3.exe`, then set `[ParticleEx] System=0` (PC), `1` (PS2), or `2` (Xbox) in `re3.ini` while the game is closed. Restart to apply. These numbers are specific to this port. The original ASI and its INI are not required.
+The existing **PC particle system remains the default**. Copy `gamefiles/ParticleEx` beside `re3.exe`, then set `[ParticleEx] System=0` (PC), `1` (PS2), `2` (Xbox), or `3` (PS2+Xbox) in `re3.ini` while the game is closed. Restart to apply. These numbers are specific to this port. The original ASI and its INI are not required.
 
 The selected console system falls back to PC if its configuration is missing/invalid or its texture dictionary cannot be loaded or lacks required textures. PC still needs the original game resources.
 
 This native adaptation includes the two console particle engines, Xbox animated and moving flames, flamethrower effects, centred molotov fire, emitter differences and re3's PS2 water-effect branches. Saved emitters are normalized to the selected system without changing the save format. Console fade/animation/rotation counters tick at 30 Hz; the existing PC timing is unchanged. Configuration reloads are transactional, and raster indexing is bounded independently of animation lifetime.
 
-The pools retain 1000 particles. EXE hooks, external ASI/Waterdrops integration, developer editors, `.pobj` import/export and all upstream experimental switches are outside this adaptation. Console assets are separate from the original PC assets.
+Hybrid mode uses PS2 smoke, scene emitters, foot dust, wet wheel spray and explosion jets, with Xbox fire, ordinary explosions, flamethrower and car/ped water splashes. Boat and foot puddle splashes use the non-PS2 path. Both asset directories are required. The two engines share a 30 Hz clock and update emitters once per tick. Existing water drag and scorch fixes are unchanged.
+
+Timed emitters now survive until their deadline: hydrants spray for 5 seconds in PC/PS2 and 15 seconds in Xbox/hybrid. Expired distant emitters cannot rejoin the active list.
+
+Each console pool retains 1000 particles. EXE hooks, external ASI/Waterdrops integration, developer editors, `.pobj` import/export and all upstream experimental switches are outside this adaptation. Console assets are separate from the original PC assets.
 
 Credit: Fire_Head, using the user-specified enborballer snapshot linked above. No separate upstream license file was present in that snapshot; no new license is asserted for upstream code or assets.
 

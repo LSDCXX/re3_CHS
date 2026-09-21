@@ -236,6 +236,11 @@ TWEAKFUNC(CParticle::ReloadConfig);
 
 void CParticle::ReloadConfig()
 {
+	if (ParticleEx::ActiveSystem == ParticleEx::PS2Xbox) {
+		REPS2::ParticleEngine::ReloadConfig();
+		REXBOX::ParticleEngine::ReloadConfig();
+		return;
+	}
 	if (ParticleEx::ActiveSystem == ParticleEx::PS2) return REPS2::ParticleEngine::ReloadConfig();
 	if (ParticleEx::ActiveSystem == ParticleEx::Xbox) return REXBOX::ParticleEngine::ReloadConfig();
 
@@ -808,8 +813,8 @@ void CParticle::Shutdown()
 
 CParticle *CParticle::AddParticle(tParticleType type, CVector const &vecPos, CVector const &vecDir, CEntity *pEntity, float fSize, int32 nRotationSpeed, int32 nRotation, int32 nCurFrame, int32 nLifeSpan)
 {
-	if (ParticleEx::ActiveSystem == ParticleEx::PS2) return REPS2::ParticleEngine::AddParticle(static_cast<REPS2::tParticleType>(type), vecPos, vecDir, pEntity, fSize, nRotationSpeed, nRotation, nCurFrame, nLifeSpan);
-	if (ParticleEx::ActiveSystem == ParticleEx::Xbox) return REXBOX::ParticleEngine::AddParticle(ParticleEx::XboxType(type), vecPos, vecDir, pEntity, fSize, nRotationSpeed, nRotation, nCurFrame, nLifeSpan);
+	if (ParticleEx::SystemForParticle(type) == ParticleEx::PS2) return REPS2::ParticleEngine::AddParticle(static_cast<REPS2::tParticleType>(type), vecPos, vecDir, pEntity, fSize, nRotationSpeed, nRotation, nCurFrame, nLifeSpan);
+	if (ParticleEx::SystemForParticle(type) == ParticleEx::Xbox) return REXBOX::ParticleEngine::AddParticle(ParticleEx::XboxType(type), vecPos, vecDir, pEntity, fSize, nRotationSpeed, nRotation, nCurFrame, nLifeSpan);
 
 	CRGBA color(0, 0, 0, 0);
 	return AddParticle(type, vecPos, vecDir, pEntity, fSize, color, nRotationSpeed, nRotation, nCurFrame, nLifeSpan);
@@ -818,8 +823,8 @@ CParticle *CParticle::AddParticle(tParticleType type, CVector const &vecPos, CVe
 float throttleParticleAdd = 0;
 CParticle *CParticle::AddParticle(tParticleType type, CVector const &vecPos, CVector const &vecDir, CEntity *pEntity, float fSize, RwRGBA const &color, int32 nRotationSpeed, int32 nRotation, int32 nCurFrame, int32 nLifeSpan)
 {
-	if (ParticleEx::ActiveSystem == ParticleEx::PS2) return REPS2::ParticleEngine::AddParticle(static_cast<REPS2::tParticleType>(type), vecPos, vecDir, pEntity, fSize, color, nRotationSpeed, nRotation, nCurFrame, nLifeSpan);
-	if (ParticleEx::ActiveSystem == ParticleEx::Xbox) return REXBOX::ParticleEngine::AddParticle(ParticleEx::XboxType(type), vecPos, vecDir, pEntity, fSize, color, nRotationSpeed, nRotation, nCurFrame, nLifeSpan);
+	if (ParticleEx::SystemForParticle(type) == ParticleEx::PS2) return REPS2::ParticleEngine::AddParticle(static_cast<REPS2::tParticleType>(type), vecPos, vecDir, pEntity, fSize, color, nRotationSpeed, nRotation, nCurFrame, nLifeSpan);
+	if (ParticleEx::SystemForParticle(type) == ParticleEx::Xbox) return REXBOX::ParticleEngine::AddParticle(ParticleEx::XboxType(type), vecPos, vecDir, pEntity, fSize, color, nRotationSpeed, nRotation, nCurFrame, nLifeSpan);
 
 	if ( CTimer::GetIsPaused() )
 		return NULL;
@@ -1060,6 +1065,11 @@ float throttleParticleUpdate = 0;
 
 void CParticle::Update()
 {
+	if (ParticleEx::ActiveSystem == ParticleEx::PS2Xbox) {
+		// One shared clock; the PS2 tick also advances Xbox in hybrid mode.
+		REPS2::ParticleEngine::Update();
+		return;
+	}
 	if (ParticleEx::ActiveSystem == ParticleEx::PS2) return REPS2::ParticleEngine::Update();
 	if (ParticleEx::ActiveSystem == ParticleEx::Xbox) return REXBOX::ParticleEngine::Update();
 
@@ -1505,6 +1515,11 @@ void CParticle::Update()
 
 void CParticle::Render()
 {
+	if (ParticleEx::ActiveSystem == ParticleEx::PS2Xbox) {
+		REPS2::ParticleEngine::Render();
+		REXBOX::ParticleEngine::Render();
+		return;
+	}
 	if (ParticleEx::ActiveSystem == ParticleEx::PS2) return REPS2::ParticleEngine::Render();
 	if (ParticleEx::ActiveSystem == ParticleEx::Xbox) return REXBOX::ParticleEngine::Render();
 
@@ -1833,6 +1848,11 @@ void CParticle::Render()
 
 void CParticle::RemovePSystem(tParticleType type)
 {
+	if (ParticleEx::ActiveSystem == ParticleEx::PS2Xbox) {
+		REPS2::ParticleEngine::RemovePSystem(static_cast<REPS2::tParticleType>(type));
+		REXBOX::ParticleEngine::RemovePSystem(ParticleEx::XboxType(type));
+		return;
+	}
 	if (ParticleEx::ActiveSystem == ParticleEx::PS2) return REPS2::ParticleEngine::RemovePSystem(static_cast<REPS2::tParticleType>(type));
 	if (ParticleEx::ActiveSystem == ParticleEx::Xbox) return REXBOX::ParticleEngine::RemovePSystem(ParticleEx::XboxType(type));
 
@@ -1855,7 +1875,7 @@ void CParticle::RemoveParticle(CParticle *pParticle, CParticle *pPrevParticle, t
 
 void CParticle::AddJetExplosion(CVector const &vecPos, float fPower, float fSize)
 {
-	if (ParticleEx::ActiveSystem == ParticleEx::PS2) return REPS2::ParticleEngine::AddJetExplosion(vecPos, fPower, fSize);
+	if (ParticleEx::UsesPS2Emitters()) return REPS2::ParticleEngine::AddJetExplosion(vecPos, fPower, fSize);
 	if (ParticleEx::ActiveSystem == ParticleEx::Xbox) return REXBOX::ParticleEngine::AddJetExplosion(vecPos, fPower, fSize);
 
 	CRGBA color(240, 240, 240, 255);
@@ -1915,7 +1935,7 @@ void CParticle::AddJetExplosion(CVector const &vecPos, float fPower, float fSize
 
 void CParticle::AddYardieDoorSmoke(CVector const &vecPos, CMatrix const &matMatrix)
 {
-	if (ParticleEx::ActiveSystem == ParticleEx::PS2) return REPS2::ParticleEngine::AddYardieDoorSmoke(vecPos, matMatrix);
+	if (ParticleEx::UsesPS2Emitters()) return REPS2::ParticleEngine::AddYardieDoorSmoke(vecPos, matMatrix);
 	if (ParticleEx::ActiveSystem == ParticleEx::Xbox) return REXBOX::ParticleEngine::AddYardieDoorSmoke(vecPos, matMatrix);
 
 	CRGBA color(0, 0, 0, 0);
