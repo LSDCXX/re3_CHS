@@ -12,6 +12,7 @@
 #endif
 
 #include "Pad.h"
+#include "PadInput.h"
 #include "ClassicAxis.h"
 #include "ControllerConfig.h"
 #include "Timer.h"
@@ -43,6 +44,9 @@
 #endif
 
 CPad Pads[MAX_PADS];
+// Keep cheat input physical: keyboard/mouse bindings must never enter pad codes.
+static CControllerState CheatPadState, OldCheatPadState;
+
 #ifdef GTA_PS2
 u_long128 pad_dma_buf[scePadDmaBufferMax] __attribute__((aligned(64)));
 u_long128 pad2_dma_buf[scePadDmaBufferMax] __attribute__((aligned(64)));
@@ -425,6 +429,10 @@ void CPad::Clear(bool bResetPlayerControls)
 	OldState.Clear();
 
 	PCTempKeyState.Clear();
+	if (this == GetPad(0)) {
+		CheatPadState.Clear();
+		OldCheatPadState.Clear();
+	}
 	PCTempJoyState.Clear();
 	PCTempMouseState.Clear();
 
@@ -656,9 +664,9 @@ CControllerState CPad::ReconcileTwoControllersInput(CControllerState const &Stat
 	{ if ( (ReconState.pos || ReconState.axis < 0) && (ReconState.neg || ReconState.axis > 0) ) { ReconState.pos = 0; ReconState.neg = 0; ReconState.axis = 0; } }
 
 	_RECONCILE_BUTTON(LeftShoulder1);
-	_RECONCILE_BUTTON(LeftShoulder2);
+	ReconState.LeftShoulder2 = Max(State1.LeftShoulder2, State2.LeftShoulder2);
 	_RECONCILE_BUTTON(RightShoulder1);
-	_RECONCILE_BUTTON(RightShoulder2);
+	ReconState.RightShoulder2 = Max(State1.RightShoulder2, State2.RightShoulder2);
 	_RECONCILE_BUTTON(Start);
 	_RECONCILE_BUTTON(Select);
 	_RECONCILE_BUTTON(Square);
@@ -767,7 +775,6 @@ void CPad::StartShake_Train(float fX, float fY)
 	}
 }
 
-#ifdef GTA_PS2_STUFF
 void CPad::AddToCheatString(char c)
 {
 	for ( int32 i = ARRAY_SIZE(CheatString) - 2; i >= 0; i-- )
@@ -893,7 +900,6 @@ void CPad::AddToCheatString(char c)
 #endif
 #undef _CHEATCMP
 }
-#endif
 
 void CPad::AddToPCCheatString(char c)
 {
@@ -1424,6 +1430,23 @@ void CPad::Update(int16 pad)
 		NewState = ReconcileTwoControllersInput(PCTempMouseState, NewState);
 	}
 
+	if (pad == 0) {
+		OldCheatPadState = CheatPadState;
+#ifdef GTA_PS2
+		CheatPadState = NewState;
+#else
+		CheatPadState = PCTempJoyState;
+#endif
+		if (CTimer::GetIsUserPaused() || CTimer::GetIsCodePaused()
+#ifdef PC_MENU
+		    || FrontEndMenuManager.m_bMenuActive
+#endif
+		) {
+			memset(CheatString, ' ', sizeof(CheatString));
+			OldCheatPadState = CheatPadState;
+		}
+	}
+
 	PCTempJoyState.Clear();
 	PCTempKeyState.Clear();
 	PCTempMouseState.Clear();
@@ -1442,51 +1465,52 @@ void CPad::Update(int16 pad)
 
 void CPad::DoCheats(void)
 {
-#ifdef DETECT_PAD_INPUT_SWITCH
-	if (IsAffectedByController)
-#endif
-		GetPad(0)->DoCheats(0);
+	GetPad(0)->DoCheats(0);
 }
 
 void CPad::DoCheats(int16 unk)
 {
-#ifdef GTA_PS2_STUFF
-	if ( GetTriangleJustDown() )
+	if (CRecordDataForGame::IsPlayingBack() || CRecordDataForChase::ShouldThisPadBeLeftAlone(0))
+		return;
+
+	if (CheatPadState.Triangle > 0 && OldCheatPadState.Triangle <= 0)
 		AddToCheatString('T');
 
-	if ( GetCircleJustDown() )
+	if (CheatPadState.Circle > 0 && OldCheatPadState.Circle <= 0)
 		AddToCheatString('C');
 
-	if ( GetCrossJustDown() )
+	if (CheatPadState.Cross > 0 && OldCheatPadState.Cross <= 0)
 		AddToCheatString('X');
 
-	if ( GetSquareJustDown() )
+	if (CheatPadState.Square > 0 && OldCheatPadState.Square <= 0)
 		AddToCheatString('S');
 
-	if ( GetDPadUpJustDown() )
+	if (CheatPadState.DPadUp > 0 && OldCheatPadState.DPadUp <= 0)
 		AddToCheatString('U');
 
-	if ( GetDPadDownJustDown() )
+	if (CheatPadState.DPadDown > 0 && OldCheatPadState.DPadDown <= 0)
 		AddToCheatString('D');
 
-	if ( GetDPadLeftJustDown() )
+	if (CheatPadState.DPadLeft > 0 && OldCheatPadState.DPadLeft <= 0)
 		AddToCheatString('L');
 
-	if ( GetDPadRightJustDown() )
+	if (CheatPadState.DPadRight > 0 && OldCheatPadState.DPadRight <= 0)
 		AddToCheatString('R');
 
-	if ( GetLeftShoulder1JustDown() )
+	if (CheatPadState.LeftShoulder1 > 0 && OldCheatPadState.LeftShoulder1 <= 0)
 		AddToCheatString('1');
 
-	if ( GetLeftShoulder2JustDown() )
+	if (CheatPadState.LeftShoulder2 > 30 && OldCheatPadState.LeftShoulder2 <= 30)
 		AddToCheatString('2');
 
-	if ( GetRightShoulder1JustDown() )
+	if (CheatPadState.RightShoulder1 > 0 && OldCheatPadState.RightShoulder1 <= 0)
 		AddToCheatString('3');
 
-	if ( GetRightShoulder2JustDown() )
+	if (CheatPadState.RightShoulder2 > 30 && OldCheatPadState.RightShoulder2 <= 30)
 		AddToCheatString('4');
-#endif
+
+	// Consume these edges even if the game processes cheats twice this frame.
+	OldCheatPadState = CheatPadState;
 }
 
 void CPad::StopPadsShaking(void)
@@ -1969,7 +1993,7 @@ int16 CPad::GetHandBrake(void)
 
 int16 CPad::GetBrake(void)
 {
-	if (IsStandardControls()) return ArePlayerControlsDisabled() ? 0 : (NewState.LeftShoulder2);
+	if (IsStandardControls()) return ArePlayerControlsDisabled() ? 0 : ScaleTriggerPressure(NewState.LeftShoulder2);
 	if ( ArePlayerControlsDisabled() )
 		return 0;
 
@@ -2132,7 +2156,7 @@ bool CPad::WeaponJustDown(void)
 
 int16 CPad::GetAccelerate(void)
 {
-	if (IsStandardControls()) return ArePlayerControlsDisabled() ? 0 : (NewState.RightShoulder2);
+	if (IsStandardControls()) return ArePlayerControlsDisabled() ? 0 : ScaleTriggerPressure(NewState.RightShoulder2);
 	if ( ArePlayerControlsDisabled() )
 		return 0;
 

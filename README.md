@@ -4,6 +4,8 @@
 
 ## 本次整合的功能与修复
 
+- **PS2 手柄作弊码与模拟油门**：按实际手柄按键输入，修正 LT/RT 压力被变成全量的问题；Standard Controls 下油门和刹车随扳机行程变化。按键表与验证说明见 [手柄说明](docs/PS2_CONTROLLER.md)。
+
 - **ParticleEx 粒子系统**：保留 PC 为默认，可通过配置选择 PS2／Xbox／PS2+Xbox 混合模式；包括对应火焰、烟雾和水花，资源缺失时回退 PC。切换与安装见 [ParticleEx 说明](docs/PARTICLEEX.md)。
 
 - **过场动画可动手指**：原生适配 aap/iii_anim，每只手使用独立动画状态；缺少兼容资源时使用原手部。III 的手部资源需另行安装，详见 [资源说明](docs/cutscene-hands-menu-map.md)。
