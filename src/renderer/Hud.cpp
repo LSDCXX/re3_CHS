@@ -55,7 +55,7 @@
 #undef SUBS_Y
 #undef WASTEDBUSTED_Y
 #define ZONE_Y 61.0f
-#define VEHICLE_Y 91.0f
+#define VEHICLE_Y 86.0f
 #define SUBS_Y 83.0f
 #define WASTEDBUSTED_Y 122.0f
 #endif
