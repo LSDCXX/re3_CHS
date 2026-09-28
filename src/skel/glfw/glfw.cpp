@@ -137,32 +137,14 @@ void _psCreateFolder(const char *path)
 const char *_psGetUserFilesFolder()
 {
 #if defined USE_MY_DOCUMENTS && defined _WIN32
-	HKEY hKey = NULL;
+	static CHAR szUserFiles[MAX_PATH];
+	static const CHAR userFilesSubdir[] = "\\GTA3 User Files";
 
-	static CHAR szUserFiles[256];
-
-	if ( RegOpenKeyEx(HKEY_CURRENT_USER,
-						REGSTR_PATH_SPECIAL_FOLDERS,
-						REG_OPTION_RESERVED,
-						KEY_READ,
-						&hKey) == ERROR_SUCCESS )
-	{
-		DWORD KeyType;
-		DWORD KeycbData = sizeof(szUserFiles);
-		if ( RegQueryValueEx(hKey,
-							"Personal",
-							NULL,
-							&KeyType,
-							(LPBYTE)szUserFiles,
-							&KeycbData) == ERROR_SUCCESS )
-		{
-			RegCloseKey(hKey);
-			strcat(szUserFiles, "\\GTA3 User Files");
-			_psCreateFolder(szUserFiles);
-			return szUserFiles;
-		}	
-
-		RegCloseKey(hKey);		
+	if(SUCCEEDED(SHGetFolderPathA(nil, CSIDL_MYDOCUMENTS, nil, SHGFP_TYPE_CURRENT, szUserFiles)) &&
+	   strlen(szUserFiles) + sizeof(userFilesSubdir) <= sizeof(szUserFiles)) {
+		strcat(szUserFiles, userFilesSubdir);
+		_psCreateFolder(szUserFiles);
+		return szUserFiles;
 	}
 	
 	strcpy(szUserFiles, "data");
@@ -232,6 +214,7 @@ psGrabScreen(RwCamera *pCamera)
  */
 #ifdef _WIN32
 #pragma comment( lib, "Winmm.lib" ) // Needed for time
+#pragma comment( lib, "shell32.lib" )
 RwUInt32
 psTimer(void)
 {
