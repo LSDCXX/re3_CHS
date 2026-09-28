@@ -20,14 +20,14 @@ Native re3 implementation of the requested preset, inspired by MixSets' distance
 | 普通车辆低模可见范围 / Low-detail visibility | 90 | 250 |
 | 车辆 fade 参数 / Fade parameter | 100 | 260 |
 | 大型车辆高模、低模 / Big vehicle high/low detail | 60 / 150 | 200 / 250 |
-| 常规回收屏内、屏外基础范围 / Despawn on/off-screen | 130 / 50* | 250 / 150 |
-| 另一条屏外交通回收路径 / Additional off-screen traffic cleanup | 25 | 150 |
+| 常规回收屏内、屏外基础范围 / Despawn on/off-screen | 130 / 50* | 180 / 90 |
+| 另一条屏外交通回收路径 / Additional off-screen traffic cleanup | 25 | 90 |
 | 汽车阴影 / Car shadow | 18 | 300 |
 | 人物阴影实际截止距离 / Actual ped shadow cutoff | 13 | 300 |
 | 交通灯光晕 / Traffic light corona | 50 | 300 |
 | 交通灯地面光影 / Traffic light ground projection | 40 | 300 |
 
-*原 `EXTENDED_OFFSCREEN_DESPAWN_RANGE` 配置会把常规回收路径统一为 130；现在使用显式的两档预设。保留原有镜头观察方向、停放车辆和紧急车辆等延长范围条件、任务/锁定车辆及车库保护；原相机距离倍率和 extended-range 倍率仍适用。人物阴影按距离后半段淡出，避免仅改常量导致截止距离减半或强度变负。
+*原 `EXTENDED_OFFSCREEN_DESPAWN_RANGE` 配置会把常规回收路径统一为 130；现在使用显式的两档预设。普通向前视角不再把全部屏外车辆误判为屏内；保留侧/后视角、停放车辆和紧急车辆等延长范围条件、任务/锁定车辆及车库保护；原相机距离倍率和 extended-range 倍率仍适用。人物阴影按距离后半段淡出，避免仅改常量导致截止距离减半或强度变负。
 
 The explicit preset supersedes the old unified off-screen range option. Existing special-camera/parked/emergency range conditions, mission/locked vehicle and garage protections remain. Camera/range multipliers still apply. Ped shadows fade over the outer half of their actual range.
 

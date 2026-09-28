@@ -739,7 +739,6 @@ CCarCtrl::PossiblyRemoveVehicle(CVehicle* pVehicle)
 			TheCamera.Cams[TheCamera.ActiveCam].LookingLeft ||
 			TheCamera.Cams[TheCamera.ActiveCam].LookingRight ||
 			TheCamera.Cams[TheCamera.ActiveCam].LookingBehind ||
-			TheCamera.GetLookDirection() == 0 ||
 			pVehicle->VehicleCreatedBy == PARKED_VEHICLE ||
 			pVehicle->GetModelIndex() == MI_AMBULAN ||
 			pVehicle->GetModelIndex() == MI_FIRETRUCK ||
@@ -764,7 +763,8 @@ CCarCtrl::PossiblyRemoveVehicle(CVehicle* pVehicle)
 	if ((pVehicle->GetStatus() == STATUS_SIMPLE || pVehicle->GetStatus() == STATUS_PHYSICS && pVehicle->AutoPilot.m_nDrivingStyle == DRIVINGSTYLE_STOP_FOR_CARS) &&
 		CTimer::GetTimeInMilliseconds() - pVehicle->AutoPilot.m_nTimeToStartMission > 5000 &&
 		!pVehicle->GetIsOnScreen() &&
-		(pVehicle->GetPosition() - vecPlayerPos).Magnitude2D() > VisualTuning::VehicleDespawnOffScreen &&
+		(pVehicle->GetPosition() - vecPlayerPos).Magnitude2D() >
+			VisualTuning::VehicleDespawnOffScreen * (pVehicle->bExtendedRange ? 1.5f : 1.0f) &&
 		!IsThisVehicleInteresting(pVehicle) &&
 		!pVehicle->bIsLocked &&
 		pVehicle->CanBeDeleted() &&

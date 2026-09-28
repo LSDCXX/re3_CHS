@@ -387,12 +387,18 @@ void CMenuMap::Draw(CMenuManager &menu) {
 		if(!zone) zone=CTheZones::FindSmallestZonePositionType(&position,ZONE_DEFAULT);
 		if(zone) {
 			std::basic_string<wchar> name(zone->GetTranslatedName());
-			const float zoneFontSize=1.35f;
-			float width=Min(TextWidth(name,zoneFontSize),Scale(270));
-			float x=SCREEN_WIDTH-SCREEN_SCALE_X(20)-width;
-			float y=SCREEN_SCALE_FROM_BOTTOM(120.0f);
-			Text(x+Scale(1),y+Scale(1),name,width,Fade(menu,CRGBA(0,0,0,110)),zoneFontSize);
-			Text(x,y,name,width,Fade(menu,settings.zone),zoneFontSize);
+			name.push_back(0); // Font width scanning expects a second terminator.
+			CFont::SetBackgroundOff(); CFont::SetPropOn(); CFont::SetCentreOff();
+			CFont::SetRightJustifyOff(); CFont::SetJustifyOff(); CFont::SetFontStyle(FONT_BANK);
+			CFont::SetWrapx(SCREEN_WIDTH); CFont::SetDropShadowPosition(0);
+			// MenuMap III's zone label scale and bottom margin, mirrored to the right.
+			CFont::SetScale(SCREEN_SCALE_X(0.52f), SCREEN_SCALE_Y(1.10f));
+			float x=SCREEN_WIDTH-SCREEN_SCALE_X(16.0f)-CFont::GetStringWidth(&name[0],true);
+			float y=SCREEN_SCALE_FROM_BOTTOM(34.0f);
+			CFont::SetColor(Fade(menu,CRGBA(0,0,0,110)));
+			CFont::PrintString(x+Scale(1),y+Scale(1),&name[0]);
+			CFont::SetColor(Fade(menu,settings.zone));
+			CFont::PrintString(x,y,&name[0]);
 		}
 	}
 	CFont::DrawFonts();CFont::Details=savedFont;
