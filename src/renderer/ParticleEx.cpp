@@ -6,9 +6,23 @@
 
 int32 ParticleEx::SelectedSystem = ParticleEx::PC;
 ParticleEx::System ParticleEx::ActiveSystem = ParticleEx::PC;
+bool ParticleEx::FixXboxMolotovBug = true;
+bool ParticleEx::FixFlame5Bug = false;
+bool ParticleEx::UsePS2CarPuddlePhysics = true;
+bool ParticleEx::UseAltPS2Carsplash = false;
+bool ParticleEx::UseNewWheelsWaterSplash = true;
+bool ParticleEx::DarkSpotsBugFix = true;
+bool ParticleEx::PS2Jet = true;
+bool ParticleEx::VCJet = false;
+bool ParticleEx::PS2Rain = true;
+int32 ParticleEx::ParticleLimit = 1000;
 
 void ParticleEx::Initialise()
 {
+	if (ParticleLimit < 1 || ParticleLimit > 10000) {
+		debug("ParticleEx: nParticleLimit must be 1..10000; using 1000.\n");
+		ParticleLimit = 1000;
+	}
 	ActiveSystem = PC;
 	if (SelectedSystem == PS2Xbox) {
 		if (REPS2::ParticleEngine::LoadResources()) {
@@ -29,6 +43,8 @@ void ParticleEx::Initialise()
 	}
 	if (SelectedSystem != PC && ActiveSystem == PC)
 		debug("ParticleEx: invalid selection or missing/invalid resources; using PC particles.\n");
+	if (UsesPS2Emitters()) REPS2::ParticleEngine::FixFlame5Bug(FixFlame5Bug);
+	if (UsesXboxFire()) REXBOX::ParticleEngine::FixFlame5Bug(FixFlame5Bug);
 }
 
 void ParticleEx::Shutdown()
@@ -70,8 +86,8 @@ bool ParticleEx::AddFire(CVector position, CEntity *entity)
 		position.y += CGeneral::GetRandomNumberInRange(-0.25f, 0.25f);
 	} else if (!entity) {
 		// Fix the Xbox molotov offset: distribute flames around the fire centre.
-		position.x += CGeneral::GetRandomNumberInRange(-1.0f, 1.0f);
-		position.y += CGeneral::GetRandomNumberInRange(-1.0f, 1.0f);
+		position.x += FixXboxMolotovBug ? CGeneral::GetRandomNumberInRange(-1.0f, 1.0f) : CGeneral::GetRandomNumberInRange(0.0f, 2.0f);
+		position.y += FixXboxMolotovBug ? CGeneral::GetRandomNumberInRange(-1.0f, 1.0f) : CGeneral::GetRandomNumberInRange(0.0f, 2.0f);
 		position.z -= 0.5f;
 		size *= 2.5f;
 		velocity.z *= 3.7f;

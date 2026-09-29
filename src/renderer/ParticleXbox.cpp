@@ -4,7 +4,7 @@
 #include "ParticleExCompat.h"
 
 
-#define MAX_PARTICLES_ON_SCREEN   (1000)
+#define MAX_PARTICLES_ON_SCREEN   (10000)
 
 
 //(5)
@@ -335,7 +335,7 @@ void ParticleEngine::ReloadConfig()
 
 	Kprintf("Initialising CParticle...");
 
-	InitParticleArray(gParticleArray, ARRAY_SIZE(gParticleArray));
+	InitParticleArray(gParticleArray, ParticleEx::ParticleLimit);
 	updateAccumulator = 0.0f;
 
 }

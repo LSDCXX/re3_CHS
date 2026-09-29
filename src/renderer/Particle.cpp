@@ -18,7 +18,7 @@
 #include "debugmenu.h"
 
 
-#define MAX_PARTICLES_ON_SCREEN   (1000)
+#define MAX_PARTICLES_ON_SCREEN   (10000)
 
 
 //(5)
@@ -252,9 +252,9 @@ void CParticle::ReloadConfig()
 	
 	m_pUnusedListHead = gParticleArray;
 	
-	for ( int32 i = 0; i < MAX_PARTICLES_ON_SCREEN; i++ )
+	for ( int32 i = 0; i < ParticleEx::ParticleLimit; i++ )
 	{
-		if ( i == MAX_PARTICLES_ON_SCREEN - 1 )
+		if ( i == ParticleEx::ParticleLimit - 1 )
 			gParticleArray[i].m_pNext = nil;
 		else
 			gParticleArray[i].m_pNext = &gParticleArray[i + 1];
@@ -405,7 +405,7 @@ void CParticle::Initialise()
 	gpFlame5Raster = RwTextureGetRaster(gpFlame5Tex);
 #else
 	// this seems to have become more of a design choice
-	gpFlame5Raster = RwTextureGetRaster(gpFlame1Tex);	// copy-paste bug ?
+	gpFlame5Raster = RwTextureGetRaster(ParticleEx::FixFlame5Bug ? gpFlame5Tex : gpFlame1Tex);
 #endif
 
 	gpRainDropSmallTex = RwTextureRead("rainsmall", nil);

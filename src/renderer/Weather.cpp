@@ -1,6 +1,7 @@
 #include "common.h"
 
 #include "Weather.h"
+#include "ParticleEx.h"
 
 #include "Camera.h"
 #include "Clock.h"
@@ -467,7 +468,7 @@ void CWeather::RenderRainStreaks(void)
 		return;
 	TempBufferIndicesStored = 0;
 	TempBufferVerticesStored = 0;
-	for (int i = 0; i < NUM_RAIN_STREAKS; i++) {
+	for (int i = 0; i < (ParticleEx::PS2Rain ? NUM_RAIN_STREAKS : 35); i++) {
 		if (Streaks[i].timer) {
 			float secondsElapsed = (CTimer::GetTimeInMilliseconds() - Streaks[i].timer) / 1024.0f;
 			if (secondsElapsed > STREAK_LIFETIME)

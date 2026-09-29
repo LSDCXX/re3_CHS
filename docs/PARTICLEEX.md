@@ -20,6 +20,25 @@ System=0
 
 修改后重新启动游戏。此编号是本分支的配置约定，不是上游 ASI 的内部枚举。无需安装 `IIIParticleEx.asi`，也不读取上游 `IIIParticleEx.ini`。
 
+上游 `IIIParticleEx.ini` 的 `[MAIN]` 开关在本分支对应 `re3.ini` 的 `[ParticleEx]`。布尔值用 `0/1`；未填写时采用上游默认值：
+
+```ini
+[ParticleEx]
+System=0
+bFixXboxMolotovBug=1
+bFixPCPS2Flame5Bug=0
+bUsePS2CarPuddlePhysics=1
+bUseAltPS2Carsplash=0
+bUseNewWheelsWaterSplash=1
+bDarkSpotsBugFix=1
+bPS2Jet=1
+bVCJet=0
+bPS2Rain=1
+nParticleLimit=1000
+```
+
+`bPS2Rain=1` 将雨线数量从 PC 的 35 恢复到 PS2 的 50，与粒子模式无关。`bVCJet=1` 优先于 `bPS2Jet`；两个开关都关闭时采用 PC 喷流位置。`nParticleLimit` 作用于 PC、PS2、Xbox 粒子池，本分支允许 1–10000，越界回到 1000。模式 3 仍是 PS2+Xbox 混合模式，不加入上游 README 中 PS2 Rain 后面的额外 2dfx／存档导入内容。
+
 PC 模式不需要新增资源。选中的 PS2／Xbox 配置文件缺失、格式不完整，或 TXD 加载失败、缺少所需纹理时，启动回退到 PC，并在日志中提示。缺少原游戏本身的 PC 资源不在此回退范围内。
 
 ## PS2+Xbox 混合模式
@@ -30,7 +49,7 @@ PC 模式不需要新增资源。选中的 PS2／Xbox 配置文件缺失、格�
 - Xbox：车辆／行人落水水花、地面／人物／车辆火焰、普通爆炸、喷火器、消防栓。
 - 船只和行人踩水保留非 PS2 分支。已有浅水阻力和地面黑斑不改。
 - 消防栓持续时间：PC／PS2 为 5 秒，Xbox／PS2+Xbox 为 15 秒。修正了限时发射器首次更新便被删除的问题；远处到期的发射器不会重新进入活动列表。
-- 两套引擎按同一个 30 Hz 时钟逐步更新，场景发射器每步只更新一次；每套保留 1000 个粒子的容量。
+- 两套引擎按同一个 30 Hz 时钟逐步更新，场景发射器每步只更新一次；每套粒子容量由 `nParticleLimit` 决定。
 
 ## 移植内容
 
@@ -43,11 +62,13 @@ PC 模式不需要新增资源。选中的 PS2／Xbox 配置文件缺失、格�
 - 两套新增系统的动画、淡出和旋转以 30 Hz 更新，避免高帧率加快这些计数器；物理步长与此更新周期对应。PC 原有计时路径保持不变。
 - 配置采用有界、完整条目读取，失败时保留当前配置；纹理预检查；绘制时限制帧索引，处理上游部分配置帧数大于实际纹理数组的问题。
 
-这是针对 re3 源码的适配，支持原生粒子对象与 32／64 位指针；不包含原 EXE 地址补丁、ASI 检测、外部 Waterdrops 插件钩子、调试编辑器及 `.pobj` 导入导出工具。保留 1000 个粒子的池容量；未提供上游所有实验性开关。PS2／Xbox 各自使用随附配置与纹理，原有 PC 的 `particle.cfg`／`particle.txd` 不被覆盖。
+这是针对 re3 源码的适配，支持原生粒子对象与 32／64 位指针；不包含原 EXE 地址补丁、ASI 检测、外部 Waterdrops 插件钩子、调试编辑器及 `.pobj` 导入导出工具。粒子池默认容量为 1000，可在 `re3.ini` 中调整。PS2／Xbox 各自使用随附配置与纹理，原有 PC 的 `particle.cfg`／`particle.txd` 不被覆盖。
 
 ## 来源
 
 原作者：[Fire_Head / ParticleEx](https://github.com/Fire-Head/ParticleEx)。本次按用户提供的 [enborballer/ParticleEx](https://github.com/enborballer/ParticleEx) 源码快照 `62142eaccba117961f02a621ff4781955b894683` 移植 `IIIParticleRE`，资源取自该快照的 `Release/III/ParticleEx/PS2` 和 `XBOX`。保留来源署名；该快照未附独立 LICENSE 文件，不为上游代码和资源额外声明许可。
+
+本次补充的 PS2 Rain 与 INI 默认值对照 [Fire-Head/ParticleEx `0f02ea6`](https://github.com/Fire-Head/ParticleEx/commit/0f02ea63c09e5a07f92d5e05783e26249a917102)。没有导入额外 PS2 2dfx 资源或 `.pobj` 存档工具。
 
 ## 验证范围
 
@@ -69,7 +90,7 @@ Hybrid mode uses PS2 smoke, scene emitters, foot dust, wet wheel spray and explo
 
 Timed emitters now survive until their deadline: hydrants spray for 5 seconds in PC/PS2 and 15 seconds in Xbox/hybrid. Expired distant emitters cannot rejoin the active list.
 
-Each console pool retains 1000 particles. EXE hooks, external ASI/Waterdrops integration, developer editors, `.pobj` import/export and all upstream experimental switches are outside this adaptation. Console assets are separate from the original PC assets.
+Each particle pool defaults to 1000 and can be set to 1–10000 with `nParticleLimit`. PS2 rain restores 50 streaks instead of PC's 35 through `bPS2Rain`. EXE hooks, external ASI/Waterdrops integration, developer editors, `.pobj` import/export and the additional PS2 2dfx content are outside this adaptation. Console assets are separate from the original PC assets.
 
 Credit: Fire_Head, using the user-specified enborballer snapshot linked above. No separate upstream license file was present in that snapshot; no new license is asserted for upstream code or assets.
 

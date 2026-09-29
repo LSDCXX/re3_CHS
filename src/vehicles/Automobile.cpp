@@ -2940,7 +2940,7 @@ CAutomobile::ProcessBuoyancy(void)
 		static uint32 nGenerateWaterCircles = 0;
 
 		if(initialSpeed.z < -0.3f && impulse.z > 0.3f){
-			if (ParticleEx::ActiveSystem != ParticleEx::PS2) {
+			if (ParticleEx::ActiveSystem != ParticleEx::PS2 || ParticleEx::UseAltPS2Carsplash) {
 				RwRGBA color;
 				color.red = (0.5f * CTimeCycle::GetDirectionalRed() + CTimeCycle::GetAmbientRed())*0.45f*255;
 				color.green = (0.5f * CTimeCycle::GetDirectionalGreen() + CTimeCycle::GetAmbientGreen())*0.45f*255;
@@ -3028,8 +3028,10 @@ CAutomobile::ProcessBuoyancy(void)
 				vSpeed.z = 0.0f;
 #ifdef GTA_PS2_STUFF
 				// ps2 puddle physics
-				CVector moveForce = CTimer::GetTimeStep() * (m_fMass * (vSpeed * -0.003f));
-				ApplyMoveForce(moveForce.x, moveForce.y, moveForce.z);
+				if (ParticleEx::UsePS2CarPuddlePhysics) {
+					CVector moveForce = CTimer::GetTimeStep() * (m_fMass * (vSpeed * -0.003f));
+					ApplyMoveForce(moveForce.x, moveForce.y, moveForce.z);
+				}
 #endif
 				float fSpeed = vSpeed.MagnitudeSqr();
 				if (ParticleEx::ActiveSystem != ParticleEx::PS2) {
@@ -3646,7 +3648,7 @@ CAutomobile::AddWheelDirtAndWater(CColPoint *colpoint, uint32 belowEffectSpeed)
 			)
 		{
 			CParticle::AddParticle(
-(ParticleEx::UsesPS2Emitters()) ? PARTICLE_WHEEL_WATER : PARTICLE_WATERSPRAY,
+(ParticleEx::UsesPS2Emitters() && ParticleEx::UseNewWheelsWaterSplash) ? PARTICLE_WHEEL_WATER : PARTICLE_WATERSPRAY,
 				colpoint->point + CVector(0.0f, 0.0f, 0.25f+0.25f),
 CVector(0.0f, 0.0f, (ParticleEx::UsesPS2Emitters()) ? CGeneral::GetRandomNumberInRange(0.005f, 0.04f) : 1.0f),
 				nil,

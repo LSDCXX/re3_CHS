@@ -545,6 +545,18 @@ bool LoadINISettings()
 #ifdef FIX_BUGS
 	ReadIniIfExists("Gameplay", "GangFormations", &CPopulation::GangFormations);
 	ReadIniIfExists("ParticleEx", "System", &ParticleEx::SelectedSystem);
+	ReadIniIfExists("ParticleEx", "bFixXboxMolotovBug", &ParticleEx::FixXboxMolotovBug);
+	ReadIniIfExists("ParticleEx", "bFixPCPS2Flame5Bug", &ParticleEx::FixFlame5Bug);
+	ReadIniIfExists("ParticleEx", "bUsePS2CarPuddlePhysics", &ParticleEx::UsePS2CarPuddlePhysics);
+	ReadIniIfExists("ParticleEx", "bUseAltPS2Carsplash", &ParticleEx::UseAltPS2Carsplash);
+	ReadIniIfExists("ParticleEx", "bUseNewWheelsWaterSplash", &ParticleEx::UseNewWheelsWaterSplash);
+	ReadIniIfExists("ParticleEx", "bDarkSpotsBugFix", &ParticleEx::DarkSpotsBugFix);
+	ReadIniIfExists("ParticleEx", "bPS2Jet", &ParticleEx::PS2Jet);
+	ReadIniIfExists("ParticleEx", "bVCJet", &ParticleEx::VCJet);
+	ReadIniIfExists("ParticleEx", "bPS2Rain", &ParticleEx::PS2Rain);
+	ReadIniIfExists("ParticleEx", "nParticleLimit", &ParticleEx::ParticleLimit);
+	if (ParticleEx::ParticleLimit < 1 || ParticleEx::ParticleLimit > 10000)
+		ParticleEx::ParticleLimit = 1000;
 #endif
 
 #ifdef EXTENDED_COLOURFILTER
@@ -651,6 +663,16 @@ void SaveINISettings()
 #ifdef FIX_BUGS
 	StoreIni("Gameplay", "GangFormations", CPopulation::GangFormations);
 	StoreIni("ParticleEx", "System", ParticleEx::SelectedSystem);
+	StoreIni("ParticleEx", "bFixXboxMolotovBug", uint8(ParticleEx::FixXboxMolotovBug));
+	StoreIni("ParticleEx", "bFixPCPS2Flame5Bug", uint8(ParticleEx::FixFlame5Bug));
+	StoreIni("ParticleEx", "bUsePS2CarPuddlePhysics", uint8(ParticleEx::UsePS2CarPuddlePhysics));
+	StoreIni("ParticleEx", "bUseAltPS2Carsplash", uint8(ParticleEx::UseAltPS2Carsplash));
+	StoreIni("ParticleEx", "bUseNewWheelsWaterSplash", uint8(ParticleEx::UseNewWheelsWaterSplash));
+	StoreIni("ParticleEx", "bDarkSpotsBugFix", uint8(ParticleEx::DarkSpotsBugFix));
+	StoreIni("ParticleEx", "bPS2Jet", uint8(ParticleEx::PS2Jet));
+	StoreIni("ParticleEx", "bVCJet", uint8(ParticleEx::VCJet));
+	StoreIni("ParticleEx", "bPS2Rain", uint8(ParticleEx::PS2Rain));
+	StoreIni("ParticleEx", "nParticleLimit", ParticleEx::ParticleLimit);
 #endif
 
 #ifdef EXTENDED_COLOURFILTER

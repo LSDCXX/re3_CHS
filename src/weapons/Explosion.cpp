@@ -98,7 +98,8 @@ CExplosion::AddExplosion(CEntity *explodingEntity, CEntity *culprit, eExplosionT
 	pPosn = pos;
 	pPosn.z += 5.0f;
 #ifdef FIX_BUGS
-	CShadows::AddPermanentShadow(SHADOWTEX_CAR, gpShadowHeliTex, &pPosn, 8.0f, 0.0f, 0.0f, -8.0f, 200, 0, 0, 0, 10.0f, 30000, 1.0f);
+	CShadows::AddPermanentShadow(SHADOWTEX_CAR, gpShadowHeliTex, &pPosn, 8.0f, 0.0f, 0.0f, -8.0f, 200, 0, 0, 0, 10.0f,
+		ParticleEx::DarkSpotsBugFix ? 30000 : 1, ParticleEx::DarkSpotsBugFix ? 1.0f : 30000.0f);
 #else
 	// last two arguments are swapped resulting in no shadow
 	CShadows::AddPermanentShadow(SHADOWTEX_CAR, gpShadowHeliTex, &pPosn, 8.0f, 0.0f, 0.0f, -8.0f, 200, 0, 0, 0, 10.0f, 1, 30000.0f);
@@ -195,7 +196,7 @@ CExplosion::AddExplosion(CEntity *explodingEntity, CEntity *culprit, eExplosionT
 				CParticle::AddParticle(PARTICLE_EXPLOSION_LFAST, explosion.m_pVictimEntity->GetPosition(), CVector(0.0f, 0.0f, 0.0f), nil, 5.5f, color);
 			}
 			CVehicle *veh = (CVehicle*)explosion.m_pVictimEntity;
-			int32 component = ParticleEx::ActiveSystem == ParticleEx::PC ? CAR_WING_LR : CAR_WING_LF;
+			int32 component = ParticleEx::VCJet ? CAR_BOOT : ParticleEx::PS2Jet ? CAR_WING_LF : CAR_WING_LR;
 
 			// miami leftover
 			if (veh->IsBike())
@@ -375,7 +376,7 @@ CExplosion::Update()
 					if (explosion.m_pVictimEntity != nil && !explosion.m_bIsBoat) {
 						if ((CGeneral::GetRandomNumber() & 0xF) == 0) {
 							CVehicle *veh = (CVehicle*)explosion.m_pVictimEntity;
-							uint8 component = ParticleEx::ActiveSystem == ParticleEx::PC ? CAR_WING_LR : CAR_WING_LF;
+							uint8 component = ParticleEx::PS2Jet && !ParticleEx::VCJet ? CAR_WING_LF : CAR_WING_LR;
 
 							// miami leftover
 							if (veh->IsBike())

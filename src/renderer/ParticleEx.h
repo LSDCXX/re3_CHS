@@ -9,6 +9,10 @@ namespace ParticleEx {
 enum System { PC = 0, PS2 = 1, Xbox = 2, PS2Xbox = 3 };
 extern int32 SelectedSystem;
 extern System ActiveSystem;
+extern bool FixXboxMolotovBug, FixFlame5Bug, UsePS2CarPuddlePhysics;
+extern bool UseAltPS2Carsplash, UseNewWheelsWaterSplash, DarkSpotsBugFix;
+extern bool PS2Jet, VCJet, PS2Rain;
+extern int32 ParticleLimit;
 inline bool UsesXboxFire() { return ActiveSystem == Xbox || ActiveSystem == PS2Xbox; }
 inline bool UsesPS2Emitters() { return ActiveSystem == PS2 || ActiveSystem == PS2Xbox; }
 System SystemForParticle(::tParticleType type);
