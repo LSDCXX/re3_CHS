@@ -1989,7 +1989,9 @@ CFont::GetCharacterSize_Chs(wchar c, uint16 fontStyle, bool fontHalfTexture, boo
 	if (prop) {
 		return GetCharacterWidth(ascii) * scaleX;
 	} else {
-		if (IsPunctuation(c))
+		// The HUD clock uses non-proportional HEADING digits. Keep its colon
+		// on the same cell advance so it is centred between the two pairs.
+		if (IsPunctuation(c) && !(c == ':' && fontStyle == FONT_HEADING))
 			return (GetCharacterWidth(ascii) / 1.6f) * scaleX;
 		else
 			return GetCharacterWidth(ascii) * scaleX;
