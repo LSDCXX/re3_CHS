@@ -91,24 +91,57 @@ static bool
 RenderAxisLockOn()
 {
 	CPlayerPed *player = FindPlayerPed();
-	if(!gCrossHair.m_bActive || !CClassicAxis::Aiming(player) || CClassicAxis::Options.LockOnTargetType == 0)
+	if(!CClassicAxis::Active(player) || CClassicAxis::Options.LockOnTargetType == 0)
 		return false;
+	static CVector lastPosition;
+	static CRGBA lastColor(255, 255, 255, 255);
+	static uint32 until;
+	static float angle;
+	CEntity *target = player->m_pPointGunAt;
+	bool locked = CClassicAxis::Aiming(player) && player->m_bHasLockOnTarget && target;
+	if(locked) {
+		lastPosition = target->GetPosition();
+		float health = 1.0f;
+		if(target->IsPed()) {
+			CPed *ped = static_cast<CPed *>(target);
+			ped->m_pedIK.GetComponentPosition(lastPosition, PED_MID);
+			health = Clamp(ped->m_fHealth / 100.0f, 0.0f, 1.0f);
+		}
+		lastPosition.z += 0.25f;
+		lastColor = health <= 0.0f ? CRGBA(0, 0, 0, 255) :
+			CClassicAxis::Options.LockOnTargetType == 1
+			? CRGBA(uint8(255.0f * (1.0f - health)), uint8(255.0f * health), 0, 255)
+			: CRGBA(0, uint8(255.0f * health), 0, 150);
+		until = CTimer::GetTimeInMilliseconds() + 250;
+	}
+	if(!until || CTimer::GetTimeInMilliseconds() >= until)
+		return true;
 	RwV3d pos;
 	float w, h;
-	if(!CSprite::CalcScreenCoors(gCrossHair.m_vecPos, &pos, &w, &h, true)) return true;
-	float health = player->m_pPointGunAt && player->m_pPointGunAt->IsPed()
-		? Clamp(static_cast<CPed *>(player->m_pPointGunAt)->m_fHealth / 100.0f, 0.0f, 1.0f) : 1.0f;
-	CRGBA color = CClassicAxis::Options.LockOnTargetType == 1
-		? CRGBA(uint8(255.0f * (1.0f - health)), uint8(255.0f * health), 0, 255)
-		: CRGBA(0, uint8(255.0f * health), 0, 150);
-	float radius = Clamp(w * 0.16f, SCREEN_SCALE_Y(12.0f), SCREEN_SCALE_Y(28.0f));
-	float size = CClassicAxis::Options.LockOnTargetType == 1 ? SCREEN_SCALE_Y(8.0f) : SCREEN_SCALE_Y(6.0f);
+	if(!CSprite::CalcScreenCoors(lastPosition, &pos, &w, &h, false)) return true;
+	RwRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, (void *)TRUE);
 	RwRenderStateSet(rwRENDERSTATESRCBLEND, (void *)rwBLENDSRCALPHA);
 	RwRenderStateSet(rwRENDERSTATEDESTBLEND, (void *)rwBLENDINVSRCALPHA);
-	float phase = CClassicAxis::Options.LockOnTargetType == 1 ? CTimer::GetTimeInMilliseconds() * 0.001f : 0.0f;
-	for(int i = 0; i < 3; i++) {
-		float angle = CClassicAxis::Options.LockOnTargetType == 1 ? phase + DEGTORAD(90.0f + i * 120.0f) : DEGTORAD(i * 90.0f);
-		DrawAxisTriangle(pos.x, pos.y, radius, angle, size, color);
+	RwRenderStateSet(rwRENDERSTATEZWRITEENABLE, (void *)FALSE);
+	RwRenderStateSet(rwRENDERSTATEZTESTENABLE, (void *)FALSE);
+	RwRenderStateSet(rwRENDERSTATEFOGENABLE, (void *)FALSE);
+	if(CClassicAxis::Options.LockOnTargetType == 1) {
+		float dist = Clamp(w / 128.0f, 0.6f, 1.0f);
+		angle += 0.2f * (locked ? 0.5f : 3.0f) * CTimer::GetTimeStep();
+		for(int i = 0; i < 3; i++) {
+			float direction = DEGTORAD(60.0f + i * 120.0f) - angle;
+			float radius = SCREEN_SCALE_Y(10.0f * (dist + 1.0f));
+			DrawAxisTriangle(pos.x, pos.y, radius, direction, SCREEN_SCALE_Y(10.0f * dist), CRGBA(0, 0, 0, lastColor.a));
+			DrawAxisTriangle(pos.x, pos.y, radius, direction, SCREEN_SCALE_Y(9.8f * dist), lastColor);
+		}
+	} else if(locked) {
+		float radius = SCREEN_SCALE_Y(32.0f * Clamp(w / 128.0f, 0.1f, 1.0f));
+		for(int i = 0; i < 3; i++) {
+			float direction = i == 0 ? PI : i == 1 ? 0.0f : HALFPI;
+			float offset = i == 2 ? radius * 1.5f : radius;
+			DrawAxisTriangle(pos.x, pos.y, offset, direction, SCREEN_SCALE_Y(9.0f), CRGBA(0, 0, 0, lastColor.a));
+			DrawAxisTriangle(pos.x, pos.y, offset, direction, SCREEN_SCALE_Y(8.0f), lastColor);
+		}
 	}
 	return true;
 }
@@ -116,7 +149,7 @@ RenderAxisLockOn()
 static void
 RenderAxisMouseTarget()
 {
-	if(!CClassicAxis::Options.ShowTriangleForMouseRecruit) return;
+	if(!CClassicAxis::Options.ShowTriangleForMouseRecruit || TheCamera.m_uiTransitionState != 0) return;
 	CPed *target = CClassicAxis::MouseTarget();
 	if(!target) return;
 	CVector world;
@@ -126,10 +159,16 @@ RenderAxisMouseTarget()
 	float w, h;
 	if(!CSprite::CalcScreenCoors(world, &pos, &w, &h, false)) return;
 	float health = Clamp(target->m_fHealth / 100.0f, 0.0f, 1.0f);
+	CRGBA color = health <= 0.0f ? CRGBA(0, 0, 0, 255) :
+		CRGBA(uint8(255.0f * (1.0f - health)), uint8(255.0f * health), 0, 150);
+	RwRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, (void *)TRUE);
 	RwRenderStateSet(rwRENDERSTATESRCBLEND, (void *)rwBLENDSRCALPHA);
 	RwRenderStateSet(rwRENDERSTATEDESTBLEND, (void *)rwBLENDINVSRCALPHA);
-	DrawAxisTriangle(pos.x, pos.y, 0.0f, DEGTORAD(-90.0f), SCREEN_SCALE_Y(10.0f),
-		CRGBA(uint8(255.0f * (1.0f - health)), uint8(255.0f * health), 0, 150));
+	RwRenderStateSet(rwRENDERSTATEZWRITEENABLE, (void *)FALSE);
+	RwRenderStateSet(rwRENDERSTATEZTESTENABLE, (void *)FALSE);
+	RwRenderStateSet(rwRENDERSTATEFOGENABLE, (void *)FALSE);
+	DrawAxisTriangle(pos.x, pos.y, 0.0f, DEGTORAD(90.0f),
+		SCREEN_SCALE_Y(10.0f * Clamp(w / 128.0f, 0.0f, 1.0f)), color);
 }
 
 void
