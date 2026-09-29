@@ -1668,11 +1668,7 @@ CCam::Process_FollowPedWithMouse(const CVector &CameraTarget, float TargetOrient
 
 	GetVectorsReadyForRW();
 
-	// Classic Axis has already aligned the player and solved gun IK during
-	// CWorld::Process. Rotating the ped again here leaves the arm in the old
-	// frame while the body uses the new camera heading until the next tick.
-	if(!CClassicAxis::Aiming(static_cast<CPed *>(CamTargetEntity)) &&
-	   ((CPed*)CamTargetEntity)->CanStrafeOrMouseControl() && CDraw::FadeValue < 250 &&
+	if(((CPed*)CamTargetEntity)->CanStrafeOrMouseControl() && CDraw::FadeValue < 250 &&
 	   (TheCamera.GetFadingDirection() != FADE_OUT || CDraw::FadeValue <= 100)){
 		float Heading = Front.Heading();
 		((CPed*)TheCamera.pTargetEntity)->m_fRotationCur = Heading;
