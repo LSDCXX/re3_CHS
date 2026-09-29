@@ -2,7 +2,6 @@
 
 #include "Bones.h"
 #include "Camera.h"
-#include "ClassicAxis.h"
 #include "PedIK.h"
 #include "Ped.h"
 #include "General.h"
@@ -372,10 +371,7 @@ CPedIK::PointGunInDirection(float targetYaw, float targetPitch)
 		else if (status == ANGLES_SET_EXACTLY)
 			m_flags |= GUN_POINTED_SUCCESSFULLY;
 	}
-	// The legacy torso-roll correction can flip the gun's pitch while Classic
-	// Axis turns the player with the camera. Keep it for the original controls.
-	if (TheCamera.Cams[TheCamera.ActiveCam].Using3rdPersonMouseCam() && m_flags & AIMS_WITH_ARM &&
-	    !CClassicAxis::Active(m_ped))
+	if (TheCamera.Cams[TheCamera.ActiveCam].Using3rdPersonMouseCam() && m_flags & AIMS_WITH_ARM)
 		RotateTorso(m_ped->m_pFrames[PED_MID], &m_torsoOrient, true);
 	else
 		RotateTorso(m_ped->m_pFrames[PED_MID], &m_torsoOrient, false);

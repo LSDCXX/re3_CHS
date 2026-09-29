@@ -727,10 +727,7 @@ CPlayerPed::PlayerControl1stPersonRunAround(CPad *padUsed)
 	float padMove = CVector2D(leftRight, upDown).Magnitude();
 	float padMoveInGameUnit = Min(padMove / PAD_MOVE_TO_GAME_WORLD_MOVE, CClassicAxis::MoveLimit(this));
 	if (padMoveInGameUnit > 0.0f) {
-		// Classic Axis already aligned the player with the camera's forward vector.
-		// The legacy camera orientation uses the opposite sign and makes arm IK
-		// alternate between two headings while aiming and turning.
-		m_fRotationDest = CClassicAxis::Aiming(this) ? m_fRotationCur : CGeneral::LimitRadianAngle(TheCamera.Orientation);
+		m_fRotationDest = CGeneral::LimitRadianAngle(TheCamera.Orientation);
 		m_fMoveSpeed = Min(padMoveInGameUnit, 0.07f * CTimer::GetTimeStep() + m_fMoveSpeed);
 	} else {
 		m_fMoveSpeed = 0.0f;
