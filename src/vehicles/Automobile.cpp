@@ -3028,10 +3028,8 @@ CAutomobile::ProcessBuoyancy(void)
 				vSpeed.z = 0.0f;
 #ifdef GTA_PS2_STUFF
 				// ps2 puddle physics
-				if (ParticleEx::UsePS2CarPuddlePhysics) {
-					CVector moveForce = CTimer::GetTimeStep() * (m_fMass * (vSpeed * -0.003f));
-					ApplyMoveForce(moveForce.x, moveForce.y, moveForce.z);
-				}
+				CVector moveForce = CTimer::GetTimeStep() * (m_fMass * (vSpeed * -0.003f));
+				ApplyMoveForce(moveForce.x, moveForce.y, moveForce.z);
 #endif
 				float fSpeed = vSpeed.MagnitudeSqr();
 				if (ParticleEx::ActiveSystem != ParticleEx::PS2) {

@@ -20,17 +20,15 @@ System=0
 
 修改后重新启动游戏。此编号是本分支的配置约定，不是上游 ASI 的内部枚举。无需安装 `IIIParticleEx.asi`，也不读取上游 `IIIParticleEx.ini`。
 
-上游 `IIIParticleEx.ini` 的 `[MAIN]` 开关在本分支对应 `re3.ini` 的 `[ParticleEx]`。布尔值用 `0/1`；未填写时采用上游默认值：
+需要配置的上游 `IIIParticleEx.ini` 开关在本分支对应 `re3.ini` 的 `[ParticleEx]`。水洼阻力和爆炸焦痕已由 re3 自带修复，不再提供开关。布尔值用 `0/1`；未填写时采用上游默认值：
 
 ```ini
 [ParticleEx]
 System=0
 bFixXboxMolotovBug=1
 bFixPCPS2Flame5Bug=0
-bUsePS2CarPuddlePhysics=1
 bUseAltPS2Carsplash=0
 bUseNewWheelsWaterSplash=1
-bDarkSpotsBugFix=1
 bPS2Jet=1
 bVCJet=0
 bPS2Rain=1
@@ -38,6 +36,8 @@ nParticleLimit=1000
 ```
 
 `bPS2Rain=1` 将雨线数量从 PC 的 35 恢复到 PS2 的 50，与粒子模式无关。`bVCJet=1` 优先于 `bPS2Jet`；两个开关都关闭时采用 PC 喷流位置。`nParticleLimit` 作用于 PC、PS2、Xbox 粒子池，本分支允许 1–10000，越界回到 1000。模式 3 仍是 PS2+Xbox 混合模式，不加入上游 README 中 PS2 Rain 后面的额外 2dfx／存档导入内容。
+
+如果旧 `re3.ini` 已写有 `bUsePS2CarPuddlePhysics` 或 `bDarkSpotsBugFix`，可手动删除；游戏现在不读取也不再写入这两项。
 
 PC 模式不需要新增资源。选中的 PS2／Xbox 配置文件缺失、格式不完整，或 TXD 加载失败、缺少所需纹理时，启动回退到 PC，并在日志中提示。缺少原游戏本身的 PC 资源不在此回退范围内。
 

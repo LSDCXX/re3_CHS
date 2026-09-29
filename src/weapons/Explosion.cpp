@@ -98,8 +98,7 @@ CExplosion::AddExplosion(CEntity *explodingEntity, CEntity *culprit, eExplosionT
 	pPosn = pos;
 	pPosn.z += 5.0f;
 #ifdef FIX_BUGS
-	CShadows::AddPermanentShadow(SHADOWTEX_CAR, gpShadowHeliTex, &pPosn, 8.0f, 0.0f, 0.0f, -8.0f, 200, 0, 0, 0, 10.0f,
-		ParticleEx::DarkSpotsBugFix ? 30000 : 1, ParticleEx::DarkSpotsBugFix ? 1.0f : 30000.0f);
+	CShadows::AddPermanentShadow(SHADOWTEX_CAR, gpShadowHeliTex, &pPosn, 8.0f, 0.0f, 0.0f, -8.0f, 200, 0, 0, 0, 10.0f, 30000, 1.0f);
 #else
 	// last two arguments are swapped resulting in no shadow
 	CShadows::AddPermanentShadow(SHADOWTEX_CAR, gpShadowHeliTex, &pPosn, 8.0f, 0.0f, 0.0f, -8.0f, 200, 0, 0, 0, 10.0f, 1, 30000.0f);

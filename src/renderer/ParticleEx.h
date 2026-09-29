@@ -9,8 +9,8 @@ namespace ParticleEx {
 enum System { PC = 0, PS2 = 1, Xbox = 2, PS2Xbox = 3 };
 extern int32 SelectedSystem;
 extern System ActiveSystem;
-extern bool FixXboxMolotovBug, FixFlame5Bug, UsePS2CarPuddlePhysics;
-extern bool UseAltPS2Carsplash, UseNewWheelsWaterSplash, DarkSpotsBugFix;
+extern bool FixXboxMolotovBug, FixFlame5Bug;
+extern bool UseAltPS2Carsplash, UseNewWheelsWaterSplash;
 extern bool PS2Jet, VCJet, PS2Rain;
 extern int32 ParticleLimit;
 inline bool UsesXboxFire() { return ActiveSystem == Xbox || ActiveSystem == PS2Xbox; }
