@@ -928,7 +928,8 @@ void CRadar::DrawRadarSprite(uint16 sprite, float x, float y, uint8 alpha)
 #endif
 	if(sprite == RADAR_SPRITE_WAYPOINT)
 		RwRenderStateSet(rwRENDERSTATETEXTUREFILTER, (void*)rwFILTERNEAREST);
-	RadarSprites[sprite]->Draw(CRect(x - SCREEN_SCALE_X(8.0f), y - SCREEN_SCALE_Y(8.0f), x + SCREEN_SCALE_X(8.0f), y + SCREEN_SCALE_Y(8.0f)), CRGBA(255, 255, 255, alpha));
+	float halfWidth = sprite == RADAR_SPRITE_WAYPOINT ? SCREEN_SCALE_Y(8.0f) : SCREEN_SCALE_X(8.0f);
+	RadarSprites[sprite]->Draw(CRect(x - halfWidth, y - SCREEN_SCALE_Y(8.0f), x + halfWidth, y + SCREEN_SCALE_Y(8.0f)), CRGBA(255, 255, 255, alpha));
 	if(sprite == RADAR_SPRITE_WAYPOINT)
 		RwRenderStateSet(rwRENDERSTATETEXTUREFILTER, (void*)rwFILTERLINEAR);
 }
@@ -1108,9 +1109,8 @@ CRadar::LoadTextures()
 	TonySprite.SetTexture("radar_tony");
 	WeaponSprite.SetTexture("radar_weapon");
 #ifdef MENU_MAP
-	WaypointSprite.SetTexture("radar_waypoint");
-	if(!WaypointSprite.m_pTexture) {
-		// create the texture if it's missing in TXD
+	// Use the same crisp three-ring waypoint on both the radar and menu map.
+	WaypointSprite.Delete();
 #define WAYPOINT_R (255)
 #define WAYPOINT_G (72)
 #define WAYPOINT_B (77)
@@ -1121,28 +1121,24 @@ CRadar::LoadTextures()
 		for(int x = 0; x < 16; x++)
 			for(int y = 0; y < 16; y++)
 			{
-				int x2 = x < 8 ? x : 7 - (x & 7);
-				int y2 = y < 8 ? y : 7 - (y & 7);
-				if ((y2 >= 4 && x2 >= 4) // square in the center is transparent
-					|| (x2 < 2 && y2 == 0) // two pixels on each side of first/last line are transparent
-					|| (x2 < 1 && y2 == 1)) // one pixel on each side of second to first/last line is transparent
-					pixels[x + y * 16] = 0;
-				else if((x2 == 2 && y2 >= 2)|| (y2 == 2 && x2 >= 2) )// colored square inside
+				int edge = Min(Min(x, 15 - x), Min(y, 15 - y));
+				if(edge >= 4)
+					pixels[x + y * 16] = 0; // transparent center
+				else if(edge == 1 || edge == 2)
 #ifdef RW_GL3
 					pixels[x + y * 16] = WAYPOINT_R | (WAYPOINT_G << 8) | (WAYPOINT_B << 16) | (255 << 24);
 #else
 					pixels[x + y * 16] = WAYPOINT_B | (WAYPOINT_G << 8) | (WAYPOINT_R << 16) | (255 << 24);
 #endif
 				else
-					pixels[x + y * 16] = 0xFF000000; // black
+					pixels[x + y * 16] = 0xFF000000; // outer and inner black borders
 			}
 		RwRasterUnlock(raster);
 		WaypointSprite.m_pTexture = RwTextureCreate(raster);
-		RwTextureSetFilterMode(WaypointSprite.m_pTexture, rwFILTERLINEAR);
+		RwTextureSetFilterMode(WaypointSprite.m_pTexture, rwFILTERNEAREST);
 #undef WAYPOINT_R
 #undef WAYPOINT_G
 #undef WAYPOINT_B
-	}
 #endif
 	CTxdStore::PopCurrentTxd();
 }

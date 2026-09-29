@@ -153,8 +153,8 @@ RenderAxisMouseTarget()
 	CPed *target = CClassicAxis::MouseTarget();
 	if(!target) return;
 	CVector world;
-	target->m_pedIK.GetComponentPosition(world, PED_MID);
-	world.z += 1.0f;
+	target->m_pedIK.GetComponentPosition(world, PED_HEAD);
+	world.z += 0.18f;
 	RwV3d pos;
 	float w, h;
 	if(!CSprite::CalcScreenCoors(world, &pos, &w, &h, false)) return;
@@ -167,8 +167,12 @@ RenderAxisMouseTarget()
 	RwRenderStateSet(rwRENDERSTATEZWRITEENABLE, (void *)FALSE);
 	RwRenderStateSet(rwRENDERSTATEZTESTENABLE, (void *)FALSE);
 	RwRenderStateSet(rwRENDERSTATEFOGENABLE, (void *)FALSE);
-	DrawAxisTriangle(pos.x, pos.y, 0.0f, DEGTORAD(90.0f),
-		SCREEN_SCALE_Y(10.0f * Clamp(w / 128.0f, 0.0f, 1.0f)), color);
+	// The apex is a right angle: width is twice the triangle's height.
+	float height = SCREEN_SCALE_Y(10.0f * Clamp(w / 128.0f, 0.0f, 1.0f));
+	CSprite2d::Draw2DPolygon(pos.x, pos.y - height * 0.5f,
+		pos.x - height, pos.y + height * 0.5f,
+		pos.x + height, pos.y + height * 0.5f,
+		pos.x, pos.y - height * 0.5f, color);
 }
 
 void
