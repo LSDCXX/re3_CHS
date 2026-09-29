@@ -1122,16 +1122,16 @@ CRadar::LoadTextures()
 			for(int y = 0; y < 16; y++)
 			{
 				int edge = Min(Min(x, 15 - x), Min(y, 15 - y));
-				if(edge >= 4)
-					pixels[x + y * 16] = 0; // transparent center
-				else if(edge == 2)
+				if(edge == 2)
 #ifdef RW_GL3
 					pixels[x + y * 16] = WAYPOINT_R | (WAYPOINT_G << 8) | (WAYPOINT_B << 16) | (255 << 24);
 #else
 					pixels[x + y * 16] = WAYPOINT_B | (WAYPOINT_G << 8) | (WAYPOINT_R << 16) | (255 << 24);
 #endif
+				else if(edge == 1 || edge == 3)
+					pixels[x + y * 16] = 0xFF000000; // equal-width black borders
 				else
-					pixels[x + y * 16] = 0xFF000000; // outer and inner black borders
+					pixels[x + y * 16] = 0; // transparent outermost pixels and center
 			}
 		RwRasterUnlock(raster);
 		WaypointSprite.m_pTexture = RwTextureCreate(raster);
