@@ -4038,7 +4038,7 @@ CMenuManager::PrintBriefs()
 			CFont::SetColor(newColor);
 #endif
 			CFont::PrintString(MENU_X_LEFT_ALIGNED(BRIEFS_LINE_X), MENU_Y(nextY), gUString);
-			nextY += MENU_Y(BRIEFS_LINE_HEIGHT);
+			nextY += BRIEFS_LINE_HEIGHT;
 		}
 	}
 
