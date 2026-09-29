@@ -1124,7 +1124,7 @@ CRadar::LoadTextures()
 				int edge = Min(Min(x, 15 - x), Min(y, 15 - y));
 				if(edge >= 4)
 					pixels[x + y * 16] = 0; // transparent center
-				else if(edge == 1 || edge == 2)
+				else if(edge == 2)
 #ifdef RW_GL3
 					pixels[x + y * 16] = WAYPOINT_R | (WAYPOINT_G << 8) | (WAYPOINT_B << 16) | (255 << 24);
 #else

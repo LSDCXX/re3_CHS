@@ -154,7 +154,7 @@ RenderAxisMouseTarget()
 	if(!target) return;
 	CVector world;
 	target->m_pedIK.GetComponentPosition(world, PED_HEAD);
-	world.z += 0.18f;
+	world.z += 0.30f;
 	RwV3d pos;
 	float w, h;
 	if(!CSprite::CalcScreenCoors(world, &pos, &w, &h, false)) return;
@@ -169,10 +169,11 @@ RenderAxisMouseTarget()
 	RwRenderStateSet(rwRENDERSTATEFOGENABLE, (void *)FALSE);
 	// The apex is a right angle: width is twice the triangle's height.
 	float height = SCREEN_SCALE_Y(10.0f * Clamp(w / 128.0f, 0.0f, 1.0f));
-	CSprite2d::Draw2DPolygon(pos.x, pos.y - height * 0.5f,
-		pos.x - height, pos.y + height * 0.5f,
-		pos.x + height, pos.y + height * 0.5f,
-		pos.x, pos.y - height * 0.5f, color);
+	float baseY = pos.y - SCREEN_SCALE_Y(3.0f);
+	CSprite2d::Draw2DPolygon(pos.x, baseY - height,
+		pos.x - height, baseY,
+		pos.x + height, baseY,
+		pos.x, baseY - height, color);
 }
 
 void
