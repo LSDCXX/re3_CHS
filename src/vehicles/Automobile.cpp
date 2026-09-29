@@ -1001,18 +1001,24 @@ CAutomobile::ProcessControl(void)
 					printf("m_bSirenOrAlarm toggled to %d\n", m_bSirenOrAlarm);
 				}
 			}else if(UsesSiren(GetModelIndex())){
-				if(Pads[0].bHornHistory[Pads[0].iCurrHornHistory]){
-					if(Pads[0].bHornHistory[(Pads[0].iCurrHornHistory+CPad::HORNHISTORY_SIZE-1) % CPad::HORNHISTORY_SIZE] &&
-					   Pads[0].bHornHistory[(Pads[0].iCurrHornHistory+CPad::HORNHISTORY_SIZE-2) % CPad::HORNHISTORY_SIZE])
-						m_nCarHornTimer = 1;
-					else
-						m_nCarHornTimer = 0;
-				}else if(Pads[0].bHornHistory[(Pads[0].iCurrHornHistory+CPad::HORNHISTORY_SIZE-1) % CPad::HORNHISTORY_SIZE] &&
-				         !Pads[0].bHornHistory[(Pads[0].iCurrHornHistory+1) % CPad::HORNHISTORY_SIZE]){
+				static CAutomobile *hornVehicle = nil;
+				static uint32 hornPressTime = 0;
+				const uint32 now = CTimer::GetTimeInMilliseconds();
+				const bool hornDown = Pads[0].bHornHistory[Pads[0].iCurrHornHistory];
+				const bool hornWasDown = Pads[0].bHornHistory[(Pads[0].iCurrHornHistory+CPad::HORNHISTORY_SIZE-1) % CPad::HORNHISTORY_SIZE];
+				// Measure the siren tap in milliseconds so its window is independent of frame rate.
+				if(hornDown){
+					if(!hornWasDown || hornVehicle != this){
+						hornVehicle = this;
+						hornPressTime = now;
+					}
+					m_nCarHornTimer = now - hornPressTime >= 60 ? 1 : 0;
+				}else{
 					m_nCarHornTimer = 0;
-					m_bSirenOrAlarm = !m_bSirenOrAlarm;
-				}else
-					m_nCarHornTimer = 0;
+					if(hornWasDown && hornVehicle == this && now - hornPressTime < 500)
+						m_bSirenOrAlarm = !m_bSirenOrAlarm;
+					hornVehicle = nil;
+				}
 			}else if(GetModelIndex() != MI_YARDIE && !CVehicle::bCheat3){
 				if(Pads[0].GetHorn())
 					m_nCarHornTimer = 1;
