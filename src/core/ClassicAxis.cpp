@@ -234,6 +234,17 @@ CClassicAxis::Update(CPlayerPed *p)
 		}
 		return;
 	}
+	if(!Aiming(p) && pad->GetWeapon() && Supported(p) && p->IsPedInControl()) {
+		// Hip fire follows camera yaw, but never camera pitch.
+		float heading = TheCamera.Cams[TheCamera.ActiveCam].Front.Heading();
+		p->m_fRotationCur = p->m_fRotationDest = heading;
+		p->SetHeading(heading);
+		p->m_fFPSMoveHeading = 0.0f;
+		p->ClearAimFlag();
+#ifdef FREE_CAM
+		p->m_bFreeAimActive = false;
+#endif
+	}
 	if(!changedCrosshair) {
 		oldCrossX = TheCamera.m_f3rdPersonCHairMultX;
 		oldCrossY = TheCamera.m_f3rdPersonCHairMultY;
