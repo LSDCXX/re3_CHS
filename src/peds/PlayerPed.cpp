@@ -1117,7 +1117,7 @@ CPlayerPed::ProcessPlayerWeapon(CPad *padUsed)
 	if (pointedGun == 2) pointedGun = 1;
 
 	// Rotate player/arm when shooting. We don't have auto-rotation anymore
-	if (CCamera::m_bUseMouse3rdPerson && CCamera::bFreeCam && !CClassicAxis::Aiming(this) &&
+	if (CCamera::m_bUseMouse3rdPerson && CCamera::bFreeCam && !CClassicAxis::Active(this) &&
 		m_nSelectedWepSlot == m_currentWeapon && m_nMoveState != PEDMOVE_SPRINT) {
 
 		// Weapons except throwable and melee ones
@@ -1169,7 +1169,7 @@ CPlayerPed::ProcessPlayerWeapon(CPad *padUsed)
 		changedHeadingRate = 0;
 		RestoreHeadingRate();
 	}
-	if (CClassicAxis::Aiming(this))
+	if (CClassicAxis::Active(this))
 		pointedGun = 0;
 	if (pointedGun == 1) {
 		if (m_nPedState == PED_ATTACK) {

@@ -151,7 +151,7 @@ CClassicAxis::Active(const CPed *ped)
 bool
 CClassicAxis::Aiming(const CPed *ped)
 {
-	if(!Active(ped) || ped->m_nPedState == PED_JUMP) return false;
+	if(!Active(ped) || ped->m_nPedState == PED_JUMP || ped->bIsInTheAir || ped->bIsLanding || !ped->bIsStanding) return false;
 	CPad *pad = CPad::GetPad(0);
 	CPed *p = const_cast<CPed *>(ped);
 	return !pad->ArePlayerControlsDisabled() && !CTimer::GetIsPaused() && pad->GetTarget() && !pad->GetSprint() && !pad->JumpJustDown() && Supported(p) &&
@@ -324,6 +324,16 @@ CClassicAxis::Update(CPlayerPed *p)
 		if(p->m_nPedState != PED_ATTACK && p->m_nPedState != PED_AIM_GUN && !RpAnimBlendClumpGetAssociation(p->GetClump(), ANIM_STD_HGUN_RELOAD) &&
 		   !RpAnimBlendClumpGetAssociation(p->GetClump(), ANIM_STD_AK_RELOAD))
 			p->SetPointGunAt(p->m_pPointGunAt);
+		else if(p->m_nPedState == PED_AIM_GUN) {
+			CWeaponInfo weapon = *CWeaponInfo::GetWeaponInfo(p->GetWeapon()->m_eWeaponType);
+			AdjustWeaponInfo(p, weapon);
+			AnimationId anim = p->bCrouchWhenShooting ? weapon.m_Anim2ToPlay : weapon.m_AnimToPlay;
+			CAnimBlendAssociation *pose = RpAnimBlendClumpGetAssociation(p->GetClump(), anim);
+			if(!pose || pose->blendDelta < 0.0f) {
+				pose = CAnimManager::BlendAnimation(p->GetClump(), ASSOCGRP_STD, anim, 4.0f);
+				pose->blendDelta = 8.0f;
+			}
+		}
 	}
 }
 void

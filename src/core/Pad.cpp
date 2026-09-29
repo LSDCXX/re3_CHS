@@ -1816,6 +1816,8 @@ bool CPad::GetLookBehindForPed(void)
 {
 	if ( ArePlayerControlsDisabled() )
 		return false;
+	if (CClassicAxis::Aiming(FindPlayerPed()))
+		return false;
 
 	return !!NewState.RightShock;
 }
