@@ -5,6 +5,7 @@
 
 CColModel CTempColModels::ms_colModelPed1;
 CColModel CTempColModels::ms_colModelPed2;
+CColModel CTempColModels::ms_colModelHeli;
 CColModel CTempColModels::ms_colModelBBox;
 CColModel CTempColModels::ms_colModelBumper1;
 CColModel CTempColModels::ms_colModelWheel1;
@@ -76,6 +77,11 @@ CTempColModels::Initialise(void)
 	ms_colModelPed1.boundingSphere.Set(1.25f, CVector(0.0f, 0.0f, 0.0f));
 	ms_colModelPed1.boundingBox.Set(CVector(-0.35f, -0.35f, -1.0f), CVector(0.35f, 0.35f, 0.9f));
 	SET_COLMODEL_SPHERES(ms_colModelPed1, s_aPedSpheres);
+
+	// Both helicopter models previously used a pedestrian-sized visibility bound.
+	ms_colModelHeli.boundingSphere.Set(8.5f, CVector(0.0f, -1.75f, 0.73f));
+	ms_colModelHeli.boundingBox.Set(CVector(-2.18f, -8.52f, -0.67f), CVector(2.18f, 4.58f, 2.125f));
+	ms_colModelHeli.level = LEVEL_GENERIC;
 
 	// Ped 2 Spheres
 

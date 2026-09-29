@@ -1089,6 +1089,13 @@ CFont::GetTextRect(CRect *rect, float xstart, float ystart, wchar *s)
 	float x, y;
 	int16 maxlength;
 	wchar *t;
+#ifdef FIX_BUGS
+	const float paddingX = SCREEN_SCALE_X(4.0f);
+	const float paddingY = SCREEN_SCALE_Y(2.0f);
+#else
+	const float paddingX = 4.0f;
+	const float paddingY = 2.0f;
+#endif
 
 	maxlength = 0;
 	numLines = 0;
@@ -1151,44 +1158,44 @@ CFont::GetTextRect(CRect *rect, float xstart, float ystart, wchar *s)
 
 	if(Details.centre){
 		if(Details.backgroundOnlyText){
-			rect->left = xstart - maxlength/2 - 4.0f;
-			rect->right = xstart + maxlength/2 + 4.0f;
+			rect->left = xstart - maxlength/2 - paddingX;
+			rect->right = xstart + maxlength/2 + paddingX;
 #ifdef MORE_LANGUAGES
 			if (IsJapaneseFont()) {
-				rect->bottom = (32.0f * CFont::Details.scaleY / 2.75f + 2.0f * CFont::Details.scaleY) * numLines + ystart + (4.0f / 2.75f);
-				rect->top = ystart - (4.0f / 2.75f);
+				rect->bottom = (32.0f * CFont::Details.scaleY / 2.75f + 2.0f * CFont::Details.scaleY) * numLines + ystart + SCREEN_SCALE_Y(4.0f / 2.75f);
+				rect->top = ystart - SCREEN_SCALE_Y(4.0f / 2.75f);
 			} else {
 #endif
-				rect->bottom = (32.0f * CFont::Details.scaleY * 0.5f + 2.0f * CFont::Details.scaleY) * numLines + ystart + 2.0f;
-				rect->top = ystart - 2.0f;
+				rect->bottom = (32.0f * CFont::Details.scaleY * 0.5f + 2.0f * CFont::Details.scaleY) * numLines + ystart + paddingY;
+				rect->top = ystart - paddingY;
 #ifdef MORE_LANGUAGES
 			}
 #endif
 		}else{
-			rect->left = xstart - Details.centreSize*0.5f - 4.0f;
-			rect->right = xstart + Details.centreSize*0.5f + 4.0f;
+			rect->left = xstart - Details.centreSize*0.5f - paddingX;
+			rect->right = xstart + Details.centreSize*0.5f + paddingX;
 #ifdef MORE_LANGUAGES
 			if (IsJapaneseFont()) {
-				rect->bottom = (32.0f * CFont::Details.scaleY / 2.75f + 2.0f * CFont::Details.scaleY) * numLines + ystart + (4.0f / 2.75f);
-				rect->top = ystart - (4.0f / 2.75f);
+				rect->bottom = (32.0f * CFont::Details.scaleY / 2.75f + 2.0f * CFont::Details.scaleY) * numLines + ystart + SCREEN_SCALE_Y(4.0f / 2.75f);
+				rect->top = ystart - SCREEN_SCALE_Y(4.0f / 2.75f);
 			} else {
 #endif
-				rect->bottom = (32.0f * CFont::Details.scaleY * 0.5f + 2.0f * CFont::Details.scaleY) * numLines + ystart + 2.0f;
-				rect->top = ystart - 2.0f;
+				rect->bottom = (32.0f * CFont::Details.scaleY * 0.5f + 2.0f * CFont::Details.scaleY) * numLines + ystart + paddingY;
+				rect->top = ystart - paddingY;
 #ifdef MORE_LANGUAGES
 			}
 #endif
 		}
 	}else{
-		rect->left = xstart - 4.0f;
+		rect->left = xstart - paddingX;
 		rect->right = Details.wrapX;
-		rect->bottom = ystart - 4.0f + 4.0f;
+		rect->bottom = ystart;
 #ifdef MORE_LANGUAGES
 		if (IsJapaneseFont())
-			rect->top = (32.0f * CFont::Details.scaleY / 2.75f + 2.0f * CFont::Details.scaleY) * numLines + ystart + 2.0f + (4.0f / 2.75f);
+			rect->top = (32.0f * CFont::Details.scaleY / 2.75f + 2.0f * CFont::Details.scaleY) * numLines + ystart + paddingY + SCREEN_SCALE_Y(4.0f / 2.75f);
 		else
 #endif
-			rect->top = (32.0f * CFont::Details.scaleY * 0.5f + 2.0f * CFont::Details.scaleY) * numLines + ystart + 2.0f + 2.0f;
+			rect->top = (32.0f * CFont::Details.scaleY * 0.5f + 2.0f * CFont::Details.scaleY) * numLines + ystart + paddingY * 2.0f;
 	}
 }
 
@@ -2264,20 +2271,27 @@ CFont::GetTextRect_Chs(CRect *rect, float xstart, float ystart, wchar *s)
 {
 	short numLines = GetNumberLines_Chs(xstart, ystart, s);
 	float lineHeight = Details.scaleY * 18.0f;
+	const float paddingX = SCREEN_SCALE_X(4.0f);
+	const float paddingY = SCREEN_SCALE_Y(2.0f);
 
 	if (Details.centre) {
-		rect->left = xstart - (Details.centreSize * 0.5f) - 4.0f;
-		rect->right = xstart + (Details.centreSize * 0.5f) + 4.0f;
+		rect->left = xstart - (Details.centreSize * 0.5f) - paddingX;
+		rect->right = xstart + (Details.centreSize * 0.5f) + paddingX;
 	} else if (Details.rightJustify) {
-		rect->left = Details.rightJustifyWrap - 4.0f;
-		rect->right = xstart + 4.0f;
+		rect->left = Details.rightJustifyWrap - paddingX;
+		rect->right = xstart + paddingX;
 	} else {
-		rect->left = xstart - 4.0f;
-		rect->right = Details.wrapX + 4.0f;
+		rect->left = xstart - paddingX;
+		rect->right = Details.wrapX + paddingX;
 	}
 
-	rect->top = ystart - 2.0f;
-	rect->bottom = ystart + lineHeight * numLines + 2.0f;
+	const float displayScale = Details.style == FONT_BANK && gChineseSyntheticSlant != 0.0f
+		? CHS_BANK_DISPLAY_SCALE : CHS_DISPLAY_SCALE;
+	const float nativeCellHeight = Details.style == FONT_BANK || Details.style == FONT_HEADING ? 20.0f : 16.0f;
+	const float glyphOffset = Details.scaleY * (nativeCellHeight - 16.0f * displayScale) * 0.5f;
+	const float glyphHeight = Details.scaleY * 16.0f * displayScale;
+	rect->top = ystart + glyphOffset - paddingY;
+	rect->bottom = ystart + lineHeight * (numLines > 0 ? numLines - 1 : 0) + glyphOffset + glyphHeight + paddingY;
 }
 
 float

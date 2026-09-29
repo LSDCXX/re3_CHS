@@ -3813,7 +3813,16 @@ CMenuManager::LoadSettings()
 			CFileMgr::Read(fileHandle, (char*)&m_PrefsSpeakers, 1);
 			CFileMgr::Read(fileHandle, (char*)&m_nPrefsAudio3DProviderIndex, 1);
 			CFileMgr::Read(fileHandle, (char*)&m_PrefsDMA, 1);
-			CFileMgr::Read(fileHandle, (char*)&m_PrefsBrightness, 1);
+			uint8 savedBrightness = 0;
+			CFileMgr::Read(fileHandle, (char*)&savedBrightness, 1);
+#ifdef FIX_BUGS
+			// Preserve the one-byte settings format while allowing values below 256.
+			// Stock settings stored 256 as 0 and 256+n as n.
+			m_PrefsBrightness = savedBrightness == 0 || savedBrightness >= 31 ?
+				256 + savedBrightness : (savedBrightness - 1) << 5;
+#else
+			m_PrefsBrightness = savedBrightness;
+#endif
 			CFileMgr::Read(fileHandle, (char*)&m_PrefsLOD, 4);
 			CFileMgr::Read(fileHandle, (char*)&m_PrefsShowSubtitles, 1);
 			CFileMgr::Read(fileHandle, (char*)&m_PrefsUseWideScreen, 1);
@@ -3913,7 +3922,13 @@ CMenuManager::SaveSettings()
 		CFileMgr::Write(fileHandle, (char*)&m_PrefsSpeakers, 1);
 		CFileMgr::Write(fileHandle, (char*)&m_nPrefsAudio3DProviderIndex, 1);
 		CFileMgr::Write(fileHandle, (char*)&m_PrefsDMA, 1);
-		CFileMgr::Write(fileHandle, (char*)&m_PrefsBrightness, 1);
+		uint8 savedBrightness =
+#ifdef FIX_BUGS
+			(uint8)(((m_PrefsBrightness + 31) & ~31) / 32 + 1);
+#else
+			(uint8)m_PrefsBrightness;
+#endif
+		CFileMgr::Write(fileHandle, (char*)&savedBrightness, 1);
 		CFileMgr::Write(fileHandle, (char*)&m_PrefsLOD, sizeof(m_PrefsLOD));
 		CFileMgr::Write(fileHandle, (char*)&m_PrefsShowSubtitles, 1);
 		CFileMgr::Write(fileHandle, (char*)&m_PrefsUseWideScreen, 1);

@@ -783,8 +783,14 @@ CHeli::InitHelis(void)
 		pHelis[i] = nil;
 
 #if GTA_VERSION >= GTA3_PS2_160
-	((CVehicleModelInfo*)CModelInfo::GetModelInfo(MI_ESCAPE))->SetColModel(&CTempColModels::ms_colModelPed1);
-	((CVehicleModelInfo*)CModelInfo::GetModelInfo(MI_CHOPPER))->SetColModel(&CTempColModels::ms_colModelPed1);
+	CColModel *heliColModel =
+#ifdef FIX_BUGS
+		&CTempColModels::ms_colModelHeli;
+#else
+		&CTempColModels::ms_colModelPed1;
+#endif
+	((CVehicleModelInfo*)CModelInfo::GetModelInfo(MI_ESCAPE))->SetColModel(heliColModel);
+	((CVehicleModelInfo*)CModelInfo::GetModelInfo(MI_CHOPPER))->SetColModel(heliColModel);
 #endif
 }
 
@@ -796,10 +802,16 @@ CHeli::GenerateHeli(bool catalina)
 	int i;
 
 #if GTA_VERSION < GTA3_PS2_160
+	CColModel *heliColModel =
+#ifdef FIX_BUGS
+		&CTempColModels::ms_colModelHeli;
+#else
+		&CTempColModels::ms_colModelPed1;
+#endif
 	if(catalina)
-		((CVehicleModelInfo*)CModelInfo::GetModelInfo(MI_ESCAPE))->SetColModel(&CTempColModels::ms_colModelPed1);
+		((CVehicleModelInfo*)CModelInfo::GetModelInfo(MI_ESCAPE))->SetColModel(heliColModel);
 	else
-		((CVehicleModelInfo*)CModelInfo::GetModelInfo(MI_CHOPPER))->SetColModel(&CTempColModels::ms_colModelPed1);
+		((CVehicleModelInfo*)CModelInfo::GetModelInfo(MI_CHOPPER))->SetColModel(heliColModel);
 #endif
 
 	if(catalina)

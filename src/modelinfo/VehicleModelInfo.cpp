@@ -221,6 +221,12 @@ CVehicleModelInfo::CreateInstance(void)
 	}else{
 		ms_compsUsed[0] = -1;
 		ms_compsUsed[1] = -1;
+#ifdef FIX_BUGS
+		// A garage may have requested extras for a model with none. Do not let
+		// that stale request suppress the roof light on the next traffic taxi.
+		ms_compsToUse[0] = -2;
+		ms_compsToUse[1] = -2;
+#endif
 	}
 	return (RwObject*)clump;
 }

@@ -2545,7 +2545,9 @@ CloneAtomicToFrameCB(RwObject *frame, void *data)
 	RpAtomic *newAtomic = RpAtomicClone((RpAtomic*)frame);
 	RpAtomicSetFrame(newAtomic, (RwFrame*)data);
 	RpClumpAddAtomic(flyingClumpTemp, newAtomic);
+#ifndef FIX_BUGS
 	CVisibilityPlugins::SetAtomicRenderCallback(newAtomic, nil);
+#endif
 	return frame;
 }
 

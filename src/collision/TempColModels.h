@@ -7,6 +7,7 @@ class CTempColModels
 public:
 	static CColModel ms_colModelPed1;
 	static CColModel ms_colModelPed2;
+	static CColModel ms_colModelHeli;
 	static CColModel ms_colModelBBox;
 	static CColModel ms_colModelBumper1;
 	static CColModel ms_colModelWheel1;	
