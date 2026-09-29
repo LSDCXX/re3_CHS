@@ -4006,6 +4006,7 @@ CMenuManager::PrintBriefs()
 	CFont::SetColor(CRGBA(LABEL_COLOR.r, LABEL_COLOR.g, LABEL_COLOR.b, FadeIn(255)));
 	CFont::SetFontStyle(FONT_LOCALE(FONT_BANK));
 	CFont::SetRightJustifyOff();
+	CFont::SetWrapx(MENU_X_RIGHT_ALIGNED(BRIEFS_LINE_X));
 	CFont::SetScale(MENU_X(MENU_TEXT_SIZE_X * 0.7), MENU_Y(MENU_TEXT_SIZE_Y * 0.9)); // second mulipliers are double, idk why
 
 	float nextY = BRIEFS_TOP_MARGIN;
@@ -4036,7 +4037,7 @@ CMenuManager::PrintBriefs()
 			newColor.a = FadeIn(255);
 			CFont::SetColor(newColor);
 #endif
-			CFont::PrintString(MENU_X_LEFT_ALIGNED(BRIEFS_LINE_X), nextY, gUString);
+			CFont::PrintString(MENU_X_LEFT_ALIGNED(BRIEFS_LINE_X), MENU_Y(nextY), gUString);
 			nextY += MENU_Y(BRIEFS_LINE_HEIGHT);
 		}
 	}
