@@ -23,14 +23,27 @@ camera, animation and weapon APIs. It does not load the ASI or use executable-ad
 
 ## Configuration
 
-The optional `data/ClassicAxisIII.ini` is read from the game directory on startup.
-The shipped defaults also work without this file. Restart after editing it.
-The source distribution stores the file at `gamefiles/data/ClassicAxisIII.ini`.
+Classic Axis settings now live in the game's generated `re3.ini`, under
+`[ClassicAxis]`. The separate `data/ClassicAxisIII.ini` is no longer read.
+Values are written as numbers for booleans (`0`/`1`); edit them while the game
+is closed and restart. Defaults apply if a key is missing.
 
-Only the options listed in the shipped file are implemented. `WalkKey` supports
-`LALT` or `NULL`; `CrouchKey` supports one letter or `NULL`. The reticle and aiming
-ray are fixed at the exact screen centre; old `CameraCrosshairMultX/Y` settings
-are ignored, including those in previously installed configuration files.
+| Key | Default | Effect |
+|---|---:|---|
+| `ForceAutoAim` | `0` | Allow mouse/keyboard auto lock-on. |
+| `LockOnTargetType` | `1` | `0` native marker, `1` rotating SA triangles, `2` LCS/VCS triangles. |
+| `ShowTriangleForMouseRecruit` | `1` | Health-colored triangle over the ped under the mouse aiming ray. |
+| `WalkKey` | `LALT` | Held walk key; `NULL` disables. |
+| `CrouchKey` | `C` | Crouch toggle key; `NULL` disables. |
+| `StoriesAimingCoords` | `0` | LCS/VCS-style camera shoulder position. |
+| `StoriesPointingArm` | `0` | LCS/VCS-style one-handed arm angle. |
+| `RightAnalogStickSensitivityX/Y` | `1.0` | Horizontal/vertical right-stick response, clamped to `0.1`–`4.0`. |
+| `ZoomForAssaultRifles` | `1` | Narrow FOV when aiming with assault rifles. |
+| `ModernCamera` | `1` | Use the modern follow-camera offset. |
+
+The reticle and bullet ray remain fixed at the exact screen centre;
+`CameraCrosshairMultX/Y` are intentionally unsupported. Native weapon-specific
+first-person modes and non-Classic Controls are unchanged.
 
 ## Camera and crouch-fire corrections (revision 2)
 
@@ -207,7 +220,7 @@ so holding it caps walking and releasing it restores normal movement. Walking
 wins when the same key is also bound to sprint. Restart the game after INI edits.
 Classic Controls and inactive Axis contexts retain their original sprint behavior.
 
-Example: WalkKey = LCTRL, or WalkKey = E. Preserve the user's existing INI when
+Example: WalkKey = LCTRL, or WalkKey = E. Preserve the user's existing re3.ini when
 updating just the executable. Validation: 419 Axis and 87 production Pad checks;
 11 unchanged retry checks remain included. Full build; no gameplay playtest.
 

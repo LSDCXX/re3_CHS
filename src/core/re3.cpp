@@ -12,6 +12,7 @@
 #include "Renderer.h"
 #include "Credits.h"
 #include "Camera.h"
+#include "ClassicAxis.h"
 #include "Weather.h"
 #include "Clock.h"
 #include "World.h"
@@ -586,6 +587,19 @@ bool LoadINISettings()
 #ifdef NO_MOVIES
 	ReadIniIfExists("General", "NoMovies", &gbNoMovies);
 #endif
+	ClassicAxisOptions &axis = CClassicAxis::Options;
+	ReadIniIfExists("ClassicAxis", "ForceAutoAim", &axis.ForceAutoAim);
+	ReadIniIfExists("ClassicAxis", "ModernCamera", &axis.ModernCamera);
+	ReadIniIfExists("ClassicAxis", "ZoomForAssaultRifles", &axis.ZoomForAssaultRifles);
+	ReadIniIfExists("ClassicAxis", "StoriesAimingCoords", &axis.StoriesAimingCoords);
+	ReadIniIfExists("ClassicAxis", "StoriesPointingArm", &axis.StoriesPointingArm);
+	ReadIniIfExists("ClassicAxis", "LockOnTargetType", &axis.LockOnTargetType);
+	ReadIniIfExists("ClassicAxis", "ShowTriangleForMouseRecruit", &axis.ShowTriangleForMouseRecruit);
+	ReadIniIfExists("ClassicAxis", "RightAnalogStickSensitivityX", &axis.RightAnalogStickSensitivityX);
+	ReadIniIfExists("ClassicAxis", "RightAnalogStickSensitivityY", &axis.RightAnalogStickSensitivityY);
+	ReadIniIfExists("ClassicAxis", "WalkKey", axis.WalkKey, sizeof(axis.WalkKey));
+	ReadIniIfExists("ClassicAxis", "CrouchKey", axis.CrouchKey, sizeof(axis.CrouchKey));
+	CClassicAxis::ApplySettings();
 
 #ifdef CUSTOM_FRONTEND_OPTIONS
 	bool migrate = cfg.get("FrontendOptions").size() != 0;
@@ -700,6 +714,18 @@ void SaveINISettings()
 #ifdef NO_MOVIES
 	StoreIni("General", "NoMovies", gbNoMovies);
 #endif
+	const ClassicAxisOptions &axis = CClassicAxis::Options;
+	StoreIni("ClassicAxis", "ForceAutoAim", uint8(axis.ForceAutoAim));
+	StoreIni("ClassicAxis", "ModernCamera", uint8(axis.ModernCamera));
+	StoreIni("ClassicAxis", "ZoomForAssaultRifles", uint8(axis.ZoomForAssaultRifles));
+	StoreIni("ClassicAxis", "StoriesAimingCoords", uint8(axis.StoriesAimingCoords));
+	StoreIni("ClassicAxis", "StoriesPointingArm", uint8(axis.StoriesPointingArm));
+	StoreIni("ClassicAxis", "LockOnTargetType", int32(axis.LockOnTargetType));
+	StoreIni("ClassicAxis", "ShowTriangleForMouseRecruit", uint8(axis.ShowTriangleForMouseRecruit));
+	StoreIni("ClassicAxis", "RightAnalogStickSensitivityX", axis.RightAnalogStickSensitivityX);
+	StoreIni("ClassicAxis", "RightAnalogStickSensitivityY", axis.RightAnalogStickSensitivityY);
+	StoreIni("ClassicAxis", "WalkKey", CClassicAxis::Options.WalkKey, sizeof(axis.WalkKey));
+	StoreIni("ClassicAxis", "CrouchKey", CClassicAxis::Options.CrouchKey, sizeof(axis.CrouchKey));
 #ifdef CUSTOM_FRONTEND_OPTIONS
 	for (int i = 0; i < MENUPAGES; i++) {
 		for (int j = 0; j < NUM_MENUROWS; j++) {

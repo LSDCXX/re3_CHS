@@ -2780,14 +2780,13 @@ int16 CPad::SniperModeLookUpDown(void)
 int16 CPad::LookAroundLeftRight(void)
 {
 	float axis = GetPad(0)->NewState.RightStickX;
+	float sensitivity = CClassicAxis::Active(FindPlayerPed()) ? CClassicAxis::Options.RightAnalogStickSensitivityX : 1.0f;
 
 	if ( Abs(axis) > 85 && !GetLookBehindForPed() )
-		return (int16) ( (axis + ( ( axis > 0 ) ? -85 : 85) )
-							* (127.0f / 32.0f) ); // 3.96875f
+		return (int16) Clamp((axis + (axis > 0 ? -85 : 85)) * (127.0f / 32.0f) * sensitivity, -512.0f, 512.0f);
 
 	else if ( TheCamera.Cams[0].Using3rdPersonMouseCam() && Abs(axis) > 10 )
-		return (int16) ( (axis + ( ( axis > 0 ) ? -10 : 10) )
-							* (127.0f / 64.0f) ); // 1.984375f
+		return (int16) Clamp((axis + (axis > 0 ? -10 : 10)) * (127.0f / 64.0f) * sensitivity, -512.0f, 512.0f);
 
 	return 0;
 }
@@ -2795,6 +2794,7 @@ int16 CPad::LookAroundLeftRight(void)
 int16 CPad::LookAroundUpDown(void)
 {
 	int16 axis = GetPad(0)->NewState.RightStickY;
+	float sensitivity = CClassicAxis::Active(FindPlayerPed()) ? CClassicAxis::Options.RightAnalogStickSensitivityY : 1.0f;
 
 #ifdef FIX_BUGS
 	axis = -axis;
@@ -2805,12 +2805,10 @@ int16 CPad::LookAroundUpDown(void)
 #endif
 
 	if ( Abs(axis) > 85 && !GetLookBehindForPed() )
-		return (int16) ( (axis + ( ( axis > 0 ) ? -85 : 85) )
-							* (127.0f / 32.0f) ); // 3.96875f
+		return (int16) Clamp((axis + (axis > 0 ? -85 : 85)) * (127.0f / 32.0f) * sensitivity, -512.0f, 512.0f);
 
 	else if ( TheCamera.Cams[0].Using3rdPersonMouseCam() && Abs(axis) > 40 )
-		return (int16) ( (axis + ( ( axis > 0 ) ? -40 : 40) )
-							* (127.0f / 64.0f) ); // 1.984375f
+		return (int16) Clamp((axis + (axis > 0 ? -40 : 40)) * (127.0f / 64.0f) * sensitivity, -512.0f, 512.0f);
 
 	return 0;
 }

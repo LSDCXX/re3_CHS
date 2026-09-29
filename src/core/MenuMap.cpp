@@ -3,7 +3,6 @@
 #if defined(MENU_MAP) && !defined(PS2_MENU)
 #include <string>
 #include <vector>
-#include <sstream>
 #include "MenuMap.h"
 #include "MenuMapMath.h"
 #include "MenuMapLabels.h"
@@ -20,7 +19,6 @@
 #include "Pools.h"
 #include "Vehicle.h"
 #include "PlayerPed.h"
-#include "FileMgr.h"
 #include "Streaming.h"
 #include "TxdStore.h"
 #include "RwHelper.h"
@@ -71,59 +69,8 @@ bool Chinese() {
 	return false;
 #endif
 }
-std::string Trim(const std::string &s) {
-	size_t first = s.find_first_not_of(" \t\r\n");
-	return first == std::string::npos ? "" : s.substr(first, s.find_last_not_of(" \t\r\n") - first + 1);
-}
-bool Boolean(const std::string &s) { return !strcasecmp(s.c_str(), "true") || s == "1"; }
-void ReadColor(const std::string &s, CRGBA &color) {
-	int r,g,b,a;
-	if(sscanf(s.c_str(), "%d %d %d %d", &r,&g,&b,&a) == 4)
-		color = CRGBA(Bound(r,0,255),Bound(g,0,255),Bound(b,0,255),Bound(a,0,255));
-}
 void ReadSettings() {
 	settings = Settings();
-	int file = CFileMgr::OpenFile("data\\MenuMapIII.ini", "rb");
-	if(!file) return;
-	char line[1024];
-	std::string section;
-	bool firstBlipsSection = true;
-	while(CFileMgr::ReadLine(file, line, sizeof(line))) {
-		std::string s = Trim(line);
-		if(s.compare(0,3,"\xEF\xBB\xBF") == 0) s.erase(0,3);
-		s = Trim(s.substr(0, s.find(';')));
-		if(s.empty()) continue;
-		if(s[0] == '[' && s.back() == ']') {
-			section = s.substr(1,s.size()-2);
-			if(section == "BLIPS" && firstBlipsSection) { settings.services.clear(); firstBlipsSection = false; }
-			continue;
-		}
-		if(section == "BLIPS") {
-			for(size_t i = 0; i < s.size(); i++) if(s[i] == ',' || s[i] == 'f' || s[i] == 'F') s[i] = ' ';
-			std::istringstream input(s); Service entry; std::string extra;
-			if(input >> entry.x >> entry.y >> entry.sprite >> entry.island && !(input >> extra)
-				&& std::isfinite(entry.x) && std::isfinite(entry.y) && fabsf(entry.x) <= 2000 && fabsf(entry.y) <= 2000
-				&& entry.sprite > 0 && entry.sprite < RADAR_SPRITE_COUNT && entry.island >= 0 && entry.island <= 2
-				&& settings.services.size() < 128) settings.services.push_back(entry);
-			continue;
-		}
-		size_t equal = s.find('='); if(equal == std::string::npos) continue;
-		std::string key = Trim(s.substr(0,equal)), value = Trim(s.substr(equal+1));
-		if(section == "GXT") {
-			int id;
-			if(sscanf(key.c_str(), "LG_%d", &id) == 1 && id >= 0 && id < 128)
-				settings.labels[id] = MenuMapMath::DecodeUTF8(value);
-		} else if(section == "MENUMAP") {
-			if(key == "RadarMapColor") ReadColor(value, settings.map);
-			else if(key == "BackgroundColor") ReadColor(value, settings.background);
-			else if(key == "CrosshairColor") ReadColor(value, settings.crosshair);
-			else if(key == "ZoneNameColor") ReadColor(value, settings.zone);
-			else if(key == "ForceBlipsOnMap") settings.forceServices = Boolean(value);
-			else if(key == "EnableLegendBox") settings.legend = Boolean(value);
-			else if(key == "ReadStringsFromThisFile") settings.customText = Boolean(value);
-		}
-	}
-	CFileMgr::CloseFile(file);
 }
 std::basic_string<wchar> Wide(const std::u16string &text) {
 	std::basic_string<wchar> result;

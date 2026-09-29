@@ -14,10 +14,10 @@ Install the compatible iii_anim hand assets in the game's `anim` directory and i
 
 ## Map
 
-Copy `gamefiles/data/MenuMapIII.ini` to the game's `data` directory. Missing configuration uses built-in defaults. The map uses the existing 64 radar TXDs in the game archives; no extra map texture pack is required. Do not enable a separate MenuMap ASI alongside the native implementation. The upstream SkyUI compatibility setting does not apply here.
+The map now always uses its built-in colors, service positions, labels, and legend defaults; `data/MenuMapIII.ini` is no longer read. The map uses the existing 64 radar TXDs in the game archives; no extra map texture pack is required. Do not enable a separate MenuMap ASI alongside the native implementation. The upstream SkyUI compatibility setting does not apply here.
 
 - Full-screen map, original re3 yellow footer with black instructions; the lower-right area name follows the cursor.
-- Chinese/English legend and hover labels, configurable service locations, progression-based island shading.
+- Chinese/English legend and hover labels, built-in service locations, progression-based island shading.
 - Open the map from the pause menu. Escape or the visible Back button returns to the pause menu; M has no map action.
 - Drag, arrows or left stick pan; wheel/PgUp/PgDn or R2/L2 zoom.
 - Double-click or R centres the player; L or L1 toggles the legend.
