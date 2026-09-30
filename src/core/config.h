@@ -346,7 +346,7 @@ enum Config {
 #define CONSOLE_BOTTOM_TEXT_PLACEMENTS // PS2 heights for zone/vehicle names, subtitles and wasted/busted
 #define VC_STYLE_SUBTITLES // Keep gameplay subtitles clear of radar; center cutscene subtitles
 #define HUD_ENHANCEMENTS	// Adjusts some aspects to make the HUD look/behave a little bit better.
-// #define BETA_SLIDING_TEXT
+#define BETA_SLIDING_TEXT
 #define TRIANGULAR_BLIPS	// height indicating triangular radar blips, as in VC
 #define FIX_RADAR			// use radar size from early version before R* broke it
 // #define XBOX_SUBTITLES	// the infamous outlines
