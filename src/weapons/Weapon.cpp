@@ -1256,6 +1256,18 @@ CWeapon::FireShotgun(CEntity *shooter, CVector *fireSource)
 		if ( shooter == FindPlayerPed() && TheCamera.Cams[0].Using3rdPersonMouseCam() )
 		{
 			CVector Left;
+			CPlayerPed *player = (CPlayerPed *)shooter;
+			if (CClassicAxis::Active(player) && !CClassicAxis::Aiming(player)) {
+				// Hip fire follows current camera yaw, never cached aim or pitch.
+				source = *fireSource;
+				CVector forward = TheCamera.Cams[TheCamera.ActiveCam].Front;
+				forward.z = 0.0f;
+				if (forward.MagnitudeSqr() < 0.0001f)
+					forward = CVector(-Sin(player->m_fRotationCur), Cos(player->m_fRotationCur), 0.0f);
+				forward.Normalise();
+				target = source + forward;
+				Left = CrossProduct(forward, CVector(0.0f, 0.0f, 1.0f));
+			} else
 #ifdef FREE_CAM
 			if (CCamera::bFreeCam) {
 				CPlayerPed* shooterPed = (CPlayerPed*)shooter;
