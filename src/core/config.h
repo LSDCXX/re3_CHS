@@ -264,7 +264,9 @@ enum Config {
 #	define TIMEBARS		// print debug timers
 #endif
 
+#ifndef RE3_DISABLE_FIX_BUGS
 #define FIX_BUGS		// fixes bugs that we've came across during reversing. You can undefine this only on release builds.
+#endif
 #define MORE_LANGUAGES		// Add more translations to the game
 #define CHINESE
 #define COMPATIBLE_SAVES // this allows changing structs while keeping saves compatible, and keeps saves compatible between platforms, needs to be enabled on 64bit builds!
@@ -350,7 +352,9 @@ enum Config {
 #define TRIANGULAR_BLIPS	// height indicating triangular radar blips, as in VC
 #define FIX_RADAR			// use radar size from early version before R* broke it
 // #define XBOX_SUBTITLES	// the infamous outlines
+#ifdef FIX_BUGS
 #define RADIO_OFF_TEXT
+#endif
 #define PC_MENU
 
 #ifndef PC_MENU
@@ -433,7 +437,9 @@ enum Config {
 #define EXTERNAL_3D_SOUND // use external engine to simulate 3d audio spatialization. OpenAL would not work without it (because it works in a 3d space
                           // originally and making it work in 2d only requires more resource). Will not work on PS2
 #define AUDIO_REFLECTIONS // Enable audio reflections. Disabled on mobile, didn't exist yet on PS2.
+#ifdef FIX_BUGS
 #define RADIO_SCROLL_TO_PREV_STATION
+#endif
 #define AUDIO_CACHE
 #define PS2_AUDIO_CHANNELS // increases the maximum number of audio channels to PS2 value of 44 (PC has 28 originally)
 #define PS2_AUDIO_PATHS // changes audio paths for cutscenes and radio to PS2 paths (needs vbdec on MSS builds)

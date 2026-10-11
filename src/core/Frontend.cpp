@@ -4000,6 +4000,7 @@ CMenuManager::PickNewPlayerColour()
 	}
 }
 
+#ifdef FIX_BUGS
 void
 CMenuManager::PrintBriefs()
 {
@@ -4046,6 +4047,51 @@ CMenuManager::PrintBriefs()
 	CFont::SetDropShadowPosition(0);
 #endif
 }
+#else
+void
+CMenuManager::PrintBriefs()
+{
+	CFont::SetColor(CRGBA(LABEL_COLOR.r, LABEL_COLOR.g, LABEL_COLOR.b, FadeIn(255)));
+	CFont::SetFontStyle(FONT_LOCALE(FONT_BANK));
+	CFont::SetRightJustifyOff();
+	CFont::SetScale(MENU_X(MENU_TEXT_SIZE_X * 0.7), MENU_Y(MENU_TEXT_SIZE_Y * 0.9)); // second mulipliers are double, idk why
+
+	float nextY = BRIEFS_TOP_MARGIN;
+	CRGBA newColor;
+	for(int i = 4; i >= 0; i--) {
+		tPreviousBrief &brief = CMessages::PreviousBriefs[i];
+		if(brief.m_pText) {
+			CMessages::InsertNumberInString(brief.m_pText, brief.m_nNumber[0], brief.m_nNumber[1], brief.m_nNumber[2], brief.m_nNumber[3],
+			                                brief.m_nNumber[4], brief.m_nNumber[5], gUString);
+			CMessages::InsertStringInString(gUString, brief.m_pString);
+			CMessages::InsertPlayerControlKeysInString(gUString);
+			newColor = TEXT_COLOR;
+			FilterOutColorMarkersFromString(gUString, newColor);
+			if(newColor != TEXT_COLOR) {
+				newColor.r /= 2;
+				newColor.g /= 2;
+				newColor.b /= 2;
+			}
+
+#ifdef PS2_LIKE_MENU
+			CFont::SetDropColor(CRGBA(0, 0, 0, FadeIn(255)));
+			CFont::SetDropShadowPosition(1);
+#endif
+
+#if defined(FIX_BUGS) || defined(PS2_LIKE_MENU)
+			newColor.a = FadeIn(255);
+			CFont::SetColor(newColor);
+#endif
+			CFont::PrintString(MENU_X_LEFT_ALIGNED(BRIEFS_LINE_X), nextY, gUString);
+			nextY += MENU_Y(BRIEFS_LINE_HEIGHT);
+		}
+	}
+
+#ifdef PS2_LIKE_MENU
+	CFont::SetDropShadowPosition(0);
+#endif
+}
+#endif
 
 // Not sure about name. Not to be confused with CPad::PrintErrorMessage
 void

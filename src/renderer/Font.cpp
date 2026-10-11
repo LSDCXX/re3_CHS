@@ -1092,9 +1092,11 @@ CFont::GetTextRect(CRect *rect, float xstart, float ystart, wchar *s)
 #ifdef FIX_BUGS
 	const float paddingX = SCREEN_SCALE_X(4.0f);
 	const float paddingY = SCREEN_SCALE_Y(2.0f);
+	const float japanesePaddingY = SCREEN_SCALE_Y(4.0f / 2.75f);
 #else
 	const float paddingX = 4.0f;
 	const float paddingY = 2.0f;
+	const float japanesePaddingY = 4.0f / 2.75f;
 #endif
 
 	maxlength = 0;
@@ -1162,8 +1164,8 @@ CFont::GetTextRect(CRect *rect, float xstart, float ystart, wchar *s)
 			rect->right = xstart + maxlength/2 + paddingX;
 #ifdef MORE_LANGUAGES
 			if (IsJapaneseFont()) {
-				rect->bottom = (32.0f * CFont::Details.scaleY / 2.75f + 2.0f * CFont::Details.scaleY) * numLines + ystart + SCREEN_SCALE_Y(4.0f / 2.75f);
-				rect->top = ystart - SCREEN_SCALE_Y(4.0f / 2.75f);
+				rect->bottom = (32.0f * CFont::Details.scaleY / 2.75f + 2.0f * CFont::Details.scaleY) * numLines + ystart + japanesePaddingY;
+				rect->top = ystart - japanesePaddingY;
 			} else {
 #endif
 				rect->bottom = (32.0f * CFont::Details.scaleY * 0.5f + 2.0f * CFont::Details.scaleY) * numLines + ystart + paddingY;
@@ -1176,8 +1178,8 @@ CFont::GetTextRect(CRect *rect, float xstart, float ystart, wchar *s)
 			rect->right = xstart + Details.centreSize*0.5f + paddingX;
 #ifdef MORE_LANGUAGES
 			if (IsJapaneseFont()) {
-				rect->bottom = (32.0f * CFont::Details.scaleY / 2.75f + 2.0f * CFont::Details.scaleY) * numLines + ystart + SCREEN_SCALE_Y(4.0f / 2.75f);
-				rect->top = ystart - SCREEN_SCALE_Y(4.0f / 2.75f);
+				rect->bottom = (32.0f * CFont::Details.scaleY / 2.75f + 2.0f * CFont::Details.scaleY) * numLines + ystart + japanesePaddingY;
+				rect->top = ystart - japanesePaddingY;
 			} else {
 #endif
 				rect->bottom = (32.0f * CFont::Details.scaleY * 0.5f + 2.0f * CFont::Details.scaleY) * numLines + ystart + paddingY;
@@ -1192,7 +1194,7 @@ CFont::GetTextRect(CRect *rect, float xstart, float ystart, wchar *s)
 		rect->bottom = ystart;
 #ifdef MORE_LANGUAGES
 		if (IsJapaneseFont())
-			rect->top = (32.0f * CFont::Details.scaleY / 2.75f + 2.0f * CFont::Details.scaleY) * numLines + ystart + paddingY + SCREEN_SCALE_Y(4.0f / 2.75f);
+			rect->top = (32.0f * CFont::Details.scaleY / 2.75f + 2.0f * CFont::Details.scaleY) * numLines + ystart + paddingY + japanesePaddingY;
 		else
 #endif
 			rect->top = (32.0f * CFont::Details.scaleY * 0.5f + 2.0f * CFont::Details.scaleY) * numLines + ystart + paddingY * 2.0f;

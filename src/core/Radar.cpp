@@ -1114,20 +1114,20 @@ CRadar::LoadTextures()
 #ifdef MENU_MAP
 	// The menu map and radar use the same image, embedded in the executable.
 	WaypointSprite.Delete();
-	unsigned char *rgba = nil;
-	unsigned width = 0, height = 0;
+	uint8 *rgba = nil;
+	uint32 width = 0, height = 0;
 	if(lodepng_decode32(&rgba, &width, &height, gRadarWaypointPng, sizeof(gRadarWaypointPng)) == 0 &&
 	   width == 64 && height == 64){
 		RwRaster *raster = RwRasterCreate(width, height, 32, rwRASTERTYPETEXTURE | rwRASTERFORMAT8888);
 		if(raster){
 			RwUInt32 *pixels = (RwUInt32 *)RwRasterLock(raster, 0, rwRASTERLOCKWRITE);
 			if(pixels){
-				for(unsigned i = 0; i < width * height; i++){
-					const unsigned char *c = rgba + i * 4;
+				for(uint32 i = 0; i < width * height; i++) {
+					const uint8 *c = rgba + i * 4;
 #ifdef RW_GL3
-					pixels[i] = c[0] | (c[1] << 8) | (c[2] << 16) | (c[3] << 24);
+					pixels[i] = c[0] | ((uint32)c[1] << 8) | ((uint32)c[2] << 16) | ((uint32)c[3] << 24);
 #else
-					pixels[i] = c[2] | (c[1] << 8) | (c[0] << 16) | (c[3] << 24);
+					pixels[i] = c[2] | ((uint32)c[1] << 8) | ((uint32)c[0] << 16) | ((uint32)c[3] << 24);
 #endif
 				}
 				RwRasterUnlock(raster);
