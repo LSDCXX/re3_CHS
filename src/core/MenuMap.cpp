@@ -145,7 +145,7 @@ bool NearService(const CVector &position, int sprite) {
 void Icon(int sprite, Point p, CRGBA color, float size) {
 	if(sprite > 0 && sprite < RADAR_SPRITE_COUNT && CRadar::RadarSprites[sprite] && CRadar::RadarSprites[sprite]->m_pTexture) {
 		if(sprite == RADAR_SPRITE_WAYPOINT)
-			RwRenderStateSet(rwRENDERSTATETEXTUREFILTER,(void*)rwFILTERNEAREST);
+			RwRenderStateSet(rwRENDERSTATETEXTUREFILTER,(void*)rwFILTERLINEAR);
 		TextureRect(CRadar::RadarSprites[sprite]->m_pTexture,CRect(p.x-size,p.y-size,p.x+size,p.y+size),color);
 		if(sprite == RADAR_SPRITE_WAYPOINT)
 			RwRenderStateSet(rwRENDERSTATETEXTUREFILTER,(void*)rwFILTERLINEAR);

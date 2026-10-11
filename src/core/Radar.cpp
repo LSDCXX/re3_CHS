@@ -15,6 +15,9 @@
 #include "Pools.h"
 #include "Script.h"
 #include "TxdStore.h"
+#include "RadarWaypointPng.h"
+#include "../../vendor/librw/src/lodepng/lodepng.h"
+#include <stdlib.h>
 #include "World.h"
 #include "SaveBuf.h"
 #include "Streaming.h"
@@ -927,7 +930,7 @@ void CRadar::DrawRadarSprite(uint16 sprite, float x, float y, uint8 alpha)
 	if(sprite == RADAR_SPRITE_WAYPOINT) alpha = 255;
 #endif
 	if(sprite == RADAR_SPRITE_WAYPOINT)
-		RwRenderStateSet(rwRENDERSTATETEXTUREFILTER, (void*)rwFILTERNEAREST);
+		RwRenderStateSet(rwRENDERSTATETEXTUREFILTER, (void*)rwFILTERLINEAR);
 	float halfWidth = sprite == RADAR_SPRITE_WAYPOINT ? SCREEN_SCALE_Y(8.0f) : SCREEN_SCALE_X(8.0f);
 	RadarSprites[sprite]->Draw(CRect(x - halfWidth, y - SCREEN_SCALE_Y(8.0f), x + halfWidth, y + SCREEN_SCALE_Y(8.0f)), CRGBA(255, 255, 255, alpha));
 	if(sprite == RADAR_SPRITE_WAYPOINT)
@@ -1109,36 +1112,35 @@ CRadar::LoadTextures()
 	TonySprite.SetTexture("radar_tony");
 	WeaponSprite.SetTexture("radar_weapon");
 #ifdef MENU_MAP
-	// Use the same crisp three-ring waypoint on both the radar and menu map.
+	// The menu map and radar use the same image, embedded in the executable.
 	WaypointSprite.Delete();
-#define WAYPOINT_R (255)
-#define WAYPOINT_G (72)
-#define WAYPOINT_B (77)
-
-		RwRaster *raster = RwRasterCreate(16, 16, 0, rwRASTERTYPETEXTURE | rwRASTERFORMAT8888);
-
-		RwUInt32 *pixels = (RwUInt32 *)RwRasterLock(raster, 0, rwRASTERLOCKWRITE);
-		for(int x = 0; x < 16; x++)
-			for(int y = 0; y < 16; y++)
-			{
-				int edge = Min(Min(x, 15 - x), Min(y, 15 - y));
-				if(edge == 2)
+	unsigned char *rgba = nil;
+	unsigned width = 0, height = 0;
+	if(lodepng_decode32(&rgba, &width, &height, gRadarWaypointPng, sizeof(gRadarWaypointPng)) == 0 &&
+	   width == 64 && height == 64){
+		RwRaster *raster = RwRasterCreate(width, height, 32, rwRASTERTYPETEXTURE | rwRASTERFORMAT8888);
+		if(raster){
+			RwUInt32 *pixels = (RwUInt32 *)RwRasterLock(raster, 0, rwRASTERLOCKWRITE);
+			if(pixels){
+				for(unsigned i = 0; i < width * height; i++){
+					const unsigned char *c = rgba + i * 4;
 #ifdef RW_GL3
-					pixels[x + y * 16] = WAYPOINT_R | (WAYPOINT_G << 8) | (WAYPOINT_B << 16) | (255 << 24);
+					pixels[i] = c[0] | (c[1] << 8) | (c[2] << 16) | (c[3] << 24);
 #else
-					pixels[x + y * 16] = WAYPOINT_B | (WAYPOINT_G << 8) | (WAYPOINT_R << 16) | (255 << 24);
+					pixels[i] = c[2] | (c[1] << 8) | (c[0] << 16) | (c[3] << 24);
 #endif
-				else if(edge == 1 || edge == 3)
-					pixels[x + y * 16] = 0xFF000000; // equal-width black borders
+				}
+				RwRasterUnlock(raster);
+				WaypointSprite.m_pTexture = RwTextureCreate(raster);
+				if(WaypointSprite.m_pTexture)
+					RwTextureSetFilterMode(WaypointSprite.m_pTexture, rwFILTERLINEAR);
 				else
-					pixels[x + y * 16] = 0; // transparent outermost pixels and center
-			}
-		RwRasterUnlock(raster);
-		WaypointSprite.m_pTexture = RwTextureCreate(raster);
-		RwTextureSetFilterMode(WaypointSprite.m_pTexture, rwFILTERNEAREST);
-#undef WAYPOINT_R
-#undef WAYPOINT_G
-#undef WAYPOINT_B
+					RwRasterDestroy(raster);
+			}else
+				RwRasterDestroy(raster);
+		}
+	}
+	free(rgba);
 #endif
 	CTxdStore::PopCurrentTxd();
 }
