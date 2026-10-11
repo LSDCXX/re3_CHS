@@ -1489,8 +1489,6 @@ float fFalloff = 3.0f;
 float fStickSens = 0.01f;
 float fTweakFOV = 1.05f;
 float fTranslateCamUp = 0.8f;
-int16 nFadeControlThreshhold = 45;
-float fDefaultAlphaOrient = -0.22f;
 
 void
 CCam::Process_FollowPedWithMouse(const CVector &CameraTarget, float TargetOrientation, float, float)
@@ -1535,20 +1533,6 @@ CCam::Process_FollowPedWithMouse(const CVector &CameraTarget, float TargetOrient
 	}else{
 		BetaOffset = LookLeftRight * fStickSens * (1.0f/14.0f) * FOV/80.0f * CTimer::GetTimeStep();
 		AlphaOffset = LookUpDown * fStickSens * (0.6f/14.0f) * FOV/80.0f * CTimer::GetTimeStep();
-	}
-
-	if(TheCamera.GetFading() && TheCamera.GetFadingDirection() == FADE_IN && nFadeControlThreshhold < CDraw::FadeValue ||
-	   CDraw::FadeValue > 200){
-		if(Alpha < fDefaultAlphaOrient-0.05f)
-			AlphaOffset = 0.05f;
-		else if(Alpha < fDefaultAlphaOrient)
-			AlphaOffset = fDefaultAlphaOrient - Alpha;
-		else if(Alpha > fDefaultAlphaOrient+0.05f)
-			AlphaOffset = -0.05f;
-		else if(Alpha > fDefaultAlphaOrient)
-			AlphaOffset = fDefaultAlphaOrient - Alpha;
-		else
-			AlphaOffset = 0.0f;
 	}
 
 	Alpha += AlphaOffset;
