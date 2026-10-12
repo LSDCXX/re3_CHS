@@ -1514,12 +1514,7 @@ void CHud::DrawAfterFade()
 			wchar helpWithCurrentKeys[HELP_MSG_LENGTH];
 			CMessages::WideStringCopy(helpWithCurrentKeys, m_HelpMessageToPrint, HELP_MSG_LENGTH);
 			CMessages::InsertPlayerControlKeysInString(helpWithCurrentKeys);
-#ifdef FIX_BUGS
-			CFont::PrintHelpString(SCREEN_SCALE_X(26.0f), SCREEN_SCALE_Y(28.0f) + SCREEN_SCALE_Y_FIX((150.0f - PagerXOffset) * 0.6f),
-			                       helpWithCurrentKeys);
-#else
 			CFont::PrintString(SCREEN_SCALE_X(26.0f), SCREEN_SCALE_Y(28.0f) + SCREEN_SCALE_Y_FIX((150.0f - PagerXOffset) * 0.6f), helpWithCurrentKeys);
-#endif
 			CFont::SetAlphaFade(255.0f);
 		}
 	}

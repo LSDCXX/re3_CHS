@@ -15,9 +15,6 @@ public:
 	static void SetRecipNearClip(void);
 	static void InitPerFrame(void);
 	static int32 GetBank(int32 n, RwTexture *tex);
-#ifdef FIX_BUGS
-	static RwTexture *GetBankTexture(int32 bank) { return bank >= 0 && bank < (int32)ARRAY_SIZE(mpBankTextures) ? mpBankTextures[bank] : nil; }
-#endif
 	static void AddSpriteToBank(int32 bank, const CRect &rect, const CRGBA &col,
 		float u0, float v0, float u1, float v1, float u3, float v3, float u2, float v2);
 	static void DrawBank(int32 bank);
