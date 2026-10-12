@@ -2197,16 +2197,40 @@ void SystemInit()
 		CMenuManager::m_PrefsLanguage = LANGUAGE_SPANISH;
 	else if ( lang  == SCE_GERMAN_LANGUAGE )
 	{
+#ifndef FIX_BUGS
 		CGame::germanGame = true;
+#else
+		CGame::germanGame = false;
+#endif
+#ifndef FIX_BUGS
 		CGame::nastyGame = false;
+#else
+		CGame::nastyGame = true;
+#endif
+#ifndef FIX_BUGS
 		CMenuManager::m_PrefsAllowNastyGame = false;
+#else
+		CMenuManager::m_PrefsAllowNastyGame = true;
+#endif
 		CMenuManager::m_PrefsLanguage = LANGUAGE_GERMAN;
 	}
 	else if ( lang  == SCE_FRENCH_LANGUAGE )
 	{
+#ifndef FIX_BUGS
 		CGame::frenchGame = true;
+#else
+		CGame::frenchGame = false;
+#endif
+#ifndef FIX_BUGS
 		CGame::nastyGame = false;
+#else
+		CGame::nastyGame = true;
+#endif
+#ifndef FIX_BUGS
 		CMenuManager::m_PrefsAllowNastyGame = false;
+#else
+		CMenuManager::m_PrefsAllowNastyGame = true;
+#endif
 		CMenuManager::m_PrefsLanguage = LANGUAGE_FRENCH;
 	}
 	else

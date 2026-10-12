@@ -1,6 +1,7 @@
 #define FORCE_PC_SCALING
 #define WITHWINDOWS
 #define WITHDINPUT
+#include "Localization.h"
 #include "common.h"
 #ifndef PS2_MENU
 #include "crossplatform.h"
@@ -3573,10 +3574,18 @@ CMenuManager::InitialiseChangedLanguageSettings()
 
 		switch (m_PrefsLanguage) {
 		case LANGUAGE_FRENCH:
+#ifndef FIX_BUGS
 			CGame::frenchGame = true;
+#else
+			CGame::frenchGame = false;
+#endif
 			break;
 		case LANGUAGE_GERMAN:
+#ifndef FIX_BUGS
 			CGame::germanGame = true;
+#else
+			CGame::germanGame = false;
+#endif
 			break;
 #ifdef MORE_LANGUAGES
 		case LANGUAGE_RUSSIAN:
@@ -6626,15 +6635,19 @@ CMenuManager::ConstructStatLine(int rowIdx)
 		STAT_LINE_1(int, "FEST_H4", CStats::HighestScores[4]);
 	}
 
+#ifdef FIX_BUGS
+	switch(Localization::UsesMetricUnits() ? LANGUAGE_FRENCH : LANGUAGE_AMERICAN) {
+#else
 	switch (m_PrefsLanguage) {
-		case LANGUAGE_AMERICAN:
-#ifndef USE_MEASUREMENTS_IN_METERS
-			STAT_LINE_1(float, "FEST_DF", CStats::DistanceTravelledOnFoot * MILES_IN_METER);
-			STAT_LINE_1(float, "FEST_DC", CStats::DistanceTravelledInVehicle * MILES_IN_METER);
-			STAT_LINE_1(int, "MMRAIN", CStats::mmRain);
-			STAT_LINE_1(float, "MXCARD", CStats::MaximumJumpDistance * FEET_IN_METER);
-			STAT_LINE_1(float, "MXCARJ", CStats::MaximumJumpHeight * FEET_IN_METER);
-			break;
+#endif
+	case LANGUAGE_AMERICAN:
+#if defined(FIX_BUGS) || !defined(USE_MEASUREMENTS_IN_METERS)
+		STAT_LINE_1(float, "FEST_DF", CStats::DistanceTravelledOnFoot *MILES_IN_METER);
+		STAT_LINE_1(float, "FEST_DC", CStats::DistanceTravelledInVehicle *MILES_IN_METER);
+		STAT_LINE_1(int, "MMRAIN", CStats::mmRain);
+		STAT_LINE_1(float, "MXCARD", CStats::MaximumJumpDistance *FEET_IN_METER);
+		STAT_LINE_1(float, "MXCARJ", CStats::MaximumJumpHeight *FEET_IN_METER);
+		break;
 #endif
 		case LANGUAGE_FRENCH:
 		case LANGUAGE_GERMAN:

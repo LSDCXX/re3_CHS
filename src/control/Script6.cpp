@@ -1,3 +1,4 @@
+#include "Localization.h"
 #include "common.h"
 
 #include "Script.h"
@@ -427,7 +428,9 @@ int8 CRunningScript::ProcessCommands1000To1099(int32 command)
 		return 0;
 	}
 	case COMMAND_ARE_MEASUREMENTS_IN_METRES:
-#ifdef USE_MEASUREMENTS_IN_METERS
+#ifdef FIX_BUGS
+		UpdateCompareFlag(Localization::UsesMetricUnits());
+#elif defined(USE_MEASUREMENTS_IN_METERS)
 		UpdateCompareFlag(true);
 #else
 		UpdateCompareFlag(false);

@@ -432,16 +432,40 @@ psInitialize(void)
 		CMenuManager::m_PrefsLanguage = CMenuManager::LANGUAGE_SPANISH;
 	else if ( lang  == LANG_GERMAN )
 	{
+#ifndef FIX_BUGS
 		CGame::germanGame = true;
+#else
+		CGame::germanGame = false;
+#endif
+#ifndef FIX_BUGS
 		CGame::nastyGame = false;
+#else
+		CGame::nastyGame = true;
+#endif
+#ifndef FIX_BUGS
 		CMenuManager::m_PrefsAllowNastyGame = false;
+#else
+		CMenuManager::m_PrefsAllowNastyGame = true;
+#endif
 		CMenuManager::m_PrefsLanguage = CMenuManager::LANGUAGE_GERMAN;
 	}
 	else if ( lang  == LANG_FRENCH )
 	{
+#ifndef FIX_BUGS
 		CGame::frenchGame = true;
+#else
+		CGame::frenchGame = false;
+#endif
+#ifndef FIX_BUGS
 		CGame::nastyGame = false;
+#else
+		CGame::nastyGame = true;
+#endif
+#ifndef FIX_BUGS
 		CMenuManager::m_PrefsAllowNastyGame = false;
+#else
+		CMenuManager::m_PrefsAllowNastyGame = true;
+#endif
 		CMenuManager::m_PrefsLanguage = CMenuManager::LANGUAGE_FRENCH;
 	}
 	else
@@ -1199,26 +1223,54 @@ void InitialiseLanguage()
 		|| primSystemLCID == LANG_GERMAN
 		|| primLayout	  == LANG_GERMAN )
 	{
+#ifndef FIX_BUGS
 		CGame::nastyGame = false;
+#else
+		CGame::nastyGame = true;
+#endif
+#ifndef FIX_BUGS
 		CMenuManager::m_PrefsAllowNastyGame = false;
+#else
+		CMenuManager::m_PrefsAllowNastyGame = true;
+#endif
+#ifndef FIX_BUGS
 		CGame::germanGame = true;
+#else
+		CGame::germanGame = false;
+#endif
 	}
 	
 	if (   primUserLCID	  == LANG_FRENCH
 		|| primSystemLCID == LANG_FRENCH
 		|| primLayout	  == LANG_FRENCH )
 	{
+#ifndef FIX_BUGS
 		CGame::nastyGame = false;
+#else
+		CGame::nastyGame = true;
+#endif
+#ifndef FIX_BUGS
 		CMenuManager::m_PrefsAllowNastyGame = false;
+#else
+		CMenuManager::m_PrefsAllowNastyGame = true;
+#endif
+#ifndef FIX_BUGS
 		CGame::frenchGame = true;
+#else
+		CGame::frenchGame = false;
+#endif
 	}
 	
 	if (   subUserLCID	 == SUBLANG_ENGLISH_AUS
 		|| subSystemLCID == SUBLANG_ENGLISH_AUS
 		|| subLayout	 == SUBLANG_ENGLISH_AUS )
+#ifndef FIX_BUGS
 		CGame::noProstitutes = true;
+#else
+		CGame::noProstitutes = false;
+#endif
 
-#ifdef NASTY_GAME
+#if defined(NASTY_GAME) || defined(FIX_BUGS)
 	CGame::nastyGame = true;
 	CMenuManager::m_PrefsAllowNastyGame = true;
 	CGame::noProstitutes = false;

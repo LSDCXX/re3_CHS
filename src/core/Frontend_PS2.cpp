@@ -906,11 +906,19 @@ CMenuManager::InitialiseChangedLanguageSettings(void)
 
 			case LANGUAGE_FRENCH:
 			{
-				CGame::frenchGame = true;
-				if ( m_PrefsAllowNastyGame )
-					CGame::nastyGame = false;
+#ifndef FIX_BUGS
+			        CGame::frenchGame = true;
+#else
+			        CGame::frenchGame = false;
+#endif
+			        if ( m_PrefsAllowNastyGame )
+#ifndef FIX_BUGS
+				        CGame::nastyGame = false;
+#else
+				        CGame::nastyGame = true;
+#endif
 
-				MENU_TEXT_SIZE_X = 0.504f;
+			        MENU_TEXT_SIZE_X = 0.504f;
 				MENU_TEXT_SIZE_Y = 0.84f;//0.96f;
 
 				BUTTONTAB_TEXT_SIZE_X = 0.32f;
@@ -943,11 +951,19 @@ CMenuManager::InitialiseChangedLanguageSettings(void)
 
 			case LANGUAGE_GERMAN:
 			{
-				CGame::germanGame = true;
-				if ( m_PrefsAllowNastyGame )
-					CGame::nastyGame = false;
+#ifndef FIX_BUGS
+			        CGame::germanGame = true;
+#else
+			        CGame::germanGame = false;
+#endif
+			        if ( m_PrefsAllowNastyGame )
+#ifndef FIX_BUGS
+				        CGame::nastyGame = false;
+#else
+				        CGame::nastyGame = true;
+#endif
 
-				MENU_TEXT_SIZE_X = 0.546f;
+			        MENU_TEXT_SIZE_X = 0.546f;
 				MENU_TEXT_SIZE_Y = 0.84f;//0.96f;
 
 				BUTTONTAB_TEXT_SIZE_X = 0.32f;

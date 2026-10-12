@@ -477,6 +477,15 @@ public:
 	// not static yet
 	float m_fMouseAccelHorzntl;// acceleration multiplier for 1st person controls
 	float m_fMouseAccelVertical;// acceleration multiplier for 1st person controls
+
+	float GetMouseYAcceleration(void) const
+	{
+#ifdef FIX_BUGS
+		return m_fMouseAccelHorzntl;
+#else
+		return m_fMouseAccelVertical;
+#endif
+	}
 	float m_f3rdPersonCHairMultX;
 	float m_f3rdPersonCHairMultY;
 

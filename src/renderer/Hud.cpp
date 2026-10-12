@@ -23,6 +23,30 @@
 #include "User.h"
 #include "World.h"
 
+static void
+DrawScriptSprite(CSprite2d &sprite, const CRect &rect, const CRGBA &color)
+{
+#ifdef FIX_BUGS
+	uint32 oldFilter = rwFILTERLINEAR;
+	RwRenderStateGet(rwRENDERSTATETEXTUREFILTER, &oldFilter);
+	RwRenderStateSet(rwRENDERSTATETEXTUREFILTER, (void *)rwFILTERLINEAR);
+#endif
+	sprite.Draw(rect, color);
+#ifdef FIX_BUGS
+	RwRenderStateSet(rwRENDERSTATETEXTUREFILTER, (void *)(uintptr)oldFilter);
+#endif
+}
+
+static CRect
+ScaleScriptRectangle(const CRect &rect)
+{
+#ifdef FIX_BUGS
+	return CRect(SCALE_AND_CENTER_X(rect.left), SCREEN_SCALE_Y(rect.bottom), SCALE_AND_CENTER_X(rect.right), SCREEN_SCALE_Y(rect.top));
+#else
+	return CRect(rect.left, rect.bottom, rect.right, rect.top);
+#endif
+}
+
 #ifdef PS2_HUD
 #define MONEY_X 100.0f
 #define WEAPON_X 91.0f
@@ -1200,20 +1224,11 @@ void CHud::Draw()
 			// Yeah, top and bottom changed place. R* vision
 			if (IntroRect.m_bIsUsed && IntroRect.m_bBeforeFade) {
 				if (IntroRect.m_nTextureId >= 0) {
-					CRect rect (
-						IntroRect.m_sRect.left,
-						IntroRect.m_sRect.bottom,
-						IntroRect.m_sRect.right,
-						IntroRect.m_sRect.top );
-
-					CTheScripts::ScriptSprites[IntroRect.m_nTextureId].Draw(rect, IntroRect.m_sColor);
+					CRect rect = ScaleScriptRectangle(IntroRect.m_sRect);
+					DrawScriptSprite(CTheScripts::ScriptSprites[IntroRect.m_nTextureId], rect, IntroRect.m_sColor);
 				}
 				else {
-					CRect rect (
-						IntroRect.m_sRect.left,
-						IntroRect.m_sRect.bottom,
-						IntroRect.m_sRect.right,
-						IntroRect.m_sRect.top );
+					CRect rect = ScaleScriptRectangle(IntroRect.m_sRect);
 
 					CSprite2d::DrawRect(rect, IntroRect.m_sColor);
 				}
@@ -1562,11 +1577,10 @@ void CHud::DrawAfterFade()
 
 			// Yeah, top and bottom changed place. R* vision
 			if (rectangle.m_nTextureId >= 0) {
-				CTheScripts::ScriptSprites[rectangle.m_nTextureId].Draw(CRect(rectangle.m_sRect.left, rectangle.m_sRect.bottom,
-					rectangle.m_sRect.right, rectangle.m_sRect.top), rectangle.m_sColor);
+				DrawScriptSprite(CTheScripts::ScriptSprites[rectangle.m_nTextureId], ScaleScriptRectangle(rectangle.m_sRect),
+				                 rectangle.m_sColor);
 			} else {
-				CSprite2d::DrawRect(CRect(rectangle.m_sRect.left, rectangle.m_sRect.bottom,
-					rectangle.m_sRect.right, rectangle.m_sRect.top), rectangle.m_sColor);
+				CSprite2d::DrawRect(ScaleScriptRectangle(rectangle.m_sRect), rectangle.m_sColor);
 			}
 		}
 	}
