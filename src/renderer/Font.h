@@ -129,6 +129,9 @@ public:
 	static void InitPerFrame(void);
 	static void PrintChar(float x, float y, wchar c);
 	static void PrintString(float x, float y, wchar *s);
+#ifdef FIX_BUGS
+	static void PrintHelpString(float x, float y, wchar *s);
+#endif
 	static void PrintStringFromBottom(float x, float y, wchar *str);
 #ifdef XBOX_SUBTITLES
 	static void PrintOutlinedString(float x, float y, wchar *str, float outlineStrength, bool fromBottom, CRGBA outlineColor);

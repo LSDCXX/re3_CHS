@@ -1,10 +1,11 @@
 #include "common.h"
 
-#include "Sprite2d.h"
-#include "TxdStore.h"
 #include "Font.h"
-#include "Timer.h"
+#include "FontHelpBounds.h"
 #include "Frontend.h"
+#include "Sprite2d.h"
+#include "Timer.h"
+#include "TxdStore.h"
 #ifdef BUTTON_ICONS
 #include "FileMgr.h"
 #endif
@@ -60,6 +61,12 @@ RenderChsBatchItems(const std::vector<ChsBatchItem> &items)
 			const ChsBatchItem &item = items[i];
 			if(item.sprite != sprite)
 				continue;
+#ifdef FIX_BUGS
+			if(gHelpTextBounds.active) {
+				gHelpTextBounds.Capture(RwTextureGetRaster(sprite->m_pTexture), item.rect, item.u0, item.v0, item.u1, item.v1, item.shear);
+				continue;
+			}
+#endif
 			CSprite2d::SetVertices(&gChsBatchVertices[numVertices], item.rect,
 				item.color, item.color, item.color, item.color,
 				item.u0, item.v0, item.u1, item.v0,
@@ -125,10 +132,10 @@ DecodeChineseCodepoint(const wchar *text, int &units)
 static const CharPos &
 GetCharPos(uint32 chr, bool slant)
 {
-	#ifdef _WIN32
+#ifdef _WIN32
 	if (CHSFont::Inited())
 		return CHSFont::GetSlot(chr, slant);
-	#endif
+#endif
 	if (chr >= 0x10000)
 		return sFallbackCharPos;
 	return sTable[chr];
@@ -461,11 +468,14 @@ int CFont::ButtonsSlot = -1;
 void
 CFont::Initialise(void)
 {
-	#ifdef CHINESE
-	#ifdef _WIN32
+#ifdef FIX_BUGS
+	gHelpTextBounds.Reset();
+#endif
+#ifdef CHINESE
+#ifdef _WIN32
 	CHSFont::EnsureConfig();
-	#endif
-	#endif
+#endif
+#endif
 	int slot;
 
 	slot = CTxdStore::AddTxdSlot("fonts");
@@ -543,6 +553,9 @@ CFont::Initialise(void)
 void
 CFont::LoadButtons(const char* txdPath)
 {
+#ifdef FIX_BUGS
+	gHelpTextBounds.Reset();
+#endif
 	if (int file = CFileMgr::OpenFile(txdPath)) {
 		CFileMgr::CloseFile(file);
 		if (ButtonsSlot == -1)
@@ -583,6 +596,9 @@ CFont::LoadButtons(const char* txdPath)
 void
 CFont::ReloadFonts(uint8 set)
 {
+#ifdef FIX_BUGS
+	gHelpTextBounds.Reset();
+#endif
 	if (Slot != -1 && LanguageSet != set) {
 		Sprite[0].Delete();
 		Sprite[1].Delete();
@@ -625,6 +641,9 @@ CFont::ReloadFonts(uint8 set)
 void
 CFont::Shutdown(void)
 {
+#ifdef FIX_BUGS
+	gHelpTextBounds.Reset();
+#endif
 #ifdef BUTTON_ICONS
 	if (ButtonsSlot != -1) {
 		for (int i = 0; i < MAX_BUTTON_ICONS; i++)
@@ -685,6 +704,12 @@ CFont::DrawButton(float x, float y)
 		rect.top = Details.scaleY + Details.scaleY + y;
 		rect.right = Details.scaleY * 17.0f + x;
 		rect.bottom = Details.scaleY * 19.0f + y;
+#ifdef FIX_BUGS
+		if(gHelpTextBounds.active) {
+			gHelpTextBounds.Capture(RwTextureGetRaster(ButtonSprite[PS2Symbol].m_pTexture), rect, 0.0f, 0.0f, 1.0f, 1.0f);
+			return;
+		}
+#endif
 
 		int vertexAlphaState;
 		RwRenderStateGet(rwRENDERSTATEVERTEXALPHAENABLE, &vertexAlphaState);
@@ -694,6 +719,20 @@ CFont::DrawButton(float x, float y)
 	}
 }
 #endif
+
+static void
+AddHelpFontSprite(int32 bank, const CRect &rect, const CRGBA &color, float u0, float v0, float u1, float v1, float u3, float v3, float u2, float v2)
+{
+#ifdef FIX_BUGS
+	if(gHelpTextBounds.active) {
+		RwTexture *texture = CSprite2d::GetBankTexture(bank);
+		RwRaster *raster = texture ? RwTextureGetRaster(texture) : nil;
+		gHelpTextBounds.Capture(raster, rect, u0, v0, u2, v2);
+		return;
+	}
+#endif
+	CSprite2d::AddSpriteToBank(bank, rect, color, u0, v0, u1, v1, u3, v3, u2, v2);
+}
 
 void
 CFont::PrintChar(float x, float y, wchar c)
@@ -719,95 +758,69 @@ CFont::PrintChar(float x, float y, wchar c)
 
 	if(Details.style == FONT_BANK || Details.style == FONT_HEADING){
 		if(Details.dropShadowPosition != 0){
-			CSprite2d::AddSpriteToBank(
+			AddHelpFontSprite(
 #ifdef FIX_BUGS
-				Details.bank + Details.style,
+			    Details.bank + Details.style,
 #else
-				Details.style,
+			    Details.style,
 #endif
 #ifdef FIX_BUGS
-				CRect(x + SCREEN_SCALE_X(Details.dropShadowPosition),
-				      y + SCREEN_SCALE_Y(Details.dropShadowPosition),
-				      x + SCREEN_SCALE_X(Details.dropShadowPosition) + 32.0f * Details.scaleX * 1.0f,
-				      y + SCREEN_SCALE_Y(Details.dropShadowPosition) + 40.0f * Details.scaleY * 0.5f),
+			    CRect(x + SCREEN_SCALE_X(Details.dropShadowPosition), y + SCREEN_SCALE_Y(Details.dropShadowPosition),
+			          x + SCREEN_SCALE_X(Details.dropShadowPosition) + 32.0f * Details.scaleX * 1.0f,
+			          y + SCREEN_SCALE_Y(Details.dropShadowPosition) + 40.0f * Details.scaleY * 0.5f),
 #else
-				CRect(x + Details.dropShadowPosition,
-				      y + Details.dropShadowPosition,
-				      x + Details.dropShadowPosition + 32.0f * Details.scaleX * 1.0f,
-				      y + Details.dropShadowPosition + 40.0f * Details.scaleY * 0.5f),
+			    CRect(x + Details.dropShadowPosition, y + Details.dropShadowPosition,
+			          x + Details.dropShadowPosition + 32.0f * Details.scaleX * 1.0f,
+			          y + Details.dropShadowPosition + 40.0f * Details.scaleY * 0.5f),
 #endif
-				Details.dropColor,
-				xoff/16.0f,                 yoff/12.8f,
-				(xoff+1.0f)/16.0f - 0.001f, yoff/12.8f,
-				xoff/16.0f,                 (yoff+1.0f)/12.8f,
-				(xoff+1.0f)/16.0f - 0.001f, (yoff+1.0f)/12.8f - 0.0001f);
+			    Details.dropColor, xoff / 16.0f, yoff / 12.8f, (xoff + 1.0f) / 16.0f - 0.001f, yoff / 12.8f, xoff / 16.0f, (yoff + 1.0f) / 12.8f,
+			    (xoff + 1.0f) / 16.0f - 0.001f, (yoff + 1.0f) / 12.8f - 0.0001f);
 		}
-		CSprite2d::AddSpriteToBank(
+		AddHelpFontSprite(
 #ifdef FIX_BUGS
-			Details.bank + Details.style,
+		    Details.bank + Details.style,
 #else
-			Details.style,
+		    Details.style,
 #endif
-			CRect(x, y,
-			      x + 32.0f * Details.scaleX * 1.0f,
-			      y + 40.0f * Details.scaleY * 0.5f),
-			Details.color,
-			xoff/16.0f,                 yoff/12.8f,
-			(xoff+1.0f)/16.0f - 0.001f, yoff/12.8f,
-			xoff/16.0f,                 (yoff+1.0f)/12.8f - 0.002f,
-			(xoff+1.0f)/16.0f - 0.001f, (yoff+1.0f)/12.8f - 0.002f);
+		    CRect(x, y, x + 32.0f * Details.scaleX * 1.0f, y + 40.0f * Details.scaleY * 0.5f), Details.color, xoff / 16.0f, yoff / 12.8f,
+		    (xoff + 1.0f) / 16.0f - 0.001f, yoff / 12.8f, xoff / 16.0f, (yoff + 1.0f) / 12.8f - 0.002f, (xoff + 1.0f) / 16.0f - 0.001f,
+		    (yoff + 1.0f) / 12.8f - 0.002f);
 #ifdef MORE_LANGUAGES
 	}else if (IsJapaneseFont()) {
 		if (Details.dropShadowPosition != 0) {
-			CSprite2d::AddSpriteToBank(
+			AddHelpFontSprite(
 #ifdef FIX_BUGS
-				Details.bank + Details.style,
+			    Details.bank + Details.style,
 #else
-				Details.style,
+			    Details.style,
 #endif
 #ifdef FIX_BUGS
-				CRect(x + SCREEN_SCALE_X(Details.dropShadowPosition),
-					y + SCREEN_SCALE_Y(Details.dropShadowPosition),
-					x + SCREEN_SCALE_X(Details.dropShadowPosition) + 32.0f * Details.scaleX * 1.0f,
-					y + SCREEN_SCALE_Y(Details.dropShadowPosition) + 40.0f * Details.scaleY / 2.75f),
+			    CRect(x + SCREEN_SCALE_X(Details.dropShadowPosition), y + SCREEN_SCALE_Y(Details.dropShadowPosition),
+			          x + SCREEN_SCALE_X(Details.dropShadowPosition) + 32.0f * Details.scaleX * 1.0f,
+			          y + SCREEN_SCALE_Y(Details.dropShadowPosition) + 40.0f * Details.scaleY / 2.75f),
 #else
-				CRect(x + Details.dropShadowPosition,
-					y + Details.dropShadowPosition,
-					x + Details.dropShadowPosition + 32.0f * Details.scaleX * 1.0f,
-					y + Details.dropShadowPosition + 40.0f * Details.scaleY / 2.75f),
+			    CRect(x + Details.dropShadowPosition, y + Details.dropShadowPosition,
+			          x + Details.dropShadowPosition + 32.0f * Details.scaleX * 1.0f,
+			          y + Details.dropShadowPosition + 40.0f * Details.scaleY / 2.75f),
 #endif
-				Details.dropColor,
-				xoff * w / 1024.0f, yoff / 25.6f,
-				xoff * w / 1024.0f + (1.0f / 48.0f) - 0.001f, yoff / 25.6f,
-				xoff * w / 1024.0f, (yoff + 1.0f) / 25.6f,
-				xoff * w / 1024.0f + (1.0f / 48.0f) - 0.001f, (yoff + 1.0f) / 25.6f - 0.0001f);
+			    Details.dropColor, xoff * w / 1024.0f, yoff / 25.6f, xoff * w / 1024.0f + (1.0f / 48.0f) - 0.001f, yoff / 25.6f, xoff * w / 1024.0f,
+			    (yoff + 1.0f) / 25.6f, xoff * w / 1024.0f + (1.0f / 48.0f) - 0.001f, (yoff + 1.0f) / 25.6f - 0.0001f);
 		}
-		CSprite2d::AddSpriteToBank(Details.bank + Details.style,
-			CRect(x, y,
-				x + 32.0f * Details.scaleX * 1.0f,
-				y + 40.0f * Details.scaleY / 2.75f),
-			Details.color,
-			xoff * w / 1024.0f, yoff / 25.6f,
-			xoff * w / 1024.0f + (1.0f / 48.0f) - 0.001f, yoff / 25.6f,
-			xoff * w / 1024.0f, (yoff + 1.0f) / 25.6f - 0.002f,
-			xoff * w / 1024.0f + (1.0f / 48.0f) - 0.001f, (yoff + 1.0f) / 25.6f - 0.0001f);
+		AddHelpFontSprite(Details.bank + Details.style, CRect(x, y, x + 32.0f * Details.scaleX * 1.0f, y + 40.0f * Details.scaleY / 2.75f),
+		                  Details.color, xoff * w / 1024.0f, yoff / 25.6f, xoff * w / 1024.0f + (1.0f / 48.0f) - 0.001f, yoff / 25.6f,
+		                  xoff * w / 1024.0f, (yoff + 1.0f) / 25.6f - 0.002f, xoff * w / 1024.0f + (1.0f / 48.0f) - 0.001f,
+		                  (yoff + 1.0f) / 25.6f - 0.0001f);
 #endif
 	}else
 	{
-		CSprite2d::AddSpriteToBank(
+		AddHelpFontSprite(
 #ifdef FIX_BUGS
-			Details.bank + Details.style,
+		    Details.bank + Details.style,
 #else
-			Details.style,
+		    Details.style,
 #endif
-			CRect(x, y,
-					x + 32.0f * Details.scaleX * w,
-					y + 32.0f * Details.scaleY * 0.5f),
-			Details.color,
-			xoff/16.0f,               yoff/16.0f,
-			(xoff+w)/16.0f,           yoff/16.0f,
-			xoff/16.0f,               (yoff+1.0f)/16.0f,
-			(xoff+w)/16.0f - 0.0001f, (yoff+1.0f)/16.0f - 0.0001f);
+		    CRect(x, y, x + 32.0f * Details.scaleX * w, y + 32.0f * Details.scaleY * 0.5f), Details.color, xoff / 16.0f, yoff / 16.0f,
+		    (xoff + w) / 16.0f, yoff / 16.0f, xoff / 16.0f, (yoff + 1.0f) / 16.0f, (xoff + w) / 16.0f - 0.0001f, (yoff + 1.0f) / 16.0f - 0.0001f);
 	}
 }
 
@@ -830,6 +843,89 @@ bool CFont::IsAnsiCharacter(wchar *s)
 	if (*s == 'D' || *s == '$')
 		return true;
 	return false;
+}
+#endif
+
+#ifdef FIX_BUGS
+void
+CFont::PrintHelpString(float x, float y, wchar *text)
+{
+	if(!*text || *text == '*') return;
+	// Colour/fade changes do not change geometry. Keep the measured bounds
+	// while the same help message fades, and invalidate on font reloads.
+	static std::vector<wchar> previousText;
+	static std::vector<float> previousLayout;
+	static uint32 previousGeneration = ~0u;
+	static CRect measured;
+	static bool hasInk = false;
+	const CFontDetails saved = Details;
+	std::vector<wchar> message(text, text + UnicodeStrlen(text) + 1);
+	std::vector<float> layout = {saved.scaleX,
+	                             saved.scaleY,
+	                             saved.wrapX - x,
+	                             (float)saved.style,
+	                             (float)saved.proportional,
+	                             (float)saved.dropShadowPosition,
+	                             saved.slant,
+	                             saved.slant != 0.0f ? saved.slantRefX - x : 0.0f,
+	                             saved.slant != 0.0f ? saved.slantRefY - y : 0.0f,
+	                             (float)saved.bank,
+	                             (float)SCREEN_WIDTH,
+	                             (float)SCREEN_HEIGHT};
+#ifdef MORE_LANGUAGES
+	layout.push_back((float)LanguageSet);
+#endif
+#ifdef CHINESE
+	layout.push_back((float)CGame::chineseGame);
+	layout.push_back((float)gChineseFontStyleOverride);
+	layout.push_back(gChineseSyntheticSlant);
+#endif
+	if(message != previousText || layout != previousLayout || previousGeneration != gHelpTextBounds.generation) {
+		DrawFonts(); // Flush preceding HUD text before collecting this message.
+		Details = saved;
+
+#ifdef MORE_LANGUAGES
+		const bool16 savedNewLine = NewLine;
+#endif
+#ifdef BUTTON_ICONS
+		const int savedSymbol = PS2Symbol;
+#endif
+		Details.background = false;
+		gHelpTextBounds.Begin();
+		std::vector<wchar> copy = message; // Native layout may remove trailing spaces.
+		PrintString(x, y, copy.data());
+		DrawFonts();
+		gHelpTextBounds.End();
+		hasInk = gHelpTextBounds.valid;
+		if(hasInk) {
+			measured = gHelpTextBounds.bounds;
+			measured.left -= x;
+			measured.right -= x;
+			measured.top -= y;
+			measured.bottom -= y;
+		}
+		Details = saved;
+
+#ifdef MORE_LANGUAGES
+		NewLine = savedNewLine;
+#endif
+#ifdef BUTTON_ICONS
+		PS2Symbol = savedSymbol;
+#endif
+		previousText = message;
+		previousLayout = layout;
+		previousGeneration = gHelpTextBounds.generation;
+	}
+	if(hasInk) {
+		const float paddingX = SCREEN_SCALE_X(4.0f);
+		const float paddingY = SCREEN_SCALE_Y(2.0f);
+		CSprite2d::DrawRect(
+		    CRect(x + measured.left - paddingX, y + measured.top - paddingY, x + measured.right + paddingX, y + measured.bottom + paddingY),
+		    saved.backgroundColor);
+	}
+	Details.background = false;
+	PrintString(x, y, message.data());
+	Details.background = saved.background;
 }
 #endif
 
@@ -1879,6 +1975,9 @@ CFont::UnloadChineseFonts()
 void
 CFont::ReloadChineseFonts()
 {
+#ifdef FIX_BUGS
+	gHelpTextBounds.Reset();
+#endif
 	if (!gChineseFontSystemInitialised)
 		return;
 
@@ -1955,13 +2054,13 @@ CFont::PrintCHSChar(float x, float y, uint32 c)
 
 	CSprite2d *spr;
 	CRGBA color = Details.color;
-	#ifdef _WIN32
+#ifdef _WIN32
 	if (CHSFont::Inited()) {
 		spr = &CHSFont::SpriteC[pos.page];
 		if (CHSFont::IsSlotColor(c, slant))
 			color = CRGBA(255, 255, 255, Details.color.a);
 	} else
-	#endif
+#endif
 		spr = slant ? &SpriteChinese[FONT_CHN_SLANT] : &SpriteChinese[FONT_CHN_NORMAL];
 
 	if (Details.dropShadowPosition != 0) {
