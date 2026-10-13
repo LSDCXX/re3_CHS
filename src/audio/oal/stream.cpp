@@ -1,6 +1,8 @@
+#include "StreamPcm.h"
 #include "common.h"
 
 #ifdef AUDIO_OAL
+#include <AL/alext.h>
 
 #if defined _MSC_VER && !defined CMAKE_NO_AUTOLINK
 #ifdef AUDIO_OAL_USE_SNDFILE
@@ -999,7 +1001,7 @@ CStream::BufferShouldBeFilledAndQueued(std::pair<ALuint, ALuint>* bufs)
 		ALuint alBuffers[2] = {(*bufs).first, (*bufs).second}; // left - right
 		if (FillBuffer(alBuffers)) {
 			alSourceQueueBuffers(m_pAlSources[0], 1, &alBuffers[0]);
-			alSourceQueueBuffers(m_pAlSources[1], 1, &alBuffers[1]);
+			if(!m_bDirectPlayback) alSourceQueueBuffers(m_pAlSources[1], 1, &alBuffers[1]);
 			return true;
 		}
 	}
@@ -1144,23 +1146,12 @@ void CStream::Terminate()
 #endif
 }
 
-CStream::CStream(ALuint *sources, ALuint (&buffers)[NUM_STREAMBUFFERS]) :
-	m_pAlSources(sources),
-	m_alBuffers(buffers),
-	m_pBuffer(nil),
-	m_bPaused(false),
-	m_bActive(false),
+CStream::CStream(ALuint *sources, ALuint (&buffers)[NUM_STREAMBUFFERS])
+    : m_pAlSources(sources), m_alBuffers(buffers), m_pBuffer(nil), m_bPaused(false), m_bActive(false), m_bDirectPlayback(false),
 #ifdef MULTITHREADED_AUDIO
-	m_bIExist(false),
-	m_bDoSeek(false),
-	m_SeekPos(0),
+      m_bIExist(false), m_bDoSeek(false), m_SeekPos(0),
 #endif
-	m_pSoundFile(nil),
-	m_bReset(false),
-	m_nVolume(0),
-	m_nPan(0),
-	m_nPosBeforeReset(0),
-	m_nLoopCount(1)
+      m_pSoundFile(nil), m_bReset(false), m_nVolume(0), m_nPan(0), m_nPosBeforeReset(0), m_nLoopCount(1)
 	
 {
 }
@@ -1376,6 +1367,11 @@ void CStream::SetVolume(uint32 nVol)
 
 void CStream::SetPan(uint8 nPan)
 {
+	if(m_bDirectPlayback) {
+		m_nPan = nPan;
+		SetPosition(0, 0.0f, 0.0f, 0.0f);
+		return;
+	}
 	m_nPan = Clamp((int8)nPan - 63, 0, 63);
 	SetPosition(0, (m_nPan - 63) / 64.0f, 0.0f, Sqrt(1.0f - SQR((m_nPan - 63) / 64.0f)));
 
@@ -1424,9 +1420,8 @@ uint32 CStream::GetPosMS()
 
 	//std::lock_guard<std::mutex> lock(m_mutex);
 
-	return m_pSoundFile->Tell()
-		- m_pSoundFile->samples2ms(m_pSoundFile->GetBufferSamples() * (NUM_STREAMBUFFERS/2-1)) / m_pSoundFile->GetChannels()
-		+ m_pSoundFile->samples2ms(offset/m_pSoundFile->GetSampleSize()) / m_pSoundFile->GetChannels();
+	return m_pSoundFile->Tell() - m_pSoundFile->samples2ms(m_pSoundFile->GetBufferSamples() * (NUM_STREAMBUFFERS / 2 - 1)) / m_pSoundFile->GetChannels() +
+	       m_pSoundFile->samples2ms(offset / m_pSoundFile->GetSampleSize()) / (m_bDirectPlayback ? 2 : m_pSoundFile->GetChannels());
 }
 
 uint32 CStream::GetLengthMS()
@@ -1444,13 +1439,17 @@ bool CStream::FillBuffer(ALuint *alBuffer)
 		return false;
 	if ( !(alBuffer[0] != AL_NONE && alIsBuffer(alBuffer[0])) )
 		return false;
-	if ( !(alBuffer[1] != AL_NONE && alIsBuffer(alBuffer[1])) )
-		return false;
+	if(!m_bDirectPlayback && !(alBuffer[1] != AL_NONE && alIsBuffer(alBuffer[1]))) return false;
 #endif
 
 	uint32 size = m_pSoundFile->Decode(m_pBuffer);
 	if( size == 0 )
 		return false;
+	if(m_bDirectPlayback) {
+		if(!InterleaveStreamPcm((int16 *)m_pBuffer, size / sizeof(int16), m_pSoundFile->GetChannels(), m_directPcm)) return false;
+		alBufferData(alBuffer[0], AL_FORMAT_STEREO16, m_directPcm.data(), (ALsizei)(m_directPcm.size() * sizeof(int16)), m_pSoundFile->GetSampleRate());
+		return true;
+	}
 
 	uint32 channelSize = size / m_pSoundFile->GetChannels();
 	
@@ -1474,7 +1473,7 @@ bool CStream::QueueBuffers()
 		ALuint rightBuf = buffers.second;
 
 		alSourceQueueBuffers(m_pAlSources[0], 1, &leftBuf);
-		alSourceQueueBuffers(m_pAlSources[1], 1, &rightBuf);
+		if(!m_bDirectPlayback) alSourceQueueBuffers(m_pAlSources[1], 1, &rightBuf);
 
 		buffersQueued = true;
 	}
@@ -1491,7 +1490,7 @@ int32 CStream::FillBuffers()
 		if ( !FillBuffer(&m_alBuffers[i*2]) )
 			break;
 		alSourceQueueBuffers(m_pAlSources[0], 1, &m_alBuffers[i*2]);
-		alSourceQueueBuffers(m_pAlSources[1], 1, &m_alBuffers[i*2+1]);
+		if(!m_bDirectPlayback) alSourceQueueBuffers(m_pAlSources[1], 1, &m_alBuffers[i * 2 + 1]);
 	}
 	
 	return i;
@@ -1510,6 +1509,16 @@ void CStream::ClearBuffers()
 		alSourceUnqueueBuffers(m_pAlSources[0], 1, &value);
 	while (buffersQueued[1]--)
 		alSourceUnqueueBuffers(m_pAlSources[1], 1, &value);
+}
+
+void
+CStream::SetDirectPlayback(bool direct)
+{
+#ifdef MULTITHREADED_AUDIO
+	std::lock_guard<std::mutex> guard(m_mutex);
+#endif
+	assert(!IsOpened());
+	m_bDirectPlayback = direct;
 }
 
 bool CStream::Setup(bool imSureQueueIsEmpty, bool lock)
@@ -1541,6 +1550,23 @@ bool CStream::Setup(bool imSureQueueIsEmpty, bool lock)
 
 		//SetPosition(0.0f, 0.0f, 0.0f);
 		SetPitch(1.0f);
+		alSourcef(m_pAlSources[0], AL_ROLLOFF_FACTOR, m_bDirectPlayback ? 0.0f : 1.0f);
+		if(alIsExtensionPresent("AL_SOFT_source_spatialize"))
+			alSourcei(m_pAlSources[0], AL_SOURCE_SPATIALIZE_SOFT, m_bDirectPlayback ? AL_FALSE : AL_AUTO_SOFT);
+		if(alIsExtensionPresent("AL_SOFT_direct_channels")) alSourcei(m_pAlSources[0], AL_DIRECT_CHANNELS_SOFT, m_bDirectPlayback ? AL_TRUE : AL_FALSE);
+		if(alIsExtensionPresent("AL_SOFT_source_resampler")) {
+			ALint resampler = alGetInteger(AL_DEFAULT_RESAMPLER_SOFT);
+			LPALGETSTRINGISOFT getString = (LPALGETSTRINGISOFT)alGetProcAddress("alGetStringiSOFT");
+			if(m_bDirectPlayback && getString) {
+				const ALint count = alGetInteger(AL_NUM_RESAMPLERS_SOFT);
+				for(ALint i = 0; i < count; i++) {
+					const char *name = getString(AL_RESAMPLER_NAME_SOFT, i);
+					if(name && strstr(name, "Sinc") && !strstr(name, "Fast") && !strstr(name, "fast")) resampler = i;
+				}
+			}
+			alSourcei(m_pAlSources[0], AL_SOURCE_RESAMPLER_SOFT, resampler);
+		}
+		if(m_bDirectPlayback) SetPosition(0, 0.0f, 0.0f, 0.0f);
 		//SetPan(m_nPan);
 		//SetVolume(100);
 	}
@@ -1567,8 +1593,7 @@ void CStream::SetPlay(bool state)
 
 		sourceState = AL_PLAYING;
 		alGetSourcei(m_pAlSources[1], AL_SOURCE_STATE, &sourceState);
-		if (sourceState != AL_PLAYING)
-			alSourcePlay(m_pAlSources[1]);
+		if(!m_bDirectPlayback && sourceState != AL_PLAYING) alSourcePlay(m_pAlSources[1]);
 
 		m_bActive = true;
 	}
@@ -1645,6 +1670,10 @@ void CStream::Update()
 			//alSourcef(m_pAlSources[1], AL_ROLLOFF_FACTOR, 0.0f);
 			alGetSourcei(m_pAlSources[1], AL_BUFFERS_QUEUED, &totalBuffers[1]);
 			alGetSourcei(m_pAlSources[1], AL_BUFFERS_PROCESSED, &buffersProcessed[1]);
+			if(m_bDirectPlayback) {
+				totalBuffers[1] = totalBuffers[0];
+				buffersProcessed[1] = buffersProcessed[0];
+			}
 		} while (buffersProcessed[0] != buffersProcessed[1]);
 
 		assert(buffersProcessed[0] == buffersProcessed[1]);
@@ -1678,7 +1707,10 @@ void CStream::Update()
 				ALuint buffer[2];
 				
 				alSourceUnqueueBuffers(m_pAlSources[0], 1, &buffer[0]);
-				alSourceUnqueueBuffers(m_pAlSources[1], 1, &buffer[1]);
+				if(m_bDirectPlayback) {
+					buffer[1] = AL_NONE; // The second source is not queued or played.
+				} else
+					alSourceUnqueueBuffers(m_pAlSources[1], 1, &buffer[1]);
 
 				if (m_bActive)
 				{

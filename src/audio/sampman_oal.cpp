@@ -1645,6 +1645,7 @@ cSampleManager::PreloadStreamedFile(uint8 nFile, uint8 nStream)
 		CStream *stream = aStream[nStream];
 
 		stream->Close();
+		stream->SetDirectPlayback(nFile <= STREAMED_SOUND_RADIO_MP3_PLAYER);
 
 #ifdef PS2_AUDIO_PATHS
 		if(AudioStreamMapped[nFile] || !stream->Open(PS2StreamedNameTable[nFile], IsThisTrackAt16KHz(nFile) ? 16000 : 32000))
@@ -1694,6 +1695,7 @@ cSampleManager::StartStreamedFile(uint8 nFile, uint32 nPos, uint8 nStream)
 		return FALSE;
 
 	aStream[nStream]->Close();
+	aStream[nStream]->SetDirectPlayback(nFile <= STREAMED_SOUND_RADIO_MP3_PLAYER);
 
 	if ( nFile == STREAMED_SOUND_RADIO_MP3_PLAYER )
 	{

@@ -2,6 +2,7 @@
 
 #ifdef AUDIO_OAL
 #include <AL/al.h>
+#include <vector>
 
 #define NUM_STREAMBUFFERS 8
 
@@ -121,7 +122,9 @@ class CStream
 	
 	bool     m_bPaused;
 	bool     m_bActive;
-	
+	bool m_bDirectPlayback;
+	std::vector<int16> m_directPcm;
+
 public:
 #ifdef MULTITHREADED_AUDIO
 	std::mutex	m_mutex;
@@ -154,6 +157,7 @@ public:
 	void SetPosition(int i, float x, float y, float z);
 	void SetPitch(float pitch);
 	void SetGain(float gain);
+	void SetDirectPlayback(bool direct);
 	void   Pause();
 	void   SetPlay(bool state);
 	
