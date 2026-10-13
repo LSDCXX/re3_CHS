@@ -29,6 +29,7 @@
 #include "common.h"
 #include "crossplatform.h"
 
+#include "AudioStreamMappings.h"
 #include "sampman.h"
 
 #include "oal/oal_utils.h"
@@ -728,11 +729,26 @@ void cSampleManager::ReacquireDigitalHandle(void)
 	// TODO? alcProcessContext
 }
 
+static bool AudioStreamMapped[ARRAY_SIZE(StreamedNameTable)];
+
+static bool
+MappedAudioFileExists(const char *path)
+{
+	FILE *file = fcaseopen(path, "rb");
+	if(!file) return false;
+	fclose(file);
+	return true;
+}
+
 bool8
 cSampleManager::Initialise(void)
 {
 	if ( _bSampmanInitialised )
 		return TRUE;
+	FILE *mappingFile = fcaseopen("audio/audio-samples.ini", "rb");
+	const bool hasAudioStreamMappings = ReadAudioStreamMappings(mappingFile, StreamedNameTable, AudioStreamMapped, MappedAudioFileExists);
+	if(mappingFile) fclose(mappingFile);
+	if(hasAudioStreamMappings) debug("Using audio/audio-samples.ini stream mappings\n");
 
 	EFXInit();
 
@@ -882,7 +898,7 @@ cSampleManager::Initialise(void)
 	}
 
 #ifdef AUDIO_CACHE
-	FILE *cacheFile = fcaseopen("audio\\sound.cache", "rb");
+	FILE *cacheFile = hasAudioStreamMappings ? nil : fcaseopen("audio\\sound.cache", "rb");
 	if (cacheFile) {
 		debug("Loadind audio cache (If game crashes around here, then your cache is corrupted, remove audio/sound.cache)\n");
 		fread(nStreamLength, sizeof(uint32), TOTAL_STREAMED_SOUNDS, cacheFile);
@@ -893,13 +909,12 @@ cSampleManager::Initialise(void)
 #endif
 
 		for ( int32 i = 0; i < TOTAL_STREAMED_SOUNDS; i++ )
-		{	
+		{
 			if(aStream[0] && (
 #ifdef PS2_AUDIO_PATHS
-				aStream[0]->Open(PS2StreamedNameTable[i], IsThisTrackAt16KHz(i) ? 16000 : 32000) || 
+			                     (!AudioStreamMapped[i] && aStream[0]->Open(PS2StreamedNameTable[i], IsThisTrackAt16KHz(i) ? 16000 : 32000)) ||
 #endif
-				aStream[0]->Open(StreamedNameTable[i], IsThisTrackAt16KHz(i) ? 16000 : 32000)))
-			{
+			                     aStream[0]->Open(StreamedNameTable[i], IsThisTrackAt16KHz(i) ? 16000 : 32000))) {
 				uint32 tatalms = aStream[0]->GetLengthMS();
 				aStream[0]->Close();
 				nStreamLength[i] = tatalms;
@@ -907,7 +922,7 @@ cSampleManager::Initialise(void)
 				USERERROR("Can't open '%s'\n", StreamedNameTable[i]);
 		}
 #ifdef AUDIO_CACHE
-		cacheFile = fcaseopen("audio\\sound.cache", "wb");
+		cacheFile = hasAudioStreamMappings ? nil : fcaseopen("audio\\sound.cache", "wb");
 		if(cacheFile) {
 			debug("Saving audio cache\n");
 			fwrite(nStreamLength, sizeof(uint32), TOTAL_STREAMED_SOUNDS, cacheFile);
@@ -1632,7 +1647,7 @@ cSampleManager::PreloadStreamedFile(uint8 nFile, uint8 nStream)
 		stream->Close();
 
 #ifdef PS2_AUDIO_PATHS
-		if(!stream->Open(PS2StreamedNameTable[nFile], IsThisTrackAt16KHz(nFile) ? 16000 : 32000))
+		if(AudioStreamMapped[nFile] || !stream->Open(PS2StreamedNameTable[nFile], IsThisTrackAt16KHz(nFile) ? 16000 : 32000))
 #endif
 			stream->Open(StreamedNameTable[nFile], IsThisTrackAt16KHz(nFile) ? 16000 : 32000);
 		if ( !stream->Setup() )
@@ -1696,7 +1711,7 @@ cSampleManager::StartStreamedFile(uint8 nFile, uint32 nPos, uint8 nStream)
 					nFile = 0;
 					CStream *stream = aStream[nStream];
 #ifdef PS2_AUDIO_PATHS
-					if(!stream->Open(PS2StreamedNameTable[nFile], IsThisTrackAt16KHz(nFile) ? 16000 : 32000))
+					if(AudioStreamMapped[nFile] || !stream->Open(PS2StreamedNameTable[nFile], IsThisTrackAt16KHz(nFile) ? 16000 : 32000))
 #endif
 						stream->Open(StreamedNameTable[nFile], IsThisTrackAt16KHz(nFile) ? 16000 : 32000);
 					if ( stream->Setup() ) {
@@ -1749,7 +1764,8 @@ cSampleManager::StartStreamedFile(uint8 nFile, uint32 nPos, uint8 nStream)
 						_bIsMp3Active = FALSE;
 						CStream *stream = aStream[nStream];
 #ifdef PS2_AUDIO_PATHS
-						if(!stream->Open(PS2StreamedNameTable[nFile], IsThisTrackAt16KHz(nFile) ? 16000 : 32000))
+						if(AudioStreamMapped[nFile] ||
+						   !stream->Open(PS2StreamedNameTable[nFile], IsThisTrackAt16KHz(nFile) ? 16000 : 32000))
 #endif
 							stream->Open(StreamedNameTable[nFile], IsThisTrackAt16KHz(nFile) ? 16000 : 32000);
 
@@ -1793,7 +1809,7 @@ cSampleManager::StartStreamedFile(uint8 nFile, uint32 nPos, uint8 nStream)
 	}
 	CStream *stream = aStream[nStream];
 #ifdef PS2_AUDIO_PATHS
-	if(!stream->Open(PS2StreamedNameTable[nFile], IsThisTrackAt16KHz(nFile) ? 16000 : 32000))
+	if(AudioStreamMapped[nFile] || !stream->Open(PS2StreamedNameTable[nFile], IsThisTrackAt16KHz(nFile) ? 16000 : 32000))
 #endif
 		stream->Open(StreamedNameTable[nFile], IsThisTrackAt16KHz(nFile) ? 16000 : 32000);
 	
